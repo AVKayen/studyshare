@@ -2,6 +2,7 @@ package com.example
 
 import kotlinx.html.*
 
+// Main layout
 fun HTML.index(title: String, block : BODY.() -> Unit){
     head {
         title { +title }
