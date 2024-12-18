@@ -1,19 +1,23 @@
-package com.example
+package com.physman
 
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.serialization.Serializable
 
+@Serializable
+data class UserSession(val username: String)
+
 fun Application.configureSecurity() {
+
     install(Sessions) {
         // Sessions are stored in the server's in-memory database
         cookie<UserSession>("SESSION", SessionStorageMemory()) {
             cookie.extensions["SameSite"] = "lax"
         }
     }
+
     install(Authentication) {
         // Validate authentication, redirect to /login on fail
         session<UserSession>("USER") {
@@ -24,20 +28,9 @@ fun Application.configureSecurity() {
                     null
             }
             challenge {
-                call.respondRedirect("/login")
+                call.respondRedirect("/auth/login")
             }
         }
     }
 
-    // Security-related routing
-    routing {
-        get("/login") {
-            val session = call.sessions.get<UserSession>() ?: UserSession("Whoa")
-            call.sessions.set(session)
-            call.respondRedirect("/")
-        }
-    }
 }
-
-@Serializable
-data class UserSession(val username: String)

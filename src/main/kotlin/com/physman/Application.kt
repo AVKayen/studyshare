@@ -1,4 +1,4 @@
-package com.example
+package com.physman
 
 import io.ktor.server.application.*
 
