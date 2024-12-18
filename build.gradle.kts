@@ -7,7 +7,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
 }
 
-group = "com.example"
+group = "com.physman"
 version = "0.0.1"
 
 application {
