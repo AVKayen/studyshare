@@ -1,14 +1,14 @@
 package com.physman.repositories
 
 import com.physman.models.Task
-import com.physman.models.TaskOptional
+import com.physman.models.TaskUpdate
 
 interface TaskRepository {
     suspend fun getAllTasks(): List<Task>
     suspend fun createTask(task: Task): Task
     suspend fun getTask(id: Int): Task?
     suspend fun deleteTask(id: Int): Task?
-    suspend fun updateTask(task: TaskOptional): Task?
+    suspend fun updateTask(id: Int, taskUpdate: TaskUpdate): Task?
 }
 
 object InMemoryTaskRepository : TaskRepository {
@@ -25,11 +25,21 @@ object InMemoryTaskRepository : TaskRepository {
         if (task == null) {
             return null
         }
-        return tasks.removeAt(tasks.indexOf(task))
+        tasks.remove(task)
+        return task
     }
 
-    override suspend fun updateTask(task: TaskOptional): Task? {
-        TODO()
+    override suspend fun updateTask(id: Int, taskUpdate: TaskUpdate): Task? {
+        val task: Task? = tasks.find { it.id == id }
+        if (task == null) {
+            return null
+        }
+        val updatedTask = task.copy(
+            title = taskUpdate.title ?: task.title,
+            additionalNotes = taskUpdate.additionalNotes ?: task.additionalNotes
+        )
+        tasks[tasks.indexOf(task)] = updatedTask
+        return updatedTask
     }
 
     override suspend fun createTask(task: Task): Task {
