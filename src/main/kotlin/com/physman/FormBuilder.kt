@@ -24,7 +24,8 @@ class TextlikeInput(val parameterName: String, val type : InputType, val validat
                     attributes["aria-invalid"] = "true"
                 }
                 attributes["hx-post"] = "${url}/${routePath}"
-                attributes["hx-trigger"] = "closest form:abort"
+                attributes["hx-trigger"] = "keyup changed delay:300ms"
+                attributes["hx-sync"] = "closest form:abort"
                 if (inputtedString != null) {
                     value = inputtedString
                 }
