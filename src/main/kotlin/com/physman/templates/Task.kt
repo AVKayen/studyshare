@@ -5,8 +5,8 @@ import kotlinx.html.FlowContent
 import kotlinx.html.*
 
 fun FlowContent.taskTemplate(task: Task) {
-    div(classes = "flex-col") {
-        div {
+    article(classes = "flex-col task") {
+        header {
             h2 {
                 +task.title
             }

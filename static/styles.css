@@ -10,3 +10,8 @@ body {
     display: flex;
     flex-direction: column;
 }
+
+.task {
+    margin-bottom: 3rem;
+    border-radius: 0.25rem;
+}

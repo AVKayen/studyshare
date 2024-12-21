@@ -12,6 +12,7 @@ import io.ktor.server.routing.*
 import com.physman.templates.taskTemplate
 import io.ktor.server.request.*
 import kotlinx.html.InputType
+import kotlinx.html.article
 import kotlinx.html.body
 import kotlinx.html.div
 import kotlin.random.Random
@@ -57,7 +58,9 @@ fun Route.taskRouter() {
                         taskTemplate(task)
                     }
                 }
-                taskCreationForm.render(this)
+                article {
+                    taskCreationForm.render(this)
+                }
             }
         }
     }
@@ -71,9 +74,6 @@ fun Route.taskRouter() {
             call.response.status(HttpStatusCode.BadRequest)
             return@post
         }
-
-        println("TITLE: $title")
-        println("NOTES: $additionalNotes")
 
         val newTask = Task(id = Random.nextInt(99999), title = title, additionalNotes = additionalNotes)
 
