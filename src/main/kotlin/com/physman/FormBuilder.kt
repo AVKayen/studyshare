@@ -38,7 +38,7 @@ class TextlikeInput(val parameterName: String, val type : InputType, val validat
 }
 
 class Form(val title: String, val callbackUrl: String) {
-    val routePath : String = "/api/forms/${title.lowercase().replace(" ", "_")}"
+    val routePath : String = title.lowercase().replace(" ", "_")
     var inputs : List<TextlikeInput> = emptyList()
     fun addInput(input: TextlikeInput) {
         inputs = inputs.plus(input)
@@ -49,7 +49,7 @@ class Form(val title: String, val callbackUrl: String) {
 
             h1 { + this@Form.title }
             for (input in this@Form.inputs) {
-                input.render(flowContent, inputtedString = null, url = routePath)
+                input.render(flowContent, inputtedString = null, url = "${callbackUrl}/${routePath}")
             }
             button {
                 +"Submit"
@@ -69,8 +69,9 @@ fun Route.routeForm(form: Form) {
         }
         post("{input}") {
             val inputName = call.parameters["input"]!!
+            println(inputName)
             val inputElement: TextlikeInput? = form.inputs.find {
-                it.parameterName == inputName
+                it.routePath == inputName
             }
             if (inputElement == null || inputName.isBlank()) {
                 call.respondText("What")
@@ -80,7 +81,7 @@ fun Route.routeForm(form: Form) {
             val inputtedString = formParameters[inputName].toString()
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-                    inputElement.render(this, inputtedString, form.routePath)
+                    inputElement.render(this, inputtedString, "${form.callbackUrl}/${form.routePath}")
                 }
             }
         }
