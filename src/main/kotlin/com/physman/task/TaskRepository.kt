@@ -1,7 +1,4 @@
-package com.physman.repositories
-
-import com.physman.models.Task
-import com.physman.models.TaskUpdate
+package com.physman.task
 
 interface TaskRepository {
     suspend fun getAllTasks(): List<Task>
