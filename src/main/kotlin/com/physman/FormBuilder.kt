@@ -7,11 +7,11 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.html.*
 
-class TextlikeInput(val parameterName: String, val type : InputType, val validate : (String?) -> List<String>?) {
+class TextlikeInput(val parameterName: String, val type : InputType, val validate : (String) -> String?) {
     val routePath = parameterName.lowercase().replace(" ", "_")
 
     fun render(flowContent: FlowContent, inputtedString: String?, url: String) {
-        val errors: List<String>? = this.validate(inputtedString)
+        val error: String? = if(inputtedString != null) this.validate(inputtedString) else null
         flowContent.div {
             attributes["hx-target"] = "this"
             attributes["hx-swap"] = "outerHTML"
@@ -20,24 +20,25 @@ class TextlikeInput(val parameterName: String, val type : InputType, val validat
                 +parameterName
             }
             input(type = type, name = routePath) {
-                if (errors != null) {
+                if (error != null) {
                     attributes["aria-invalid"] = "true"
                 }
                 attributes["hx-post"] = "${url}/${routePath}"
+                attributes["hx-trigger"] = "closest form:abort"
                 if (inputtedString != null) {
                     value = inputtedString
                 }
             }
-            if (errors != null) {
+            if (error != null) {
                 small {
-                    +errors.joinToString(", ")
+                    +error
                 }
             }
         }
     }
 }
 
-class Form(val title: String, val callbackUrl: String) {
+class Form(val title: String, val callbackUrl: String, val formAttributes: Map<String, String>? = null) {
     val routePath : String = title.lowercase().replace(" ", "_")
     var inputs : List<TextlikeInput> = emptyList()
     fun addInput(input: TextlikeInput) {
@@ -46,6 +47,10 @@ class Form(val title: String, val callbackUrl: String) {
     fun render(flowContent: FlowContent) {
         flowContent.form {
             attributes["hx-post"] = "/${callbackUrl}"
+
+            if(this@Form.formAttributes != null) {
+                attributes.putAll(formAttributes)
+            }
 
             h1 { + this@Form.title }
             for (input in this@Form.inputs) {
