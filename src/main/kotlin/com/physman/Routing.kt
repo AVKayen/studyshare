@@ -19,9 +19,15 @@ fun Application.configureRouting() {
         route("/auth") {
             authRouter()
         }
+
         route("/form") {
             formRouter()
         }
+
+        route("/tasks") {
+            taskRouter()
+        }
+
         authenticate("USER") {
             route("/") {
                 homeRouter()

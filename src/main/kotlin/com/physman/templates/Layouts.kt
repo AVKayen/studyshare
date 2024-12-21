@@ -8,7 +8,7 @@ fun HEAD.headTags() {
     // picoCSS defaults
     link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css")
     // custom CSS
-    link(rel = "stylesheet", href = "static/styles.css")
+    link(rel = "stylesheet", href = "/static/styles.css")
 }
 
 // Main layout

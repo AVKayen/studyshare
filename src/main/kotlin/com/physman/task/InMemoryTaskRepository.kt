@@ -1,7 +1,10 @@
 package com.physman.task
 
 object InMemoryTaskRepository : TaskRepository {
-    private val tasks = mutableListOf<Task>()
+    private val tasks = mutableListOf<Task>(
+        Task(1, "zadanie 49 zbiór XYZ"),
+        Task(2, "zad 52", "tylko a) i b)")
+    )
 
     override suspend fun getAllTasks(): List<Task> = tasks
 
