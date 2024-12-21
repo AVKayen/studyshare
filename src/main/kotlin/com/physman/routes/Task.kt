@@ -13,6 +13,17 @@ import kotlin.random.Random
 
 fun Route.taskRouter() {
 
+    get {
+        val tasks = InMemoryTaskRepository.getAllTasks()
+        call.respondHtml {
+            index("Tasks") {
+                for(task in tasks) {
+                    taskTemplate(task)
+                }
+            }
+        }
+    }
+
     post {
         val formParameters = call.receiveParameters()
         val title = formParameters["title"].toString()
