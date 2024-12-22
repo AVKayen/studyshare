@@ -28,6 +28,10 @@ fun Application.configureRouting() {
             taskRouter()
         }
 
+        route("/images") {
+            imageRouter()
+        }
+
         authenticate("USER") {
             route("/") {
                 homeRouter()
