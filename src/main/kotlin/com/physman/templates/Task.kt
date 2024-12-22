@@ -12,9 +12,16 @@ fun FlowContent.taskTemplate(task: Task) {
             }
         }
         div {
-            if(task.additionalNotes != null) {
+            if (task.additionalNotes != null) {
                 println(task.additionalNotes)
                 +"Notes: ${task.additionalNotes}"
+            }
+        }
+        if (task.images.isNotEmpty()) {
+            div {
+                for (imageId in task.images) {
+                    a(href = "/images/$imageId")
+                }
             }
         }
     }
