@@ -11,6 +11,7 @@ import io.ktor.server.html.*
 import io.ktor.server.routing.*
 import com.physman.templates.taskTemplate
 import io.ktor.server.request.*
+import io.ktor.server.response.*
 import kotlinx.html.InputType
 import kotlinx.html.article
 import kotlinx.html.body
@@ -44,7 +45,7 @@ fun Route.taskRouter() {
         }
         return null
     }
-    taskCreationForm.addInput(TextlikeInput("additionalNotes", InputType.text, additionalNotesValidator))
+    taskCreationForm.addInput(TextlikeInput("additional notes", InputType.text, additionalNotesValidator))
 
     routeForm(taskCreationForm)
 
@@ -68,11 +69,11 @@ fun Route.taskRouter() {
     post {
         val formParameters = call.receiveParameters()
         val title = formParameters["title"].toString()
-        val additionalNotes = formParameters["additionalNotes"].toString()
+        val additionalNotes = formParameters["additional_notes"].toString()
 
-        if(title.isEmpty() || title.length > 48) {
-            call.response.status(HttpStatusCode.BadRequest)
-            return@post
+        val error: String? = titleValidator(title) ?: additionalNotesValidator(additionalNotes)
+        if(error != null) {
+            call.respondText(error, status = HttpStatusCode.BadRequest)
         }
 
         val newTask = Task(id = Random.nextInt(99999), title = title, additionalNotes = additionalNotes)
