@@ -13,13 +13,13 @@ interface ControlledInput {
 class TextlikeInput(
     private val parameterName: String,
     private val type : InputType,
-    val validate : (String) -> String?
+    private val validate : ((String) -> String?)?
 ) : ControlledInput {
 
     override val routePath = parameterName.lowercase().replace(" ", "_")
 
     fun render(flowContent: FlowContent, inputtedString: String?, url: String) {
-        val error: String? = if(inputtedString != null) this.validate(inputtedString) else null
+        val error: String? = if(inputtedString != null) this.validate?.invoke(inputtedString) else null
         flowContent.div {
 
             attributes["hx-target"] = "this"
