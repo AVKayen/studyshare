@@ -17,6 +17,10 @@ fun FlowContent.taskTemplate(task: Task) {
                 +"Notes: ${task.additionalNotes}"
             }
         }
+        a(href = "/tasks/${task.id}/solutions") {
+            button(classes = "solve-button", type = ButtonType.button) {
+                +"See solutions"
+            }}
         if (task.images.isNotEmpty()) {
             div {
                 for (imageId in task.images) {
