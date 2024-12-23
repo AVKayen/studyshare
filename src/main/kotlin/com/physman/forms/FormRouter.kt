@@ -1,4 +1,4 @@
-package com.physman
+package com.physman.forms
 
 import io.ktor.http.*
 import io.ktor.server.html.*

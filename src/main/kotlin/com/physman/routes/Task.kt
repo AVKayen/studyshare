@@ -1,8 +1,6 @@
 package com.physman.routes
 
-import com.physman.Form
-import com.physman.TextlikeInput
-import com.physman.globalFormRouter
+import com.physman.forms.*
 import com.physman.solution.Solution
 import com.physman.task.InMemoryTaskRepository
 import com.physman.task.Task

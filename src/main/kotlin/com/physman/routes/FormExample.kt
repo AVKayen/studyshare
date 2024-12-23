@@ -1,8 +1,6 @@
 package com.physman.routes
 
-import com.physman.Form
-import com.physman.TextlikeInput
-import com.physman.globalFormRouter
+import com.physman.forms.*
 import com.physman.templates.index
 import io.ktor.http.*
 import io.ktor.server.html.*

@@ -1,6 +1,7 @@
 package com.physman
 
 import com.physman.routes.*
+import com.physman.forms.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
