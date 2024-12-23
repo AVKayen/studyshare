@@ -195,6 +195,52 @@ fun Route.taskRouter() {
                     }
                 }
             }
+            route("/{solutionId}") {
+                get {
+                    val taskId = call.parameters["id"]?.toIntOrNull()
+                    if(taskId == null) {
+                        call.response.status(HttpStatusCode.BadRequest)
+                        return@get
+                    }
+                    val solutionId = call.parameters["solutionId"]?.toIntOrNull()
+                    if(solutionId == null) {
+                        call.response.status(HttpStatusCode.BadRequest)
+                        return@get
+                    }
+
+                    val solution = InMemoryTaskRepository.getSolution(taskId, solutionId)
+                    if(solution == null) {
+                        call.response.status(HttpStatusCode.NotFound)
+                        return@get
+                    }
+
+
+                    call.respondHtml(HttpStatusCode.OK) {
+                        index("Solution") {
+                            solutionTemplate(solution)
+                        }
+                    }
+                }
+                delete {
+                    val taskId = call.parameters["id"]?.toIntOrNull()
+                    if(taskId == null) {
+                        call.response.status(HttpStatusCode.BadRequest)
+                        return@delete
+                    }
+                    val solutionId = call.parameters["solutionId"]?.toIntOrNull()
+                    if(solutionId == null) {
+                        call.response.status(HttpStatusCode.BadRequest)
+                        return@delete
+                    }
+
+                    val deletedSolution = InMemoryTaskRepository.deleteSolution(taskId, solutionId)
+                    if(deletedSolution == null) {
+                        call.response.status(HttpStatusCode.NotFound)
+                        return@delete
+                    }
+                    call.response.status(HttpStatusCode.NoContent)
+                }
+            }
         }
     }
 }

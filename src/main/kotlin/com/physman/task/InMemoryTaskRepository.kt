@@ -85,11 +85,28 @@ object InMemoryTaskRepository : TaskRepository {
     }
 
     override suspend fun deleteSolution(taskId: Int, solutionId: Int): Solution? {
-        TODO("Not yet implemented")
+        val solution = getSolution(taskId, solutionId)
+        val task = getTask(taskId)
+        if (task == null) {
+            return null
+        }
+        task.solutions.remove(solution)
+        return solution
     }
 
     override suspend fun updateSolution(taskId: Int, solutionId: Int, solutionUpdate: SolutionUpdate): Solution? {
-        TODO("Not yet implemented")
+        val solution = getSolution(taskId, solutionId)
+        val updatedSolution = solution?.copy(
+            title = solutionUpdate.title ?: solution.title,
+            additionalNotes = solutionUpdate.additionalNotes ?: solution.additionalNotes
+        )
+        if (updatedSolution == null) {
+            return null
+        }
+
+        deleteSolution(taskId, solutionId)
+        createSolution(taskId, updatedSolution)
+        return updatedSolution
     }
 
 
