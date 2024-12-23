@@ -19,7 +19,9 @@ fun Application.configureRouting() {
         route("/auth") {
             authRouter()
         }
-
+        route("/forms") {
+            configureForms(globalFormRouter)
+        }
         route("/form") {
             formRouter()
         }

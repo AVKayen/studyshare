@@ -2,7 +2,7 @@ package com.physman.routes
 
 import com.physman.Form
 import com.physman.TextlikeInput
-import com.physman.routeForm
+import com.physman.globalFormRouter
 import com.physman.templates.index
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -54,6 +54,6 @@ fun Route.formRouter() {
         post {
             call.respondHtml(HttpStatusCode.OK) {}
         }
-        routeForm(form)
+        globalFormRouter.routeForm(form)
     }
 }

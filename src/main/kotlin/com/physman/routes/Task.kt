@@ -2,7 +2,7 @@ package com.physman.routes
 
 import com.physman.Form
 import com.physman.TextlikeInput
-import com.physman.routeForm
+import com.physman.globalFormRouter
 import com.physman.solution.Solution
 import com.physman.task.InMemoryTaskRepository
 import com.physman.task.Task
@@ -60,9 +60,9 @@ fun Route.taskRouter() {
         return solutionCreationForm
     }
 
-    routeForm(taskCreationForm)
+    globalFormRouter.routeForm(taskCreationForm)
     // i have no clue why this works (but it works)
-    routeForm(solutionCreationFormCreator(0))
+    globalFormRouter.routeForm(solutionCreationFormCreator(0))
 
     get {
         val tasks = InMemoryTaskRepository.getAllTasks()
