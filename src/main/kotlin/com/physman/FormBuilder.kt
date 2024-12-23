@@ -29,13 +29,14 @@ class TextlikeInput(
                 +parameterName
             }
             input(type = type, name = routePath) {
+                attributes["id"] = routePath
 
                 if (error != null) {
                     attributes["aria-invalid"] = "true"
                 }
 
                 attributes["hx-post"] = "${url}/${routePath}"
-                attributes["hx-trigger"] = "keyup changed delay:300ms"
+                attributes["hx-trigger"] = "keyup changed delay:500ms"
                 attributes["hx-sync"] = "closest form:abort"
 
                 if (inputtedString != null) {
@@ -53,6 +54,7 @@ class TextlikeInput(
 
 class FileInput(
     private val parameterName: String,
+    private val inputAttributes: Map<String, String>? = null
 ) : ControlledInput {
 
     override val routePath = parameterName.lowercase().replace(" ", "_")
@@ -64,7 +66,10 @@ class FileInput(
                 +parameterName
             }
             input(type = InputType.file, name = routePath) {
-
+                attributes["hx-preserve"] = "true"
+                if (inputAttributes != null) {
+                    attributes.putAll(inputAttributes)
+                }
             }
         }
     }
@@ -90,6 +95,7 @@ class Form(
     fun render(flowContent: FlowContent) {
         flowContent.form {
             attributes["hx-post"] = "/${callbackUrl}"
+
             if (isMultipart) {
                 attributes["hx-encoding"] = "multipart/form-data"
             }
@@ -124,6 +130,7 @@ fun Route.routeForm(form: Form) {
                 }
             }
         }
+
         post("{input}") {
 
             val inputName = call.parameters["input"]!!
