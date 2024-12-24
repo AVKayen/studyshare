@@ -4,11 +4,13 @@ import com.physman.task.Task
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.taskTemplate(task: Task) {
+fun FlowContent.taskPreviewTemplate(task: Task) {
     article(classes = "flex-col task") {
         header {
-            h2 {
-                +task.title
+            a(href = "/tasks/${task.id}") {
+                h2 {
+                    +task.title
+                }
             }
         }
         div {
@@ -20,10 +22,9 @@ fun FlowContent.taskTemplate(task: Task) {
 
         if (task.images.isNotEmpty()) {
             div {
-                for (imageId in task.images) {
-                    a(href = "/images/$imageId")
-                }
+                a(href = "/images/${task.images.first()}")
             }
         }
     }
 }
+

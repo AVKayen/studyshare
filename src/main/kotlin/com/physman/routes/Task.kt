@@ -4,6 +4,7 @@ import com.physman.forms.*
 import com.physman.task.InMemoryTaskRepository
 import com.physman.task.Task
 import com.physman.templates.index
+import com.physman.templates.taskPreviewTemplate
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.routing.*
@@ -11,9 +12,7 @@ import com.physman.templates.taskTemplate
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import kotlinx.html.InputType
-import kotlinx.html.article
 import kotlinx.html.body
-import kotlinx.html.div
 
 const val TITLE_MAX_LENGTH = 512
 const val ADDITIONAL_NOTES_MAX_LENGTH = 512
@@ -49,16 +48,18 @@ fun Route.taskRouter() {
     get {
         val tasks = InMemoryTaskRepository.getAllTasks()
         call.respondHtml {
-            index("Tasks") {
-                div {
-                    attributes["id"] = "task-list"
-                    for (task in tasks) {
-                        taskTemplate(task)
-                    }
+            body {
+                for (task in tasks) {
+                    taskPreviewTemplate(task)
                 }
-                article {
-                    taskCreationForm.render(this, "tasks")
-                }
+            }
+        }
+    }
+
+    get("/creation-form") {
+        call.respondHtml {
+            body {
+                taskCreationForm.render(this, "/tasks")
             }
         }
     }

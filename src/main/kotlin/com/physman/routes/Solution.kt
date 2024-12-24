@@ -5,7 +5,6 @@ import com.physman.forms.TextlikeInput
 import com.physman.forms.globalFormRouter
 import com.physman.solution.Solution
 import com.physman.task.InMemoryTaskRepository
-import com.physman.templates.index
 import com.physman.templates.solutionTemplate
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -65,31 +64,32 @@ fun Route.solutionRouter() {
         }
     }
     route("/{solutionId}") {
-        get {
-            val taskId = call.parameters["id"]
-            if(taskId == null) {
-                call.response.status(HttpStatusCode.BadRequest)
-                return@get
-            }
-            val solutionId = call.parameters["solutionId"]
-            if(solutionId == null) {
-                call.response.status(HttpStatusCode.BadRequest)
-                return@get
-            }
-
-            val solution = InMemoryTaskRepository.getSolution(taskId, solutionId)
-            if(solution == null) {
-                call.response.status(HttpStatusCode.NotFound)
-                return@get
-            }
-
-
-            call.respondHtml(HttpStatusCode.OK) {
-                index("Solution") {
-                    solutionTemplate(solution)
-                }
-            }
-        }
+          // we've decided not to show solutions on a separate pages, right? Not deleting, we may always change our minds
+//        get {
+//            val taskId = call.parameters["id"]
+//            if(taskId == null) {
+//                call.response.status(HttpStatusCode.BadRequest)
+//                return@get
+//            }
+//            val solutionId = call.parameters["solutionId"]
+//            if(solutionId == null) {
+//                call.response.status(HttpStatusCode.BadRequest)
+//                return@get
+//            }
+//
+//            val solution = InMemoryTaskRepository.getSolution(taskId, solutionId)
+//            if(solution == null) {
+//                call.response.status(HttpStatusCode.NotFound)
+//                return@get
+//            }
+//
+//
+//            call.respondHtml(HttpStatusCode.OK) {
+//                index("Solution") {
+//                    solutionTemplate(solution)
+//                }
+//            }
+//        }
         delete {
             val taskId = call.parameters["id"]
             if(taskId == null) {
