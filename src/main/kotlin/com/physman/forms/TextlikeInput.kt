@@ -1,14 +1,21 @@
 package com.physman.forms
 
 import kotlinx.html.*
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 class TextlikeInput(
-    private val parameterName: String,
+    private val inputLabel: String,
+    override val inputName: String,
     private val type : InputType,
     private val validate : ((String) -> String?)?
 ) : ControlledInput {
 
-    override val routePath = parameterName.lowercase().replace(" ", "_")
+    init {
+        if (inputName != URLEncoder.encode(inputName, StandardCharsets.UTF_8.toString())) {
+            throw IllegalArgumentException("Invalid inputName. $inputName is not url-safe.")
+        }
+    }
 
     fun render(flowContent: FlowContent, inputtedString: String? = null, url: String) {
         val error: String? = if(inputtedString != null) this.validate?.invoke(inputtedString) else null
@@ -17,17 +24,17 @@ class TextlikeInput(
             attributes["hx-target"] = "this"
             attributes["hx-swap"] = "outerHTML"
             label {
-                attributes["for"] = routePath
-                +parameterName
+                attributes["for"] = inputName
+                +inputLabel
             }
-            input(type = type, name = routePath) {
-                attributes["id"] = routePath
+            input(type = type, name = inputName) {
+                attributes["id"] = inputName
 
                 if (error != null) {
                     attributes["aria-invalid"] = "true"
                 }
 
-                attributes["hx-post"] = "${url}/${routePath}"
+                attributes["hx-post"] = "${url}/${inputName}"
                 attributes["hx-trigger"] = "keyup changed delay:500ms"
                 attributes["hx-sync"] = "closest form:abort"
 

@@ -12,7 +12,7 @@ class FormRouter {
 
     fun routeForm(form: Form) {
         forms.add(form)
-        form.validatorsRoute = "/forms/${form.routePath}"
+        form.validatorsRoute = "/forms/${form.formName}"
     }
 }
 
@@ -21,7 +21,7 @@ fun Route.configureForms(forms: FormRouter) {
 
         get {
             // TODO: How to get rid of this duplicate code?
-            val form: Form? = forms.forms.find { it.routePath == call.parameters["form"] }
+            val form: Form? = forms.forms.find { it.formName == call.parameters["form"] }
             if (form == null) {
                 call.response.status(HttpStatusCode.NotFound)
                 call.respondText { "Form not found" }
@@ -34,7 +34,7 @@ fun Route.configureForms(forms: FormRouter) {
         }
 
         post("{input}") {
-            val form: Form? = forms.forms.find { it.routePath == call.parameters["form"] }
+            val form: Form? = forms.forms.find { it.formName == call.parameters["form"] }
             if (form == null) {
                 call.response.status(HttpStatusCode.NotFound)
                 call.respondText { "Form not found" }
@@ -43,7 +43,7 @@ fun Route.configureForms(forms: FormRouter) {
             val inputName = call.parameters["input"]!!
 
             val inputElement: ControlledInput? = form!!.inputs.find {
-                it.routePath == inputName
+                it.inputName == inputName
             }
             if (inputName.isBlank() || inputElement !is TextlikeInput) {
                 call.response.status(HttpStatusCode.BadRequest)
