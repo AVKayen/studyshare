@@ -7,7 +7,7 @@ import io.ktor.server.html.*
 import io.ktor.server.routing.*
 import kotlinx.html.InputType
 
-fun Route.formRouter() {
+fun Route.formExampleRouter() {
     val nameValidator = {input : String? ->
         var errors = ""
         if (input.isNullOrBlank()) {
@@ -37,21 +37,20 @@ fun Route.formRouter() {
             null
         }
     }
-    val form = Form("This is a form", "sky")
-    form.addInput(TextlikeInput("Name", InputType.text, nameValidator))
-    form.addInput(TextlikeInput("Email", InputType.text, emailValidator))
+    val form = Form("This is an example form", "exampleForm", "formexample")
+    form.addInput(TextlikeInput("Name", "name", InputType.text, nameValidator))
+    form.addInput(TextlikeInput("Email", "email", InputType.text, emailValidator))
 
-    route("/sky") {
-        get {
-            call.respondHtml(HttpStatusCode.OK) {
-                index(title = "String") {
-                    form.render(this)
-                }
+    globalFormRouter.routeForm(form)
+
+    get {
+        call.respondHtml(HttpStatusCode.OK) {
+            index(title = "Example form page") {
+                form.render(this)
             }
         }
-        post {
-            call.respondHtml(HttpStatusCode.OK) {}
-        }
-        globalFormRouter.routeForm(form)
+    }
+    post {
+        call.respondHtml(HttpStatusCode.OK) {}
     }
 }

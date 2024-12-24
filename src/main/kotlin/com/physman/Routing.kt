@@ -23,8 +23,8 @@ fun Application.configureRouting() {
         route("/forms") {
             configureForms(globalFormRouter)
         }
-        route("/form") {
-            formRouter()
+        route("/formexample") {
+            formExampleRouter()
         }
 
         route("/tasks") {
