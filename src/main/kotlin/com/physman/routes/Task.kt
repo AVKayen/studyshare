@@ -37,14 +37,14 @@ val additionalNotesValidator = fun(additionalNotes: String): String? {
 
 fun Route.taskRouter() {
 
-    val taskCreationForm = Form("Create a new task", "taskForm", "tasks", mapOf(
+    val taskCreationForm = Form("Create a new task", "taskForm", mapOf(
         "hx-target" to "#task-list",
         "hx-swap" to "beforeend"
     ))
     taskCreationForm.addInput(TextlikeInput("title", "title", InputType.text, titleValidator))
     taskCreationForm.addInput(TextlikeInput("additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
 
-    globalFormRouter.routeForm(taskCreationForm)
+    globalFormRouter.routeFormValidators(taskCreationForm)
 
     get {
         val tasks = InMemoryTaskRepository.getAllTasks()
@@ -57,7 +57,7 @@ fun Route.taskRouter() {
                     }
                 }
                 article {
-                    taskCreationForm.render(this)
+                    taskCreationForm.render(this, "tasks")
                 }
             }
         }
@@ -122,7 +122,7 @@ fun Route.taskRouter() {
 
 
         route("/solutions") {
-//            solutionRouter()
+            solutionRouter()
         }
     }
 }

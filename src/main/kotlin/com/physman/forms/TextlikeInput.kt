@@ -17,7 +17,7 @@ class TextlikeInput(
         }
     }
 
-    fun render(flowContent: FlowContent, inputtedString: String? = null, url: String) {
+    fun render(flowContent: FlowContent, inputtedString: String? = null, validationUrl: String) {
         val error: String? = if(inputtedString != null) this.validate?.invoke(inputtedString) else null
         flowContent.div {
 
@@ -34,7 +34,7 @@ class TextlikeInput(
                     attributes["aria-invalid"] = "true"
                 }
 
-                attributes["hx-post"] = "${url}/${inputName}"
+                attributes["hx-post"] = "${validationUrl}/${inputName}"
                 attributes["hx-trigger"] = "keyup changed delay:500ms"
                 attributes["hx-sync"] = "closest form:abort"
 

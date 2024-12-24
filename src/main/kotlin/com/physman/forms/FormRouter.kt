@@ -10,7 +10,7 @@ import kotlinx.html.body
 class FormRouter {
     val forms: MutableSet<Form> = mutableSetOf()
 
-    fun routeForm(form: Form) {
+    fun routeFormValidators(form: Form) {
         forms.add(form)
         form.validatorsRoute = "/forms/${form.formName}"
     }
@@ -18,20 +18,6 @@ class FormRouter {
 
 fun Route.configureForms(forms: FormRouter) {
     route("{form}") {
-
-        get {
-            // TODO: How to get rid of this duplicate code?
-            val form: Form? = forms.forms.find { it.formName == call.parameters["form"] }
-            if (form == null) {
-                call.response.status(HttpStatusCode.NotFound)
-                call.respondText { "Form not found" }
-            }
-            call.respondHtml {
-                body {
-                    form!!.render(this)
-                }
-            }
-        }
 
         post("{input}") {
             val form: Form? = forms.forms.find { it.formName == call.parameters["form"] }

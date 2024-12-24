@@ -37,16 +37,16 @@ fun Route.formExampleRouter() {
             null
         }
     }
-    val form = Form("This is an example form", "exampleForm", "formexample")
+    val form = Form("This is an example form", "exampleForm")
     form.addInput(TextlikeInput("Name", "name", InputType.text, nameValidator))
     form.addInput(TextlikeInput("Email", "email", InputType.text, emailValidator))
 
-    globalFormRouter.routeForm(form)
+    globalFormRouter.routeFormValidators(form)
 
     get {
         call.respondHtml(HttpStatusCode.OK) {
             index(title = "Example form page") {
-                form.render(this)
+                form.render(this, "form-example")
             }
         }
     }

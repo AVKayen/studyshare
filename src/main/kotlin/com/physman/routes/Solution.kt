@@ -13,51 +13,27 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.html.InputType
-import kotlinx.html.article
 import kotlinx.html.body
-import kotlinx.html.div
 
 fun Route.solutionRouter() {
 
-    fun solutionCreationFormCreator(taskId: Int): Form {
-        val solutionCreationForm = Form("Create a new solution", "solutionForm",  "tasks/${taskId}/solutions", mapOf(
+    val solutionCreationForm = Form("Create a new solution", "solutionForm", mapOf(
             "hx-target" to "#solution-list",
             "hx-swap" to "beforeend"
         ))
         solutionCreationForm.addInput(TextlikeInput("title", "title", InputType.text, titleValidator))
         solutionCreationForm.addInput(TextlikeInput("additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
-        return solutionCreationForm
-    }
 
-    // I have no clue why this works (but it works)
-    globalFormRouter.routeForm(solutionCreationFormCreator(0))
+    globalFormRouter.routeFormValidators(solutionCreationForm)
 
-    get {
-        val taskId = call.parameters["id"]
-        if(taskId == null) {
-            call.response.status(HttpStatusCode.BadRequest)
-            return@get
-        }
-
-        val solutions = InMemoryTaskRepository.getAllSolutions(taskId)
-        if(solutions == null) {
-            call.response.status(HttpStatusCode.NotFound)
-            return@get
-        }
+    get("/creation-form") {
         call.respondHtml {
-            index("Solutions") {
-                div {
-                    attributes["id"] = "solution-list"
-                    for (solution in solutions) {
-                        solutionTemplate(solution)
-                    }
-                }
-                article {
-                    solutionCreationFormCreator(taskId.toInt()).render(this)
-                }
+            body {
+                solutionCreationForm.render(this, "/tasks/{id}/solutions")
             }
         }
     }
+
     post {
         val taskId = call.parameters["id"]
         if (taskId == null) {
@@ -69,6 +45,7 @@ fun Route.solutionRouter() {
         val additionalNotes = formParameters["additional_notes"].toString()
 
         val error: String? = titleValidator(title) ?: additionalNotesValidator(additionalNotes)
+        println(title)
         if (error != null) {
             call.respondText(error, status = HttpStatusCode.BadRequest)
         }

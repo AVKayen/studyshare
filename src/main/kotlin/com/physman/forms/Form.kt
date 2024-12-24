@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets
 class Form(
     private val formTitle: String,
     val formName: String,
-    private val callbackUrl: String,
     private val formAttributes: Map<String, String>? = null
 ) {
     var validatorsRoute: String? = null
@@ -30,7 +29,7 @@ class Form(
         inputs = inputs.plus(input)
     }
 
-    fun render(flowContent: FlowContent) {
+    fun render(flowContent: FlowContent, callbackUrl: String) {
         flowContent.form {
             attributes["hx-post"] = "/${callbackUrl}"
 
@@ -47,7 +46,7 @@ class Form(
             for (input in this@Form.inputs) {
                 if (input is TextlikeInput) {
                     if (validatorsRoute != null) {
-                        input.render(flowContent, url = this@Form.validatorsRoute!!)
+                        input.render(flowContent, validationUrl = this@Form.validatorsRoute!!)
                     } else {
                         // TODO: What error type to throw??
                         throw UninitializedPropertyAccessException("Form ${this@Form.formName} is not routed")
