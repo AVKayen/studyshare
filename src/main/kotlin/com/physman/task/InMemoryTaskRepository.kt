@@ -14,8 +14,8 @@ object InMemoryTaskRepository : TaskRepository {
 
 
     private val tasks = mutableListOf(
-        Task(title = "zadanie 49 zbiór XYZ", solutions = solutions1),
-        Task(title = "zad 52", additionalNotes = "tylko a) i b)", solutions = solutions2)
+        Task(id = "123", title = "zadanie 49 zbiór XYZ", solutions = solutions1),
+        Task(id = "321", title = "zad 52", additionalNotes = "tylko a) i b)", solutions = solutions2)
     )
 
     override suspend fun getAllTasks(): List<Task> = tasks
