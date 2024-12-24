@@ -16,7 +16,6 @@ import kotlinx.html.InputType
 import kotlinx.html.article
 import kotlinx.html.body
 import kotlinx.html.div
-import kotlin.random.Random
 
 fun Route.solutionRouter() {
 
@@ -34,7 +33,7 @@ fun Route.solutionRouter() {
     globalFormRouter.routeForm(solutionCreationFormCreator(0))
 
     get {
-        val taskId = call.parameters["id"]?.toIntOrNull()
+        val taskId = call.parameters["id"]
         if(taskId == null) {
             call.response.status(HttpStatusCode.BadRequest)
             return@get
@@ -54,13 +53,13 @@ fun Route.solutionRouter() {
                     }
                 }
                 article {
-                    solutionCreationFormCreator(taskId).render(this)
+                    solutionCreationFormCreator(taskId.toInt()).render(this)
                 }
             }
         }
     }
     post {
-        val taskId = call.parameters["id"]?.toIntOrNull()
+        val taskId = call.parameters["id"]
         if (taskId == null) {
             call.response.status(HttpStatusCode.BadRequest)
             return@post
@@ -74,7 +73,7 @@ fun Route.solutionRouter() {
             call.respondText(error, status = HttpStatusCode.BadRequest)
         }
 
-        val newSolution = Solution(id = Random.nextInt(99999), title = title, additionalNotes = additionalNotes)
+        val newSolution = Solution(title = title, additionalNotes = additionalNotes)
 
         val solution = InMemoryTaskRepository.createSolution(taskId, newSolution)
         if (solution == null) {
@@ -90,12 +89,12 @@ fun Route.solutionRouter() {
     }
     route("/{solutionId}") {
         get {
-            val taskId = call.parameters["id"]?.toIntOrNull()
+            val taskId = call.parameters["id"]
             if(taskId == null) {
                 call.response.status(HttpStatusCode.BadRequest)
                 return@get
             }
-            val solutionId = call.parameters["solutionId"]?.toIntOrNull()
+            val solutionId = call.parameters["solutionId"]
             if(solutionId == null) {
                 call.response.status(HttpStatusCode.BadRequest)
                 return@get
@@ -115,12 +114,12 @@ fun Route.solutionRouter() {
             }
         }
         delete {
-            val taskId = call.parameters["id"]?.toIntOrNull()
+            val taskId = call.parameters["id"]
             if(taskId == null) {
                 call.response.status(HttpStatusCode.BadRequest)
                 return@delete
             }
-            val solutionId = call.parameters["solutionId"]?.toIntOrNull()
+            val solutionId = call.parameters["solutionId"]
             if(solutionId == null) {
                 call.response.status(HttpStatusCode.BadRequest)
                 return@delete

@@ -5,22 +5,21 @@ import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.io.File
-import java.util.*
 
 fun Route.imageRouter() {
 
     get("/{id}") {
         try {
-            val id = UUID.fromString(call.parameters["id"]!!)
+            val id = call.parameters["id"]
 
-            val image = InMemoryImageRepository.getFile(id)
+            val image = InMemoryImageRepository.getFile(id!!)
             if (image == null) {
                 call.response.status(HttpStatusCode.NotFound)
                 return@get
             }
 
             val file = File(image.filename)
-            file.writeBytes(image.content)
+            file.writeBytes(image.content.data)
 
             call.respondFile(file)
 

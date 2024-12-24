@@ -1,10 +1,16 @@
 package com.physman.solution
 
-import java.util.*
+import org.bson.BsonType
+import org.bson.codecs.pojo.annotations.BsonId
+import org.bson.codecs.pojo.annotations.BsonRepresentation
+import org.bson.types.ObjectId
 
 data class Solution(
-    val id: Int,
+    @BsonId
+    @BsonRepresentation(BsonType.OBJECT_ID)
+    val id: String = ObjectId().toHexString(),
+
     val title: String,
     val additionalNotes: String? = null,
-    val images: List<UUID> = emptyList(),
+    val images: List<String> = emptyList(),
 )

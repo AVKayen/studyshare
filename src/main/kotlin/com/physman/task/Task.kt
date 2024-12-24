@@ -1,13 +1,19 @@
 package com.physman.task
 
 import com.physman.solution.Solution
-import java.util.*
+import org.bson.BsonType
+import org.bson.codecs.pojo.annotations.BsonId
+import org.bson.codecs.pojo.annotations.BsonRepresentation
+import org.bson.types.ObjectId
 
 data class Task(
-    val id: Int,
+    @BsonId
+    @BsonRepresentation(BsonType.OBJECT_ID)
+    val id: String = ObjectId().toHexString(),
+
     val title: String,
     val additionalNotes: String? = null,
-    val images: List<UUID> = emptyList(),
+    val images: List<String> = emptyList(),
 
-    val solutions: MutableList<Solution> = mutableListOf<Solution>()
+    val solutions: MutableList<Solution> = mutableListOf()
 )

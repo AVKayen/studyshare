@@ -1,27 +1,16 @@
 package com.physman.image
 
-import java.util.UUID
+import org.bson.BsonType
+import org.bson.codecs.pojo.annotations.BsonId
+import org.bson.codecs.pojo.annotations.BsonRepresentation
+import org.bson.types.Binary
+import org.bson.types.ObjectId
 
 data class Image(
+    @BsonId
+    @BsonRepresentation(BsonType.OBJECT_ID)
+    val id: String = ObjectId().toHexString(),
+
     val filename: String,
-    val content: ByteArray,
-    val id: UUID = UUID.randomUUID(),
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Image
-
-        if (filename != other.filename) return false
-        if (!content.contentEquals(other.content)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = filename.hashCode()
-        result = 31 * result + content.contentHashCode()
-        return result
-    }
-}
+    val content: Binary,
+)

@@ -14,7 +14,6 @@ import kotlinx.html.InputType
 import kotlinx.html.article
 import kotlinx.html.body
 import kotlinx.html.div
-import kotlin.random.Random
 
 const val TITLE_MAX_LENGTH = 512
 const val ADDITIONAL_NOTES_MAX_LENGTH = 512
@@ -74,7 +73,7 @@ fun Route.taskRouter() {
             call.respondText(error, status = HttpStatusCode.BadRequest)
         }
         println(title)
-        val newTask = Task(id = Random.nextInt(99999), title = title, additionalNotes = additionalNotes)
+        val newTask = Task(title = title, additionalNotes = additionalNotes)
 
         val task = InMemoryTaskRepository.createTask(newTask)
 
@@ -87,7 +86,7 @@ fun Route.taskRouter() {
 
     route("/{id}") {
         get {
-            val taskId = call.parameters["id"]?.toIntOrNull()
+            val taskId = call.parameters["id"]
             if(taskId == null) {
                 call.response.status(HttpStatusCode.BadRequest)
                 return@get
@@ -107,7 +106,7 @@ fun Route.taskRouter() {
         }
 
         delete {
-            val taskId = call.parameters["id"]?.toIntOrNull()
+            val taskId = call.parameters["id"]
             if(taskId == null) {
                 call.response.status(HttpStatusCode.BadRequest)
                 return@delete
