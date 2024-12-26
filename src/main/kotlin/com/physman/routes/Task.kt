@@ -4,6 +4,7 @@ import com.physman.forms.*
 import com.physman.task.InMemoryTaskRepository
 import com.physman.task.Task
 import com.physman.templates.index
+import com.physman.templates.solutionTemplate
 import com.physman.templates.taskPreviewTemplate
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -13,6 +14,7 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import kotlinx.html.InputType
 import kotlinx.html.body
+import kotlinx.html.form
 
 const val TITLE_MAX_LENGTH = 512
 const val ADDITIONAL_NOTES_MAX_LENGTH = 512
@@ -102,6 +104,9 @@ fun Route.taskRouter() {
             call.respondHtml(HttpStatusCode.OK) {
                 index("Task") {
                     taskTemplate(task)
+                    for (solution in task.solutions){
+                        solutionTemplate(solution)
+                    }
                 }
             }
         }

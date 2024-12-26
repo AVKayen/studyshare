@@ -6,6 +6,7 @@ import com.physman.forms.globalFormRouter
 import com.physman.solution.Solution
 import com.physman.task.InMemoryTaskRepository
 import com.physman.templates.solutionTemplate
+import com.physman.templates.taskPreviewTemplate
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.request.*
