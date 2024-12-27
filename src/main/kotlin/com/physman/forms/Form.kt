@@ -104,13 +104,36 @@ class Form(
         }
     }
 
-    // TODO: Abstract the validation of the form fields into a separate function to avoid code duplication
-    //  (probably some type casting from Parameters to Map<String, String> will be needed)
-    private suspend fun validateFormParameters(call: RoutingCall): Map<String, String>? {
-        val formParameters = call.receiveParameters()
+    private suspend fun validateFields(call: RoutingCall, fields: Map<String, String>): Map<String, String>? {
         val validatedFields = mutableMapOf<String, String>()
 
-        // TODO: This part is duplicated in the validateMultipartData() method
+        for (input in inputs) {
+            if (input !is TextlikeInput) {
+                continue
+            }
+            val inputValue: String = fields[input.inputName] ?: ""
+            val error = input.validate?.invoke(inputValue)
+            if (error != null) {
+                call.respondHtml {
+                    body {
+                        input.render(this, inputValue, validatorsRoute!!)
+                    }
+                }
+                return null
+            }
+            validatedFields[input.inputName] = inputValue
+        }
+        return validatedFields
+    }
+
+    // TODO: Abstract the validation of the form fields into a separate function to avoid code duplication
+    //  (difference between Map<String, String> and Parameters is a problem here)
+    private suspend fun validateFormParameters(call: RoutingCall): Map<String, String>? {
+        val formParameters = call.receiveParameters()
+        // return validateFields(call, formParameters as Map<String, String>) that would be too easy
+
+        val validatedFields = mutableMapOf<String, String>()
+
         for (input in inputs) {
             if (input !is TextlikeInput) {
                 continue
@@ -180,25 +203,7 @@ class Form(
             return null
         }
 
-        val validatedFields = mutableMapOf<String, String>()
-
-        // TODO: This part is duplicated in validateFormParameters() method
-        for (input in inputs) {
-            if (input !is TextlikeInput) {
-                continue
-            }
-            val inputValue: String = unvalidatedFields[input.inputName] ?: ""
-            val error = input.validate?.invoke(inputValue)
-            if (error != null) {
-                call.respondHtml {
-                    body {
-                        input.render(this, inputValue, validatorsRoute!!)
-                    }
-                }
-                return null
-            }
-            validatedFields[input.inputName] = inputValue
-        }
+        val validatedFields = validateFields(call, unvalidatedFields) ?: return null
 
         return FormSubmissionData(
             fields = validatedFields,
