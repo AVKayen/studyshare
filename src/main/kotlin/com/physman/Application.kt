@@ -1,5 +1,7 @@
 package com.physman
 
+import com.physman.image.InMemoryImageRepository
+import com.physman.task.InMemoryTaskRepository
 import io.ktor.server.application.*
 
 fun main(args: Array<String>) {
@@ -7,6 +9,12 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
+    val taskRepository = InMemoryTaskRepository()
+    val imageRepository = InMemoryImageRepository()
+
     configureSecurity()
-    configureRouting()
+    configureRouting(
+        taskRepository = taskRepository,
+        imageRepository = imageRepository,
+    )
 }

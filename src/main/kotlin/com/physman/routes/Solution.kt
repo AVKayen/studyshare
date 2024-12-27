@@ -5,7 +5,7 @@ import com.physman.forms.FormSubmissionData
 import com.physman.forms.TextlikeInput
 import com.physman.forms.globalFormRouter
 import com.physman.solution.Solution
-import com.physman.task.InMemoryTaskRepository
+import com.physman.task.TaskRepository
 import com.physman.templates.index
 import com.physman.templates.solutionTemplate
 import io.ktor.http.*
@@ -15,7 +15,7 @@ import io.ktor.server.routing.*
 import kotlinx.html.InputType
 import kotlinx.html.body
 
-fun Route.solutionRouter() {
+fun Route.solutionRouter(taskRepository: TaskRepository) {
 
     val solutionCreationForm = Form("Create a new solution", "solutionForm", mapOf(
             "hx-swap" to "none" // because currently this form is on an empty page
@@ -57,7 +57,7 @@ fun Route.solutionRouter() {
         val newSolution = Solution(title = title, additionalNotes = additionalNotes)
         println("New solution: $newSolution")
 
-        val solution = InMemoryTaskRepository.createSolution(taskId, newSolution)
+        val solution = taskRepository.createSolution(taskId, newSolution)
         if (solution == null) {
             call.respondText(text = "Solution has not been created.", status = HttpStatusCode.NotFound)
             return@post
@@ -105,7 +105,7 @@ fun Route.solutionRouter() {
                 return@delete
             }
 
-            val deletedSolution = InMemoryTaskRepository.deleteSolution(taskId, solutionId)
+            val deletedSolution = taskRepository.deleteSolution(taskId, solutionId)
             if(deletedSolution == null) {
                 call.respondText(text = "Solution has not been deleted.", status = HttpStatusCode.NotFound)
                 return@delete

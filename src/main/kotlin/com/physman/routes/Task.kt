@@ -1,8 +1,8 @@
 package com.physman.routes
 
 import com.physman.forms.*
-import com.physman.task.InMemoryTaskRepository
 import com.physman.task.Task
+import com.physman.task.TaskRepository
 import com.physman.templates.index
 import com.physman.templates.solutionTemplate
 import com.physman.templates.taskPreviewTemplate
@@ -34,7 +34,7 @@ val additionalNotesValidator = fun(additionalNotes: String): String? {
     return null
 }
 
-fun Route.taskRouter() {
+fun Route.taskRouter(taskRepository: TaskRepository) {
 
     val taskCreationForm = Form("Create a new task", "taskForm", mapOf(
 //        "hx-target" to "#task-list",
@@ -48,7 +48,7 @@ fun Route.taskRouter() {
     globalFormRouter.routeFormValidators(taskCreationForm)
 
     get {
-        val tasks = InMemoryTaskRepository.getAllTasks()
+        val tasks = taskRepository.getAllTasks()
         call.respondHtml {
             body {
                 for (task in tasks) {
@@ -79,7 +79,7 @@ fun Route.taskRouter() {
 
         val newTask = Task(title = title, additionalNotes = additionalNotes)
 
-        val task = InMemoryTaskRepository.createTask(newTask)
+        val task = taskRepository.createTask(newTask)
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
@@ -96,7 +96,7 @@ fun Route.taskRouter() {
                 return@get
             }
 
-            val task = InMemoryTaskRepository.getTask(taskId)
+            val task = taskRepository.getTask(taskId)
             if(task == null) {
                 call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
                 return@get
@@ -119,7 +119,7 @@ fun Route.taskRouter() {
                 return@delete
             }
 
-            val deletedTask = InMemoryTaskRepository.deleteTask(taskId)
+            val deletedTask = taskRepository.deleteTask(taskId)
             if(deletedTask == null) {
                 call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
                 return@delete
@@ -129,7 +129,7 @@ fun Route.taskRouter() {
 
 
         route("/solutions") {
-            solutionRouter()
+            solutionRouter(taskRepository)
         }
     }
 }

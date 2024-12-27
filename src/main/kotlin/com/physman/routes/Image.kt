@@ -1,18 +1,18 @@
 package com.physman.routes
 
-import com.physman.image.InMemoryImageRepository
+import com.physman.image.ImageRepository
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.io.File
 
-fun Route.imageRouter() {
+fun Route.imageRouter(imageRepository: ImageRepository) {
 
     get("/{id}") {
         try {
             val id = call.parameters["id"]
 
-            val image = InMemoryImageRepository.getFile(id!!)
+            val image = imageRepository.getFile(id!!)
             if (image == null) {
                 call.response.status(HttpStatusCode.NotFound)
                 return@get
