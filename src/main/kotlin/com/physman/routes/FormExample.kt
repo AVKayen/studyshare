@@ -4,6 +4,7 @@ import com.physman.forms.*
 import com.physman.templates.index
 import io.ktor.http.*
 import io.ktor.server.html.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.html.InputType
 
@@ -37,7 +38,11 @@ fun Route.formExampleRouter() {
             null
         }
     }
-    val form = Form("This is an example form", "exampleForm")
+    val form = Form(
+        formTitle = "This is an example form",
+        formName = "exampleForm",
+        formAttributes =  mapOf("hx-swap" to "none") // prevents the form from disappearing after submission
+    )
     form.addInput(TextlikeInput("Name", "name", InputType.text, nameValidator))
     form.addInput(TextlikeInput("Email", "email", InputType.text, emailValidator))
 
@@ -51,6 +56,9 @@ fun Route.formExampleRouter() {
         }
     }
     post {
-        call.respondHtml(HttpStatusCode.OK) {}
+        val formSubmissionData: FormSubmissionData = form.validateSubmission(call) ?: return@post
+        val name = formSubmissionData.fields["name"]!!
+        val email = formSubmissionData.fields["email"]!!
+        call.respond("Hello $name! Your email is: $email")
     }
 }

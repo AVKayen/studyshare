@@ -10,13 +10,10 @@ import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.routing.*
 import com.physman.templates.taskTemplate
-import io.ktor.server.request.*
-import io.ktor.server.response.*
 import kotlinx.html.InputType
 import kotlinx.html.body
-import kotlinx.html.form
 
-const val TITLE_MAX_LENGTH = 512
+const val TITLE_MAX_LENGTH = 5
 const val ADDITIONAL_NOTES_MAX_LENGTH = 512
 
 val titleValidator = fun(title: String): String? {
@@ -39,11 +36,13 @@ val additionalNotesValidator = fun(additionalNotes: String): String? {
 fun Route.taskRouter() {
 
     val taskCreationForm = Form("Create a new task", "taskForm", mapOf(
-        "hx-target" to "#task-list",
-        "hx-swap" to "beforeend"
+//        "hx-target" to "#task-list",
+//        "hx-swap" to "beforeend"
+          "hx-swap" to "none" // because the form is on an empty page now
     ))
     taskCreationForm.addInput(TextlikeInput("title", "title", InputType.text, titleValidator))
     taskCreationForm.addInput(TextlikeInput("additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+    taskCreationForm.addInput(FileInput("files", "files", acceptedTypes = listOf("image/*")))
 
     globalFormRouter.routeFormValidators(taskCreationForm)
 
@@ -60,22 +59,23 @@ fun Route.taskRouter() {
 
     get("/creation-form") {
         call.respondHtml {
-            body {
+//            body {
+//                taskCreationForm.render(this, "/tasks")
+//            }
+
+            // index because of lack of htmx needed for testing (htmx is served with index page only)
+            index("This won't be index") {
                 taskCreationForm.render(this, "/tasks")
             }
         }
     }
 
     post {
-        val formParameters = call.receiveParameters()
-        val title = formParameters["title"].toString()
-        val additionalNotes = formParameters["additionalNotes"].toString()
+        val formSubmissionData: FormSubmissionData = taskCreationForm.validateSubmission(call) ?: return@post
+        val title = formSubmissionData.fields["title"]!!
+        val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
+//        val files = formSubmissionData.files!!
 
-        val error: String? = titleValidator(title) ?: additionalNotesValidator(additionalNotes)
-        if(error != null) {
-            call.respondText(error, status = HttpStatusCode.BadRequest)
-        }
-        println(title)
         val newTask = Task(title = title, additionalNotes = additionalNotes)
 
         val task = InMemoryTaskRepository.createTask(newTask)

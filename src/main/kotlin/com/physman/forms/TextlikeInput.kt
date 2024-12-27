@@ -8,7 +8,7 @@ class TextlikeInput(
     private val inputLabel: String,
     override val inputName: String,
     private val type : InputType,
-    private val validate : ((String) -> String?)?
+    val validate : ((String) -> String?)?
 ) : ControlledInput {
 
     init {
@@ -21,8 +21,8 @@ class TextlikeInput(
         val error: String? = if(inputtedString != null) this.validate?.invoke(inputtedString) else null
         flowContent.div {
 
-            attributes["hx-target"] = "this"
-            attributes["hx-swap"] = "outerHTML"
+            attributes["id"] = "${inputName}Div"
+            attributes["hx-swap-oob"] = "true"
             label {
                 attributes["for"] = inputName
                 +inputLabel

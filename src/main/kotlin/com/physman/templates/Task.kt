@@ -13,7 +13,6 @@ fun FlowContent.taskTemplate(task: Task) {
         }
         div {
             if (task.additionalNotes != null) {
-                println(task.additionalNotes)
                 +"Notes: ${task.additionalNotes}"
             }
         }
