@@ -10,6 +10,7 @@ import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.routing.*
 import com.physman.templates.taskTemplate
+import io.ktor.server.response.*
 import kotlinx.html.InputType
 import kotlinx.html.body
 
@@ -97,7 +98,7 @@ fun Route.taskRouter() {
 
             val task = InMemoryTaskRepository.getTask(taskId)
             if(task == null) {
-                call.response.status(HttpStatusCode.NotFound)
+                call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
                 return@get
             }
 
@@ -120,7 +121,7 @@ fun Route.taskRouter() {
 
             val deletedTask = InMemoryTaskRepository.deleteTask(taskId)
             if(deletedTask == null) {
-                call.response.status(HttpStatusCode.NotFound)
+                call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
                 return@delete
             }
             call.response.status(HttpStatusCode.NoContent)

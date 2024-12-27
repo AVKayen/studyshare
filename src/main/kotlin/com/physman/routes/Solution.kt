@@ -10,6 +10,7 @@ import com.physman.templates.index
 import com.physman.templates.solutionTemplate
 import io.ktor.http.*
 import io.ktor.server.html.*
+import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.html.InputType
 import kotlinx.html.body
@@ -58,8 +59,7 @@ fun Route.solutionRouter() {
 
         val solution = InMemoryTaskRepository.createSolution(taskId, newSolution)
         if (solution == null) {
-            // TODO: Add a message specifying that the associated task has not been found.
-            call.response.status(HttpStatusCode.NotFound)
+            call.respondText(text = "Solution has not been created.", status = HttpStatusCode.NotFound)
             return@post
         }
 
@@ -98,19 +98,16 @@ fun Route.solutionRouter() {
 //        }
         delete {
             val taskId = call.parameters["id"]
-            if(taskId == null) {
-                call.response.status(HttpStatusCode.BadRequest)
-                return@delete
-            }
             val solutionId = call.parameters["solutionId"]
-            if(solutionId == null) {
+
+            if(taskId == null || solutionId == null) {
                 call.response.status(HttpStatusCode.BadRequest)
                 return@delete
             }
 
             val deletedSolution = InMemoryTaskRepository.deleteSolution(taskId, solutionId)
             if(deletedSolution == null) {
-                call.response.status(HttpStatusCode.NotFound)
+                call.respondText(text = "Solution has not been deleted.", status = HttpStatusCode.NotFound)
                 return@delete
             }
             call.response.status(HttpStatusCode.NoContent)
