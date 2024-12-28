@@ -145,7 +145,7 @@ class Form(
             when (part) {
                 is PartData.FormItem -> {
                     if (unvalidatedFields[part.name!!] != null) {
-                        unvalidatedFields[part.name!!] = unvalidatedFields[part.name!!] + part.value
+                        unvalidatedFields[part.name!!] = unvalidatedFields[part.name!!]!! + part.value
                     } else {
                         unvalidatedFields[part.name!!] = listOf(part.value)
                     }
