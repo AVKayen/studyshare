@@ -104,14 +104,14 @@ class Form(
         }
     }
 
-    private suspend fun validateFields(call: RoutingCall, fields: Map<String, String>): Map<String, String>? {
+    private suspend fun validateFields(call: RoutingCall, fields: Map<String, List<String>>): Map<String, String>? {
         val validatedFields = mutableMapOf<String, String>()
 
         for (input in inputs) {
             if (input !is TextlikeInput) {
                 continue
             }
-            val inputValue: String = fields[input.inputName] ?: ""
+            val inputValue: String = fields[input.inputName]?.first() ?: ""
             val error = input.validate?.invoke(inputValue)
             if (error != null) {
                 call.respondHtml {
@@ -126,37 +126,17 @@ class Form(
         return validatedFields
     }
 
-    // TODO: Abstract the validation of the form fields into a separate function to avoid code duplication
-    //  (difference between Map<String, String> and Parameters is a problem here)
+    
     private suspend fun validateFormParameters(call: RoutingCall): Map<String, String>? {
         val formParameters = call.receiveParameters()
-        // return validateFields(call, formParameters as Map<String, String>) that would be too easy
-
-        val validatedFields = mutableMapOf<String, String>()
-
-        for (input in inputs) {
-            if (input !is TextlikeInput) {
-                continue
-            }
-            val inputValue: String = formParameters[input.inputName] ?: ""
-            val error = input.validate?.invoke(inputValue)
-            if (error != null) {
-                call.respondHtml {
-                    body {
-                        input.render(this, inputValue, validatorsRoute!!)
-                    }
-                }
-                return null
-            }
-            validatedFields[input.inputName] = inputValue
-        }
-        return validatedFields
+        val unvalidatedFields: Map<String, List<String>> = formParameters.entries().associate { it.key to it.value }
+        return validateFields(call, unvalidatedFields)
     }
 
     // TODO: Read the uploaded bytes in chunks instead of loading them all into the memory
     private suspend fun validateMultipartData(call: RoutingCall): FormSubmissionData? {
         val multipartData = call.receiveMultipart()
-        val unvalidatedFields = mutableMapOf<String, String>()
+        val unvalidatedFields = mutableMapOf<String, List<String>>()
         val files = mutableListOf<UploadFileData>()
         var totalUploadSize = 0
         var formError: String? = null
@@ -164,7 +144,11 @@ class Form(
         multipartData.forEachPart { part ->
             when (part) {
                 is PartData.FormItem -> {
-                    unvalidatedFields[part.name!!] = part.value
+                    if (unvalidatedFields[part.name!!] != null) {
+                        unvalidatedFields[part.name!!] = unvalidatedFields[part.name!!]!! + part.value
+                    } else {
+                        unvalidatedFields[part.name!!] = listOf(part.value)
+                    }
                 }
 
                 is PartData.FileItem -> {
