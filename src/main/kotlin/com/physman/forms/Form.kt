@@ -90,21 +90,6 @@ class Form(
         }
     }
 
-
-    fun boberButton(flowContent: FlowContent, callbackUrl: String) {
-        flowContent.button(type = ButtonType.button) {
-            attributes["hx-patch"] = callbackUrl
-            attributes["data-my-button"] = "true"
-            + "Upvote" // Add button text
-
-            }
-        }
-
-
-
-
-
-
     // TODO: Add some styling to the error (or even entire form)
     private suspend fun respondFormError(call: RoutingCall, error: String) {
         call.respondHtml {
