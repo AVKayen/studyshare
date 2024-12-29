@@ -9,8 +9,8 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    val taskRepository = InMemoryTaskRepository()
-    val imageRepository = InMemoryImageRepository()
+    val taskRepository = InMemoryTaskRepository
+    val imageRepository = InMemoryImageRepository
 
     configureSecurity()
     configureRouting(
