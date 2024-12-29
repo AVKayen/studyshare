@@ -10,6 +10,8 @@ fun FlowContent.taskTemplate(task: Task) {
             h2 {
                 +task.title
             }
+            a(href = "/tasks/${task.id}/solutions/creation-form") {
+                +"Create solution"}
         }
         div {
             if (task.additionalNotes != null) {

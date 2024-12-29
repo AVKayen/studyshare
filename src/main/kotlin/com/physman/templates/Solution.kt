@@ -9,12 +9,16 @@ fun FlowContent.solutionTemplate(solution: Solution) {
         header {
             h2 {
                 +solution.title
+                a(href = "???") {
+                    +" Upvote"}
             }
         }
         div {
             if (solution.additionalNotes != null) {
                 println(solution.additionalNotes)
                 +"Notes: ${solution.additionalNotes}"
+                +" Id: ${solution.id}"
+
             }
         }
         if (solution.images.isNotEmpty()) {
