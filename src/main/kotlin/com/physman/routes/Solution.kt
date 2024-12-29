@@ -15,7 +15,11 @@ import io.ktor.server.routing.*
 import kotlinx.html.InputType
 import kotlinx.html.body
 
+
+
 fun Route.solutionRouter(taskRepository: TaskRepository) {
+
+
 
     val solutionCreationForm = Form("Create a new solution", "solutionForm", mapOf(
             "hx-swap" to "none" // because currently this form is on an empty page
@@ -65,7 +69,7 @@ fun Route.solutionRouter(taskRepository: TaskRepository) {
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(solution)
+                solutionTemplate(solution, taskId)
             }
         }
     }
@@ -96,7 +100,26 @@ fun Route.solutionRouter(taskRepository: TaskRepository) {
 //                }
 //            }
 //        }
-        patch {
+        get("/creation-form") {
+            val taskId = call.parameters["id"]
+            if (taskId == null) {
+                call.response.status(HttpStatusCode.BadRequest)
+                return@get
+            }
+            call.respondHtml {
+//            body {
+//                taskCreationForm.render(this, "/tasks/$taskId/solutions")
+//            }
+
+                // index because of lack of htmx needed for testing (htmx is served with index page only)
+                index("This won't be index") {
+                    solutionCreationForm.render(this, "/tasks/$taskId/solutions")
+                }
+            }
+        }
+
+
+        patch ("/upvote") {
             val taskId = call.parameters["id"]
             val solutionId = call.parameters["solutionId"]
 
@@ -114,7 +137,7 @@ fun Route.solutionRouter(taskRepository: TaskRepository) {
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-                    solutionTemplate(upvotedSolution)
+                    solutionTemplate(upvotedSolution, taskId)
                 }
             }
         }

@@ -106,7 +106,7 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                 index("Task") {
                     taskTemplate(task)
                     for (solution in task.solutions){
-                        solutionTemplate(solution)
+                        solutionTemplate(solution, taskId)
                     }
                 }
             }
