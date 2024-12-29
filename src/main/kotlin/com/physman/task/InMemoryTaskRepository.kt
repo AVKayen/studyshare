@@ -96,4 +96,10 @@ object InMemoryTaskRepository : TaskRepository {
         createSolution(taskId, updatedSolution)
         return updatedSolution
     }
+
+    override suspend fun upvoteSolution(taskId: String, solutionId: String): Solution? {
+       val solution = getSolution(taskId, solutionId) ?: return null
+        solution.votes += 1
+        return solution
+    }
 }

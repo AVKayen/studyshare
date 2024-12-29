@@ -96,6 +96,29 @@ fun Route.solutionRouter(taskRepository: TaskRepository) {
 //                }
 //            }
 //        }
+        patch {
+            val taskId = call.parameters["id"]
+            val solutionId = call.parameters["solutionId"]
+
+            if(taskId == null || solutionId == null) {
+                call.response.status(HttpStatusCode.BadRequest)
+                return@patch
+            }
+
+            val upvotedSolution = taskRepository.upvoteSolution(taskId, solutionId)
+
+            if (upvotedSolution == null) {
+                call.respondText(text = "Solution has not been created.", status = HttpStatusCode.NotFound)
+                return@patch
+            }
+
+            call.respondHtml(HttpStatusCode.OK) {
+                body {
+                    solutionTemplate(upvotedSolution)
+                }
+            }
+        }
+
         delete {
             val taskId = call.parameters["id"]
             val solutionId = call.parameters["solutionId"]

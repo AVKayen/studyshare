@@ -11,6 +11,7 @@ fun FlowContent.solutionTemplate(solution: Solution) {
                 +solution.title
                 a(href = "???") {
                     +" Upvote"}
+                +"Upvotes: ${solution.votes}"
             }
         }
         div {
