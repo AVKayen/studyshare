@@ -26,9 +26,12 @@ fun FlowContent.solutionTemplate(solution: Solution, taskId: String) {
         header {
             h2 {
                 +solution.title
+                div(classes = "upvote") {
+                   +" Upvotes: ${solution.votes}"
+               }
 
-                +" Upvotes: ${solution.votes}"
                 voteCreationForm.boberButton(this, url)
+
             }
         }
         div {
@@ -36,7 +39,6 @@ fun FlowContent.solutionTemplate(solution: Solution, taskId: String) {
                 println(solution.additionalNotes)
                 +"Notes: ${solution.additionalNotes}"
                 +" Id: ${solution.id}"
-
             }
         }
         if (solution.images.isNotEmpty()) {
