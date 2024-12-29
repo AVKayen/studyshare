@@ -31,8 +31,13 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-server-config-yaml-jvm")
+
     implementation("org.mongodb:bson-kotlinx:5.2.1")
     implementation("org.mongodb:mongodb-driver-kotlin-coroutine:5.2.1")
+
+    // implementation(platform("com.google.cloud:libraries-bom:26.51.0")) // ignore this
+    implementation("com.google.cloud:google-cloud-storage:2.46.0")
+
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }

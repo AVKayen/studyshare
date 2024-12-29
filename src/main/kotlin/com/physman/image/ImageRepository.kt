@@ -1,7 +1,7 @@
 package com.physman.image
 
 interface ImageRepository {
-    suspend fun createImage(image: Image): Image
-    suspend fun deleteImage(id: String): Image?
-    suspend fun getFile(id: String): Image?
+    suspend fun createImage(image: Image, content: ByteArray): Image
+    suspend fun deleteImage(id: String): Unit
+    suspend fun getImageLink(id: String): String?
 }
