@@ -12,17 +12,9 @@ fun Route.imageRouter(imageRepository: ImageRepository) {
         try {
             val id = call.parameters["id"]
 
-            val image = imageRepository.getFile(id!!)
-            if (image == null) {
-                call.response.status(HttpStatusCode.NotFound)
-                return@get
-            }
+            val image = imageRepository.getImageLink(id!!)
 
-            val file = File(image.filename)
-            file.writeBytes(image.content.data)
-
-            call.respondFile(file)
-
+            call.respondRedirect(image!!)
         } catch (e: IllegalArgumentException) {
             call.response.status(HttpStatusCode.BadRequest)
             return@get
