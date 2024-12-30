@@ -7,28 +7,22 @@ import kotlinx.html.*
 
 fun FlowContent.solutionTemplate(solution: Solution, taskId: String) {
 
-
-    val voteButton = Button(
-        "Upvote2",
-        mapOf(
-            //"id" to solution.id  !add letters
-    ))
-
-
-
     val url = "./${taskId}/solutions/${solution.id}/upvote"
 
-
+    val voteButton = Button(
+        "Upvote",
+        mapOf(
+                    "hx-patch" to url,
+                    "hx-swap" to "outerHTML",
+                    "hx-target" to "closest .flex-col-solution"
+    ))
 
     article(classes = "flex-col-solution") {
-
         header {
             h2 {
-
                 +solution.title
 
-
-                voteButton.boberButton(this, url)
+                voteButton.render(this)
                 div(classes = "upvote") {
                     +" Upvotes: ${solution.votes}"
                 }

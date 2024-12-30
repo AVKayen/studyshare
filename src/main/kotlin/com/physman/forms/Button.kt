@@ -1,34 +1,20 @@
 package com.physman.forms
 
-import io.ktor.http.*
-import io.ktor.http.content.*
-import io.ktor.server.html.*
-import io.ktor.server.request.*
-import io.ktor.server.routing.*
-import io.ktor.utils.io.*
 import kotlinx.html.*
-import kotlinx.io.readByteArray
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
-import kotlin.io.path.*
 
 
 class Button(
-    private val text: String,
-    private val formAttributes: Map<String, String>? = null
+    private val buttonText: String,
+    private val buttonAttributes: Map<String, String>? = null
 ) {
 
-
-    fun boberButton(flowContent: FlowContent, callbackUrl: String) {
+    fun render(flowContent: FlowContent) {
         flowContent.button(type = ButtonType.button) {
+            if (buttonAttributes != null) {
+                attributes.putAll(buttonAttributes)
+            }
 
-            attributes["hx-patch"] = callbackUrl
-            attributes["hx-swap"] = "outerHTML"
-            //attributes["hx-target"] = "closest .upvote"
-            attributes["hx-target"] = "closest .flex-col-solution"
-
-
-            +text // Add button text
+            +buttonText // Add button text
         }
     }
 
