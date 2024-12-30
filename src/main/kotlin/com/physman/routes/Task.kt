@@ -122,11 +122,13 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                 return@get
             }
 
+            task.solutions.sort() //sort by solution's upvote count
+
             call.respondHtml(HttpStatusCode.OK) {
                 index("Task") {
                     taskTemplate(task)
                     for (solution in task.solutions){
-                        solutionTemplate(solution)
+                        solutionTemplate(solution, taskId)
                     }
                 }
             }

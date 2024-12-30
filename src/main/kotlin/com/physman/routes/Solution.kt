@@ -15,8 +15,9 @@ import io.ktor.server.routing.*
 import kotlinx.html.InputType
 import kotlinx.html.body
 
-fun Route.solutionRouter(taskRepository: TaskRepository) {
 
+
+fun Route.solutionRouter(taskRepository: TaskRepository) {
     val solutionCreationForm = Form("Create a new solution", "solutionForm", mapOf(
             "hx-swap" to "none" // because currently this form is on an empty page
         ))
@@ -65,7 +66,7 @@ fun Route.solutionRouter(taskRepository: TaskRepository) {
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(solution)
+                solutionTemplate(solution, taskId)
             }
         }
     }
@@ -96,6 +97,48 @@ fun Route.solutionRouter(taskRepository: TaskRepository) {
 //                }
 //            }
 //        }
+        get("/creation-form") {
+            val taskId = call.parameters["id"]
+            if (taskId == null) {
+                call.response.status(HttpStatusCode.BadRequest)
+                return@get
+            }
+            call.respondHtml {
+//            body {
+//                taskCreationForm.render(this, "/tasks/$taskId/solutions")
+//            }
+
+                // index because of lack of htmx needed for testing (htmx is served with index page only)
+                index("This won't be index") {
+                    solutionCreationForm.render(this, "/tasks/$taskId/solutions")
+                }
+            }
+        }
+
+
+        patch ("/upvote") {
+            val taskId = call.parameters["id"]
+            val solutionId = call.parameters["solutionId"]
+
+            if(taskId == null || solutionId == null) {
+                call.response.status(HttpStatusCode.BadRequest)
+                return@patch
+            }
+
+            val upvotedSolution = taskRepository.upvoteSolution(taskId, solutionId)
+
+            if (upvotedSolution == null) {
+                call.respondText(text = "Solution has not been created.", status = HttpStatusCode.NotFound)
+                return@patch
+            }
+
+            call.respondHtml(HttpStatusCode.OK) {
+                body {
+                    solutionTemplate(upvotedSolution, taskId)
+                }
+            }
+        }
+
         delete {
             val taskId = call.parameters["id"]
             val solutionId = call.parameters["solutionId"]

@@ -15,4 +15,5 @@ interface TaskRepository {
     suspend fun getSolution(taskId: String, solutionId: String): Solution?
     suspend fun deleteSolution(taskId: String, solutionId: String): Solution?
     suspend fun updateSolution(taskId: String, solutionId: String, solutionUpdate: SolutionUpdate): Solution?
+    suspend fun upvoteSolution(taskId: String, solutionId: String): Solution?
 }

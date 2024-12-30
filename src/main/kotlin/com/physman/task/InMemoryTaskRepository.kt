@@ -3,7 +3,7 @@ package com.physman.task
 import com.physman.solution.Solution
 import com.physman.solution.SolutionUpdate
 
-class InMemoryTaskRepository : TaskRepository {
+object InMemoryTaskRepository : TaskRepository {
     private val solutions1 = mutableListOf(
         Solution(title = "Odp:14", additionalNotes = "bo tak ;)"),
         Solution(title = "Nie wiem", additionalNotes = "lol")
@@ -95,5 +95,11 @@ class InMemoryTaskRepository : TaskRepository {
         deleteSolution(taskId, solutionId)
         createSolution(taskId, updatedSolution)
         return updatedSolution
+    }
+
+    override suspend fun upvoteSolution(taskId: String, solutionId: String): Solution? {
+       val solution = getSolution(taskId, solutionId) ?: return null
+        solution.upvotes += 1
+        return solution
     }
 }
