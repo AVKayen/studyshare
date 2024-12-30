@@ -21,9 +21,12 @@ class Button(
 
     fun boberButton(flowContent: FlowContent, callbackUrl: String) {
         flowContent.button(type = ButtonType.button) {
+
             attributes["hx-patch"] = callbackUrl
-            attributes["hx-swap"] = "outerHtml"
-            attributes["hx-target"] = "closest h2"
+            attributes["hx-swap"] = "outerHTML"
+            //attributes["hx-target"] = "closest .upvote"
+            attributes["hx-target"] = "closest .flex-col-solution"
+
 
             +text // Add button text
         }
