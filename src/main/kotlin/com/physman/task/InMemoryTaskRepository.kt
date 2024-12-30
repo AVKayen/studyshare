@@ -3,7 +3,7 @@ package com.physman.task
 import com.physman.solution.Solution
 import com.physman.solution.SolutionUpdate
 
-object InMemoryTaskRepository : TaskRepository {
+class InMemoryTaskRepository : TaskRepository {
     private val solutions1 = mutableListOf(
         Solution(title = "Odp:14", additionalNotes = "bo tak ;)"),
         Solution(title = "Nie wiem", additionalNotes = "lol")
