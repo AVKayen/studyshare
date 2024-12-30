@@ -18,9 +18,6 @@ import kotlinx.html.body
 
 
 fun Route.solutionRouter(taskRepository: TaskRepository) {
-
-
-
     val solutionCreationForm = Form("Create a new solution", "solutionForm", mapOf(
             "hx-swap" to "none" // because currently this form is on an empty page
         ))

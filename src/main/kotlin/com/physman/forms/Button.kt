@@ -14,12 +14,8 @@ class Button(
                 attributes.putAll(buttonAttributes)
             }
 
-            +buttonText // Add button text
+            +buttonText
         }
     }
-
-
-
-
 }
 

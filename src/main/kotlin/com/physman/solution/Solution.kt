@@ -12,12 +12,12 @@ data class Solution(
 
     val title: String,
     val additionalNotes: String? = null,
-    var votes: Int = 0,
+    var upvotes: Int = 0,
     val images: List<String> = emptyList()
 )
 
     : Comparable<Solution> {
     override fun compareTo(other: Solution): Int {
-        return -1 * compareValues(this.votes, other.votes)
+        return -1 * compareValues(this.upvotes, other.upvotes)
     }
 }

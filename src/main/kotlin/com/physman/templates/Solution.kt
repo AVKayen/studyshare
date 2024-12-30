@@ -24,7 +24,7 @@ fun FlowContent.solutionTemplate(solution: Solution, taskId: String) {
 
                 voteButton.render(this)
 
-                +" : ${solution.votes}"
+                +" : ${solution.upvotes}"
 
             }
         }

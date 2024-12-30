@@ -99,7 +99,7 @@ object InMemoryTaskRepository : TaskRepository {
 
     override suspend fun upvoteSolution(taskId: String, solutionId: String): Solution? {
        val solution = getSolution(taskId, solutionId) ?: return null
-        solution.votes += 1
+        solution.upvotes += 1
         return solution
     }
 }
