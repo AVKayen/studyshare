@@ -10,7 +10,7 @@ fun FlowContent.solutionTemplate(solution: Solution, taskId: String) {
     val url = "./${taskId}/solutions/${solution.id}/upvote"
 
     val voteButton = Button(
-        "Upvote",
+        "Thanks!",
         mapOf(
                     "hx-patch" to url,
                     "hx-swap" to "outerHTML",
@@ -23,9 +23,9 @@ fun FlowContent.solutionTemplate(solution: Solution, taskId: String) {
                 +solution.title
 
                 voteButton.render(this)
-                div(classes = "upvote") {
-                    +" Upvotes: ${solution.votes}"
-                }
+
+                +" : ${solution.votes}"
+
             }
         }
         div {
