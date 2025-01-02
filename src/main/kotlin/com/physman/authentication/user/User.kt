@@ -13,4 +13,6 @@ data class User(
     val name: String,
     // val email: String, // hmmm
     val passwordHash: String,
-)
+) {
+    fun toUserSession() = UserSession(name)
+}

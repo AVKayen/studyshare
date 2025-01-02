@@ -1,6 +1,7 @@
 package com.physman
 
 import com.physman.image.CloudImageRepository
+import com.physman.authentication.user.MongoUserRepository
 import com.physman.task.InMemoryTaskRepository
 import com.physman.authentication.configureSecurity
 import io.ktor.server.application.*
@@ -16,9 +17,10 @@ val mongodbClient = MongoClient.create(mongodbConnectionString)
 val database = mongodbClient.getDatabase("studyshare")
 val taskRepository = InMemoryTaskRepository()
 val imageRepository = CloudImageRepository("skillful-fx-446014-k1", "studyshare-files", database)
+val userRepository = MongoUserRepository(database)
 
 fun Application.module() {
-    configureSecurity()
+    configureSecurity(userRepository)
     configureRouting(
         taskRepository = taskRepository,
         imageRepository = imageRepository,

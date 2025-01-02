@@ -25,4 +25,24 @@ class MongoUserRepository(private val database: MongoDatabase) : UserRepository 
     override suspend fun deleteUser(id: String) {
         users.findOneAndDelete(Filters.eq(User::id.name, id))
     }
+
+    override suspend fun login(name: String, password: String): UserSession? {
+        val user: User = users.find(Filters.eq(User::name.name, name)).firstOrNull() ?: return null
+        if (user.passwordHash == password) {
+            // TODO: Password hashing!!!!!!!!! Important very much
+            return user.toUserSession()
+        }
+        return null
+    }
+
+    override suspend fun register(name: String, password: String): UserSession {
+        // TODO: Password hashing!!!!!!!!! Important very much
+        val user = User(name = name, passwordHash = password)
+        users.insertOne(user)
+        return user.toUserSession()
+    }
+
+    override suspend fun changePassword(name: String, previousPassword: String, newPassword: String) {
+        TODO("Not yet implemented")
+    }
 }
