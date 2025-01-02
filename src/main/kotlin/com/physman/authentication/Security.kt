@@ -1,4 +1,4 @@
-package com.physman
+package com.physman.authentication
 
 import io.ktor.server.application.*
 import io.ktor.server.auth.*

@@ -1,6 +1,6 @@
 package com.physman.routes
 
-import com.physman.UserSession
+import com.physman.authentication.UserSession
 import com.physman.templates.*
 import io.ktor.http.*
 import io.ktor.server.html.*

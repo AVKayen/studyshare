@@ -6,13 +6,12 @@ import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import com.mongodb.client.model.Filters.eq
 import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.coroutines.flow.first
 import org.bson.types.Binary
 
-class CloudImageRepository(private val projectId: String, private val bucketName: String, private val mongodbConnectionString: String) : ImageRepository {
-    private val storage: Storage = StorageOptions.newBuilder().setProjectId(projectId).build().service;
-    private val mongoClient = MongoClient.create(mongodbConnectionString)
-    private val database = mongoClient.getDatabase("studyshare")
+class CloudImageRepository(private val projectId: String, private val bucketName: String, private val database: MongoDatabase) : ImageRepository {
+    private val storage: Storage = StorageOptions.newBuilder().setProjectId(projectId).build().service
     private val images = database.getCollection<Image>("images")
 
 
