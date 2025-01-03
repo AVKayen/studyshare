@@ -7,29 +7,45 @@ import io.ktor.server.request.*
 import io.ktor.server.routing.*
 import io.ktor.utils.io.*
 import kotlinx.html.*
-import kotlinx.io.readByteArray
 import java.net.URLEncoder
+import java.nio.channels.WritableByteChannel
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import kotlin.io.path.*
+import java.nio.file.StandardOpenOption.*
 
 
-// TODO: This values should be read from some config
-const val MAX_UPLOAD_SIZE = 50 // MB
-const val MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE * 1024 * 1024
+// TODO: This values should be read from some config, also the upload sizes must be changed in some Ktor config
+// (default max upload file size in Ktor is 50MB)
+const val MAX_UPLOAD_SIZE: Long = 250 // MB
+const val MAX_UPLOAD_SIZE_BYTES: Long = MAX_UPLOAD_SIZE * 1024 * 1024
 
-const val MAX_FILE_SIZE = 25 // MB
-const val MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE * 1024 * 1024
+const val MAX_FILE_SIZE: Long = 48 // MB
+const val MAX_FILE_SIZE_BYTES: Long = MAX_FILE_SIZE * 1024 * 1024
 
 
-data class UploadFileData(
+class UploadFileData(
     val filePath: java.nio.file.Path,
     val originalName: String
-)
+) {
+    fun deleteFile() {
+        filePath.deleteIfExists()
+    }
+}
 
-data class FormSubmissionData(
+class FormSubmissionData(
     val fields: Map<String, String>,
     val files: List<UploadFileData>?
-)
+) {
+    // To be called in the router after finished working with the submission data
+    fun cleanup() {
+        files?.let {
+            it.forEach { uploadFileData ->
+                uploadFileData.deleteFile()
+            }
+        }
+    }
+}
 
 class Form(
     private val formTitle: String,
@@ -133,12 +149,11 @@ class Form(
         return validateFields(call, unvalidatedFields)
     }
 
-    // TODO: Read the uploaded bytes in chunks instead of loading them all into the memory
     private suspend fun validateMultipartData(call: RoutingCall): FormSubmissionData? {
         val multipartData = call.receiveMultipart()
         val unvalidatedFields = mutableMapOf<String, List<String>>()
         val files = mutableListOf<UploadFileData>()
-        var totalUploadSize = 0
+        var totalUploadSize: Long = 0
         var formError: String? = null
 
         multipartData.forEachPart { part ->
@@ -153,19 +168,20 @@ class Form(
 
                 is PartData.FileItem -> {
 
-                    // TODO: This needs to be changed in the future
-                    val fileBytes = part.provider().readRemaining().readByteArray()
-                    if (fileBytes.size > MAX_FILE_SIZE_BYTES) {
+                    val tempFilePath = createTempFile()
+                    val byteChannel: WritableByteChannel = Files.newByteChannel(tempFilePath, WRITE)
+
+                    val fileSize = part.provider().copyTo(channel = byteChannel, limit = MAX_FILE_SIZE_BYTES)
+                    byteChannel.close()
+
+                    if (fileSize >= MAX_FILE_SIZE_BYTES) {
                         formError = "File(s) too large. Max file size is ${MAX_FILE_SIZE}MB."
                     }
 
-                    totalUploadSize += fileBytes.size
+                    totalUploadSize += fileSize
                     if (totalUploadSize > MAX_UPLOAD_SIZE_BYTES) {
                         formError = "Upload too large. Max size is ${MAX_UPLOAD_SIZE}MB."
                     }
-
-                    val tempFilePath = createTempFile()
-                    tempFilePath.writeBytes(fileBytes)
 
                     files.add(UploadFileData(
                         filePath = tempFilePath,
@@ -183,6 +199,9 @@ class Form(
         }
 
         formError?.let {
+            files.forEach { uploadFileData ->
+                uploadFileData.filePath.deleteIfExists()
+            }
             respondFormError(call, it)
             return null
         }
