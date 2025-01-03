@@ -1,11 +1,11 @@
 package com.physman.templates
 
 import com.physman.forms.Button
-import com.physman.solution.Solution
+import com.physman.task.Task
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.solutionTemplate(solution: Solution, taskId: String) {
+fun FlowContent.solutionTemplate(solution: Task.Solution, taskId: String) {
 
     val url = "./${taskId}/solutions/${solution.id}/upvote"
 
