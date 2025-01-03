@@ -1,15 +1,12 @@
 package com.physman.task
 
-import com.physman.solution.Solution
-import com.physman.solution.SolutionUpdate
-
 class InMemoryTaskRepository : TaskRepository {
     private val solutions1 = mutableListOf(
-        Solution(title = "Odp:14", additionalNotes = "bo tak ;)"),
-        Solution(title = "Nie wiem", additionalNotes = "lol")
+        Task.Solution(title = "Odp:14", additionalNotes = "bo tak ;)"),
+        Task.Solution(title = "Nie wiem", additionalNotes = "lol")
     )
     private val solutions2 = mutableListOf(
-        Solution(title =  "Odp:slon", additionalNotes = "ciezki jest"))
+        Task.Solution(title =  "Odp:slon", additionalNotes = "ciezki jest"))
 
 
 
@@ -54,35 +51,35 @@ class InMemoryTaskRepository : TaskRepository {
 
 
 // SOLUTION
-    override suspend fun getAllSolutions(taskId: String): MutableList<Solution>? {
+    override suspend fun getAllSolutions(taskId: String): MutableList<Task.Solution>? {
         val task: Task = getTask(taskId) ?: return null
         return task.solutions
     }
 
-    override suspend fun getSolution(taskId: String, solutionId: String): Solution? {
+    override suspend fun getSolution(taskId: String, solutionId: String): Task.Solution? {
         val allSolutions = getAllSolutions(taskId) ?: return null
 
-        val solution: Solution? = allSolutions.find { it.id == solutionId }
+        val solution: Task.Solution? = allSolutions.find { it.id == solutionId }
         if (solution == null) {
             return null
         }
         return solution
     }
 
-    override suspend fun createSolution(taskId: String, solution: Solution): Solution? {
+    override suspend fun createSolution(taskId: String, solution: Task.Solution): Task.Solution? {
         val task = getTask(taskId) ?: return null
         task.solutions.add(solution)
         return task.solutions.last()
     }
 
-    override suspend fun deleteSolution(taskId: String, solutionId: String): Solution? {
+    override suspend fun deleteSolution(taskId: String, solutionId: String): Task.Solution? {
         val solution = getSolution(taskId, solutionId)
         val task = getTask(taskId) ?: return null
         task.solutions.remove(solution)
         return solution
     }
 
-    override suspend fun updateSolution(taskId: String, solutionId: String, solutionUpdate: SolutionUpdate): Solution? {
+    override suspend fun updateSolution(taskId: String, solutionId: String, solutionUpdate: TaskUpdate.SolutionUpdate): Task.Solution? {
         val solution = getSolution(taskId, solutionId)
         val updatedSolution = solution?.copy(
             title = solutionUpdate.title ?: solution.title,
@@ -97,7 +94,7 @@ class InMemoryTaskRepository : TaskRepository {
         return updatedSolution
     }
 
-    override suspend fun upvoteSolution(taskId: String, solutionId: String): Solution? {
+    override suspend fun upvoteSolution(taskId: String, solutionId: String): Task.Solution? {
        val solution = getSolution(taskId, solutionId) ?: return null
         solution.upvotes += 1
         return solution
