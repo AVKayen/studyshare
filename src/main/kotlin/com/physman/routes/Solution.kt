@@ -4,7 +4,7 @@ import com.physman.forms.Form
 import com.physman.forms.FormSubmissionData
 import com.physman.forms.TextlikeInput
 import com.physman.forms.globalFormRouter
-import com.physman.solution.Solution
+import com.physman.task.Task
 import com.physman.task.TaskRepository
 import com.physman.templates.index
 import com.physman.templates.solutionTemplate
@@ -55,7 +55,7 @@ fun Route.solutionRouter(taskRepository: TaskRepository) {
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
 
-        val newSolution = Solution(title = title, additionalNotes = additionalNotes)
+        val newSolution = Task.Solution(title = title, additionalNotes = additionalNotes)
         println("New solution: $newSolution")
 
         val solution = taskRepository.createSolution(taskId, newSolution)
