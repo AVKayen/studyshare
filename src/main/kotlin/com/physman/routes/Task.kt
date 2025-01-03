@@ -95,9 +95,12 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
 
         val task = taskRepository.createTask(newTask)
 
+        val imageLinks = task.images.map { imageRepository.getImageLink(it) }
+         formSubmissionData.cleanup()
+
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                taskTemplate(task)
+                taskTemplate(task, imageLinks)
             }
         }
     }
@@ -116,11 +119,13 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                 return@get
             }
 
+            val imageLinks = task.images.map { imageRepository.getImageLink(it) }
+
             task.solutions.sort() //sort by solution's upvote count
 
             call.respondHtml(HttpStatusCode.OK) {
                 index("Task") {
-                    taskTemplate(task)
+                    taskTemplate(task, imageLinks)
                     for (solution in task.solutions){
                         solutionTemplate(solution, taskId)
                     }
