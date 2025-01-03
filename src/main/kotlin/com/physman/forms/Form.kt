@@ -24,15 +24,28 @@ const val MAX_FILE_SIZE: Long = 48 // MB
 const val MAX_FILE_SIZE_BYTES: Long = MAX_FILE_SIZE * 1024 * 1024
 
 
-data class UploadFileData(
+class UploadFileData(
     val filePath: java.nio.file.Path,
     val originalName: String
-)
+) {
+    fun deleteFile() {
+        filePath.deleteIfExists()
+    }
+}
 
-data class FormSubmissionData(
+class FormSubmissionData(
     val fields: Map<String, String>,
     val files: List<UploadFileData>?
-)
+) {
+    // To be called in the router after finished working with the submission data
+    fun cleanup() {
+        files?.let {
+            it.forEach { uploadFileData ->
+                uploadFileData.deleteFile()
+            }
+        }
+    }
+}
 
 class Form(
     private val formTitle: String,

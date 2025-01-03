@@ -3,7 +3,6 @@ package com.physman.routes
 import com.physman.imageRepository
 import com.physman.forms.*
 import com.physman.image.Image
-import com.physman.image.ImageRepository
 import com.physman.task.Task
 import com.physman.task.TaskRepository
 import com.physman.templates.index
@@ -13,16 +12,10 @@ import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.routing.*
 import com.physman.templates.taskTemplate
-import io.ktor.http.content.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
-import io.ktor.utils.io.*
-import io.ktor.utils.io.core.*
 import kotlinx.html.InputType
 import kotlinx.html.body
-import org.bson.types.Binary
 import org.bson.types.ObjectId
-import java.io.File
 
 const val TITLE_MAX_LENGTH = 5
 const val ADDITIONAL_NOTES_MAX_LENGTH = 512
@@ -96,6 +89,7 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             )
             imageRepository.createImage(image, file.filePath.toFile().readBytes())
         }
+        formSubmissionData.cleanup()
 
         val newTask = Task(title = title, additionalNotes = additionalNotes)
 
