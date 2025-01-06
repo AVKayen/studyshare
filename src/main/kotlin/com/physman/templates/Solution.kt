@@ -33,7 +33,6 @@ fun FlowContent.solutionTemplate(solution: Task.Solution, taskId: String) {
             if (solution.additionalNotes != null) {
                 println(solution.additionalNotes)
                 +"Notes: ${solution.additionalNotes}"
-                +" Id: ${solution.id}"
             }
         }
         if (solution.images.isNotEmpty()) {
