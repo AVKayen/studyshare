@@ -7,7 +7,6 @@ import io.ktor.server.routing.*
 import java.io.File
 
 fun Route.imageRouter(imageRepository: ImageRepository) {
-
     get("/{id}") {
         try {
             val id = call.parameters["id"]

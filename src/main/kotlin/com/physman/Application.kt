@@ -24,5 +24,6 @@ fun Application.module() {
     configureRouting(
         taskRepository = taskRepository,
         imageRepository = imageRepository,
+        userRepository = userRepository,
     )
 }
