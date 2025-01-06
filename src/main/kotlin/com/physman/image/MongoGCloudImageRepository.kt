@@ -8,7 +8,7 @@ import com.mongodb.client.model.Filters.eq
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import kotlinx.coroutines.flow.firstOrNull
 
-class CloudImageRepository(projectId: String, private val bucketName: String, database: MongoDatabase) : ImageRepository {
+class MongoGCloudImageRepository(projectId: String, private val bucketName: String, database: MongoDatabase) : ImageRepository {
     private val storage: Storage = StorageOptions.newBuilder().setProjectId(projectId).build().service
     private val images = database.getCollection<Image>("images")
 

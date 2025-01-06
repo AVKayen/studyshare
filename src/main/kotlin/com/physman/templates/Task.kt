@@ -10,7 +10,7 @@ fun FlowContent.taskTemplate(task: Task, imageLinks: List<String?>? = null) {
             h2 {
                 +task.title
             }
-            a(href = "/tasks/${task.id}/solutions/creation-form") {
+            a(href = "/solutions/creation-form?taskId=${task.id}") {
                 +"Create solution"}
         }
         div {
