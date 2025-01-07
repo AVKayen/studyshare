@@ -1,8 +1,7 @@
 package com.physman.routes
 
-import com.physman.imageRepository
 import com.physman.forms.*
-import com.physman.image.Image
+import com.physman.solution.SolutionRepository
 import com.physman.task.Task
 import com.physman.task.TaskRepository
 import com.physman.templates.index
@@ -12,32 +11,16 @@ import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.routing.*
 import com.physman.templates.taskTemplate
+import com.physman.utils.additionalNotesValidator
+import com.physman.utils.titleValidator
+import com.physman.utils.validateObjectIds
 import io.ktor.server.response.*
 import kotlinx.html.InputType
 import kotlinx.html.body
-import org.bson.types.ObjectId
 
-const val TITLE_MAX_LENGTH = 5
-const val ADDITIONAL_NOTES_MAX_LENGTH = 512
 
-val titleValidator = fun(title: String): String? {
-     if(title.isEmpty()) {
-        return "Title must not be empty"
-     }
-     if (title.length > TITLE_MAX_LENGTH) {
-        return "Title too long (max length $TITLE_MAX_LENGTH)"
-     }
-     return null
-}
 
-val additionalNotesValidator = fun(additionalNotes: String): String? {
-    if(additionalNotes.length > ADDITIONAL_NOTES_MAX_LENGTH) {
-        return "Additional notes too long (max length $ADDITIONAL_NOTES_MAX_LENGTH)"
-    }
-    return null
-}
-
-fun Route.taskRouter(taskRepository: TaskRepository) {
+fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: SolutionRepository) {
 
     val taskCreationForm = Form("Create a new task", "taskForm", mapOf(
 //        "hx-target" to "#task-list",
@@ -52,7 +35,7 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
     globalFormRouter.routeFormValidators(taskCreationForm)
 
     get {
-        val tasks = taskRepository.getAllTasks()
+        val tasks = taskRepository.getTasks()
         call.respondHtml {
             body {
                 for (task in tasks) {
@@ -81,37 +64,27 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
         val files = formSubmissionData.files!!
 
-
-        for (file in files) {
-            val image = Image(
-                id = ObjectId().toHexString(),
-                originalFilename = file.originalName,
-            )
-            imageRepository.createImage(image, file.filePath.toFile().readBytes())
-        }
         formSubmissionData.cleanup()
 
         val newTask = Task(title = title, additionalNotes = additionalNotes)
 
-        val task = taskRepository.createTask(newTask)
-
-        val imageLinks = task.images.map { imageRepository.getImageLink(it) }
-         formSubmissionData.cleanup()
+        val success = taskRepository.createTask(newTask)
+        if (!success) {
+            call.respondText(text = "Task has not been created.", status = HttpStatusCode.BadRequest)
+            return@post
+        }
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                taskTemplate(task, imageLinks)
+//                taskTemplate(newTask, imageLinks)
             }
         }
     }
 
     route("/{id}") {
         get {
-            val taskId = call.parameters["id"]
-            if(taskId == null) {
-                call.response.status(HttpStatusCode.BadRequest)
-                return@get
-            }
+            val objectIds = validateObjectIds(call, "id") ?: return@get
+            val taskId = objectIds["id"]!!
 
             val task = taskRepository.getTask(taskId)
             if(task == null) {
@@ -119,38 +92,31 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                 return@get
             }
 
-            val imageLinks = task.images.map { imageRepository.getImageLink(it) }
-
-            task.solutions.sort() //sort by solution's upvote count
+            val solutions = solutionRepository.getSolutions(taskId)
+            // TODO Sorry, I've broken the sorting
 
             call.respondHtml(HttpStatusCode.OK) {
                 index("Task") {
-                    taskTemplate(task, imageLinks)
-                    for (solution in task.solutions){
-                        solutionTemplate(solution, taskId)
+
+                    taskTemplate(task, emptyList())
+
+                    for (solution in solutions){
+                        solutionTemplate(solution, taskId.toString())
                     }
                 }
             }
         }
 
         delete {
-            val taskId = call.parameters["id"]
-            if(taskId == null) {
-                call.response.status(HttpStatusCode.BadRequest)
-                return@delete
-            }
+            val objectIds = validateObjectIds(call, "id") ?: return@delete
+            val taskId = objectIds["id"]!!
 
-            val deletedTask = taskRepository.deleteTask(taskId)
-            if(deletedTask == null) {
-                call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
+            val success = taskRepository.deleteTask(taskId)
+            if(!success) {
+                call.respondText(text = "Task has not been deleted.", status = HttpStatusCode.BadRequest)
                 return@delete
             }
             call.response.status(HttpStatusCode.NoContent)
-        }
-
-
-        route("/solutions") {
-            solutionRouter(taskRepository)
         }
     }
 }

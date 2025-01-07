@@ -4,32 +4,35 @@ import com.physman.forms.Form
 import com.physman.forms.FormSubmissionData
 import com.physman.forms.TextlikeInput
 import com.physman.forms.globalFormRouter
-import com.physman.task.Task
-import com.physman.task.TaskRepository
+import com.physman.solution.Solution
+import com.physman.solution.SolutionRepository
 import com.physman.templates.index
 import com.physman.templates.solutionTemplate
+import com.physman.utils.additionalNotesValidator
+import com.physman.utils.titleValidator
+import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.html.InputType
 import kotlinx.html.body
+import org.bson.types.ObjectId
 
 
-
-fun Route.solutionRouter(taskRepository: TaskRepository) {
+fun Route.solutionRouter(solutionRepository: SolutionRepository) {
     val solutionCreationForm = Form("Create a new solution", "solutionForm", mapOf(
             "hx-swap" to "none" // because currently this form is on an empty page
         ))
-        solutionCreationForm.addInput(TextlikeInput("title", "title", InputType.text, titleValidator))
+    solutionCreationForm.addInput(TextlikeInput("title", "title", InputType.text, titleValidator))
         solutionCreationForm.addInput(TextlikeInput("additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
 
     globalFormRouter.routeFormValidators(solutionCreationForm)
 
     get("/creation-form") {
-        val taskId = call.parameters["id"]
+        val taskId = call.request.queryParameters["taskId"]
         if (taskId == null) {
-            call.response.status(HttpStatusCode.BadRequest)
+            call.respondText("Task Id not specified.", status = HttpStatusCode.BadRequest)
             return@get
         }
         call.respondHtml {
@@ -39,117 +42,60 @@ fun Route.solutionRouter(taskRepository: TaskRepository) {
 
             // index because of lack of htmx needed for testing (htmx is served with index page only)
             index("This won't be index") {
-                solutionCreationForm.render(this, "/tasks/$taskId/solutions")
+                solutionCreationForm.render(this, "/solutions?taskId=$taskId")
             }
         }
     }
 
     post {
-        val taskId = call.parameters["id"]
-        if (taskId == null) {
-            call.response.status(HttpStatusCode.BadRequest)
-            return@post
-        }
+        val objectIds = validateObjectIds(call, "taskId") ?: return@post
+        val taskId = objectIds["taskId"]!!
 
         val formSubmissionData: FormSubmissionData = solutionCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
 
-        val newSolution = Task.Solution(title = title, additionalNotes = additionalNotes)
-        println("New solution: $newSolution")
+        val newSolution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId)
 
-        val solution = taskRepository.createSolution(taskId, newSolution)
-        if (solution == null) {
-            call.respondText(text = "Solution has not been created.", status = HttpStatusCode.NotFound)
+        val success = solutionRepository.createSolution(newSolution)
+        if (!success) {
+            call.respondText(text = "Solution has not been created.", status = HttpStatusCode.BadRequest)
             return@post
         }
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(solution, taskId)
+                solutionTemplate(newSolution, taskId.toString())
             }
         }
     }
-    route("/{solutionId}") {
-          // we've decided not to show solutions on a separate pages, right? Not deleting, we may always change our minds
-//        get {
-//            val taskId = call.parameters["id"]
-//            if(taskId == null) {
-//                call.response.status(HttpStatusCode.BadRequest)
-//                return@get
-//            }
-//            val solutionId = call.parameters["solutionId"]
-//            if(solutionId == null) {
-//                call.response.status(HttpStatusCode.BadRequest)
-//                return@get
-//            }
-//
-//            val solution = InMemoryTaskRepository.getSolution(taskId, solutionId)
-//            if(solution == null) {
-//                call.response.status(HttpStatusCode.NotFound)
-//                return@get
-//            }
-//
-//
-//            call.respondHtml(HttpStatusCode.OK) {
-//                index("Solution") {
-//                    solutionTemplate(solution)
-//                }
-//            }
-//        }
-        get("/creation-form") {
-            val taskId = call.parameters["id"]
-            if (taskId == null) {
-                call.response.status(HttpStatusCode.BadRequest)
+
+    route("/{id}") {
+
+        get ("/upvote") {
+            val objectIds = validateObjectIds(call, "id") ?: return@get
+            val solutionId = objectIds["id"]!!
+
+            val success = solutionRepository.upvoteSolution(solutionId, ObjectId()) // TODO use a real userId
+
+            if (!success) {
+                call.respondText(text = "Solution has not been upvoted.", status = HttpStatusCode.NotFound)
                 return@get
-            }
-            call.respondHtml {
-//            body {
-//                taskCreationForm.render(this, "/tasks/$taskId/solutions")
-//            }
-
-                // index because of lack of htmx needed for testing (htmx is served with index page only)
-                index("This won't be index") {
-                    solutionCreationForm.render(this, "/tasks/$taskId/solutions")
-                }
-            }
-        }
-
-
-        patch ("/upvote") {
-            val taskId = call.parameters["id"]
-            val solutionId = call.parameters["solutionId"]
-
-            if(taskId == null || solutionId == null) {
-                call.response.status(HttpStatusCode.BadRequest)
-                return@patch
-            }
-
-            val upvotedSolution = taskRepository.upvoteSolution(taskId, solutionId)
-
-            if (upvotedSolution == null) {
-                call.respondText(text = "Solution has not been created.", status = HttpStatusCode.NotFound)
-                return@patch
             }
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-                    solutionTemplate(upvotedSolution, taskId)
+//                    solutionTemplate(upvotedSolution, taskId)
                 }
             }
         }
 
         delete {
-            val taskId = call.parameters["id"]
-            val solutionId = call.parameters["solutionId"]
+            val objectIds = validateObjectIds(call, "id") ?: return@delete
+            val solutionId = objectIds["id"]!!
 
-            if(taskId == null || solutionId == null) {
-                call.response.status(HttpStatusCode.BadRequest)
-                return@delete
-            }
-
-            val deletedSolution = taskRepository.deleteSolution(taskId, solutionId)
-            if(deletedSolution == null) {
+            val success = solutionRepository.deleteSolution(solutionId)
+            if(!success) {
                 call.respondText(text = "Solution has not been deleted.", status = HttpStatusCode.NotFound)
                 return@delete
             }

@@ -1,45 +1,30 @@
 package com.physman.templates
 
-import com.physman.forms.Button
-import com.physman.task.Task
+import com.physman.solution.Solution
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.solutionTemplate(solution: Task.Solution, taskId: String) {
-
-    val url = "./${taskId}/solutions/${solution.id}/upvote"
-
-    val voteButton = Button(
-        "Thanks!",
-        mapOf(
-                    "hx-patch" to url,
-                    "hx-swap" to "outerHTML",
-                    "hx-target" to "closest .flex-col-solution"
-    ))
+fun FlowContent.solutionTemplate(solution: Solution, taskId: String) {
 
     article(classes = "flex-col-solution") {
         header {
             h2 {
-                +solution.title
-
-                voteButton.render(this)
-
-                +" : ${solution.upvotes}"
-
+                +"+${solution.upvoteCount()} ${solution.title}"
             }
         }
+
         div {
+            button {
+                attributes["hx-get"] = "/solutions/${solution.id}/upvote"
+                attributes["hx-swap"] = "none" // TODO change this to replace the current upvote count
 
-            if (solution.additionalNotes != null) {
-                println(solution.additionalNotes)
-                +"Notes: ${solution.additionalNotes}"
+                +"upvote button"
             }
         }
-        if (solution.images.isNotEmpty()) {
-            div {
-                for (imageId in solution.images) {
-                    a(href = "/images/$imageId")
-                }
+
+        div {
+            if (solution.additionalNotes != null) {
+                +"Notes: ${solution.additionalNotes}"
             }
         }
     }
