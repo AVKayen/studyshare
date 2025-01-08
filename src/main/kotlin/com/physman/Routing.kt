@@ -5,6 +5,7 @@ import com.physman.routes.*
 import com.physman.forms.*
 import com.physman.image.ImageRepository
 import com.physman.task.TaskRepository
+import com.physman.solution.SolutionRepository
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*

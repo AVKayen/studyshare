@@ -2,7 +2,6 @@ package com.physman
 
 import com.physman.image.MongoGCloudImageRepository
 import com.physman.authentication.user.MongoUserRepository
-import com.physman.task.InMemoryTaskRepository
 import com.physman.authentication.configureSecurity
 import io.ktor.server.application.*
 
@@ -21,6 +20,7 @@ fun Application.module() {
     val imageRepository = MongoGCloudImageRepository("skillful-fx-446014-k1", "studyshare-files", database)
     val solutionRepository = MongoSolutionRepository(database, imageRepository)
     val taskRepository = MongoTaskRepository(database, imageRepository, solutionRepository)
+    val userRepository = MongoUserRepository(database)
 
     configureSecurity(userRepository)
     configureRouting(
