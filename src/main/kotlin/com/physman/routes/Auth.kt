@@ -1,9 +1,6 @@
 package com.physman.routes
 
-import com.physman.authentication.user.UserRepository
-import com.physman.authentication.user.UserSession
-import com.physman.authentication.user.passwordValidator
-import com.physman.authentication.user.usernameValidator
+import com.physman.authentication.user.*
 import com.physman.forms.Form
 import com.physman.forms.TextlikeInput
 import com.physman.forms.globalFormRouter
@@ -22,15 +19,14 @@ fun Route.authRouter(userRepository: UserRepository) {
     val loginForm = Form("Login", "loginForm", mapOf(
         "hx-swap" to "none"
     ))
-    loginForm.addInput(TextlikeInput("Username", "name", InputType.text, usernameValidator))
-    loginForm.addInput(TextlikeInput("Password", "password", InputType.password, passwordValidator))
+    loginForm.addInput(TextlikeInput("Username", "name", InputType.text, usernameValidatorOnRegister))
+    loginForm.addInput(TextlikeInput("Password", "password", InputType.password, passwordValidatorOnRegister))
 
     val registerForm = Form("Register", "registerForm", mapOf(
         "hx-swap" to "none"
     ))
-    registerForm.addInput(TextlikeInput("Username", "name", InputType.text, usernameValidator))
-    registerForm.addInput(TextlikeInput("Password", "password", InputType.password, passwordValidator))
-    registerForm.addInput(TextlikeInput("Mother's maiden name", "mother", InputType.text, usernameValidator))
+    registerForm.addInput(TextlikeInput("Username", "name", InputType.text, usernameValidatorOnLogin))
+    registerForm.addInput(TextlikeInput("Password", "password", InputType.password, passwordValidatorOnLogin))
 
     globalFormRouter.routeFormValidators(loginForm)
     globalFormRouter.routeFormValidators(registerForm)
@@ -80,15 +76,24 @@ fun Route.authRouter(userRepository: UserRepository) {
             val formSubmissionData = registerForm.validateSubmission(call) ?: return@post
             val username = formSubmissionData.fields["name"]!!
             val password = formSubmissionData.fields["password"]!!
-            val mother = formSubmissionData.fields["mother"]!!
-            val session: UserSession? = userRepository.register(username, password)
-            if (session == null) {
-                registerForm.respondFormError(call, "Username already taken")
+            val session: UserSession
+            try {
+                session = userRepository.register(username, password)
+            } catch (e: Exception) {
+                registerForm.respondFormError(call, e.toString())
                 return@post
             }
             call.sessions.set(session)
             call.response.headers.append("HX-Redirect", "/")
-            call.respondText("Redirecting to home...")
+            call.respondRedirect("/")
+        }
+    }
+
+    route ("/logout") {
+        get {
+            call.sessions.clear<UserSession>()
+            call.response.headers.append("HX-Redirect", "/")
+            call.respondRedirect("/")
         }
     }
 

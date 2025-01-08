@@ -31,6 +31,7 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm")
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.ktor:ktor-server-config-yaml-jvm")
+    implementation("org.mindrot:jbcrypt:0.4")
 
     implementation("org.mongodb:bson-kotlinx:5.2.1")
     implementation("org.mongodb:mongodb-driver-kotlin-coroutine:5.2.1")

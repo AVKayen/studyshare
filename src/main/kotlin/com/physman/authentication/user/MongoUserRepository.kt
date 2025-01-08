@@ -1,10 +1,9 @@
 package com.physman.authentication.user
 
-import com.mongodb.client.model.Filters
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.mongodb.client.model.Filters.*
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
+import org.mindrot.jbcrypt.BCrypt
 
 class MongoUserRepository(database: MongoDatabase) : UserRepository {
     private val users = database.getCollection<User>("users")
@@ -28,24 +27,22 @@ class MongoUserRepository(database: MongoDatabase) : UserRepository {
 
     override suspend fun login(name: String, password: String): UserSession? {
         val user: User = users.find(eq(User::name.name, name)).firstOrNull() ?: return null
-        if (user.passwordHash == password) {
-            // TODO: Password hashing!!!!!!!!! Important very much; error handling too
+        if (BCrypt.checkpw(password, user.passwordHash)) {
             return user.toUserSession()
         }
         return null
     }
 
-    override suspend fun register(name: String, password: String): UserSession? {
-        // TODO: Password hashing!!!!!!!!! Important very much; error handling
-        val exists = users.find(eq(User::name.name, name)).firstOrNull()
-        if (exists != null) {
-            return null
+    override suspend fun register(name: String, password: String): UserSession {
+        val existingUserData = users.find(eq(User::name.name, name)).firstOrNull()
+        if (existingUserData != null) {
+            throw IllegalArgumentException("Username already taken")
         }
-
-        val user = User(name = name, passwordHash = password)
+        val passwordHash = BCrypt.hashpw(password, BCrypt.gensalt())
+        val user = User(name = name, passwordHash = passwordHash)
         val result = users.insertOne(user)
         if (!result.wasAcknowledged()) {
-            return null
+            throw Exception("Failed to insert user")
         }
         return user.toUserSession()
     }

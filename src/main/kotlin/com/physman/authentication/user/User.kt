@@ -10,7 +10,9 @@ const val USERNAME_MAX = 64
 const val PASSWORD_MIN = 8
 const val PASSWORD_MAX = 64
 
-val usernameValidator = fun(username: String): String? {
+
+// TODO: Move these somewhere else pls
+val usernameValidatorOnRegister = fun(username: String): String? {
     if(username.length < USERNAME_MIN) return "Username must be at least $USERNAME_MIN characters long"
     if(username.length > USERNAME_MAX) return "Username must be at most $USERNAME_MAX characters long"
     if(username.contains(' ')) return "Username must not contain spaces"
@@ -18,12 +20,23 @@ val usernameValidator = fun(username: String): String? {
     return null
 }
 
-val passwordValidator = fun(password: String): String? {
+val passwordValidatorOnRegister = fun(password: String): String? {
     if(password.length < PASSWORD_MIN) return "Password must be at least $PASSWORD_MIN characters long"
     if(password.length > PASSWORD_MAX) return "Password must be at most $PASSWORD_MAX characters long"
     // TODO: Stronger password requirements
     return null
 }
+
+val usernameValidatorOnLogin = fun(username: String): String? {
+    if (username.isBlank()) return "Username must not be blank"
+    return null
+}
+
+val passwordValidatorOnLogin = fun(password: String): String? {
+    if (password.isBlank()) return "Password must not be blank"
+    return null
+}
+
 
 data class User(
     @BsonId
