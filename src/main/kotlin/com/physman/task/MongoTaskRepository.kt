@@ -26,13 +26,22 @@ class MongoTaskRepository(
         }
     }
 
-    override suspend fun getTasks(): List<Task> {
-        return taskCollection.find().toList()
+    override suspend fun getTasks(): List<TaskView> {
+        return taskCollection.find().toList().map { task: Task ->
+            TaskView(
+                task =  task,
+                images = imageRepository.getImages(task.imageIds)
+            )
+        }
     }
 
-    override suspend fun getTask(id: ObjectId): Task? {
+    override suspend fun getTask(id: ObjectId): TaskView? {
         val filter = Filters.eq("_id", id)
-        return taskCollection.find(filter).firstOrNull()
+        val task = taskCollection.find(filter).firstOrNull() ?: return null
+        return TaskView(
+            task = task,
+            images = imageRepository.getImages(task.imageIds)
+        )
     }
 
     override suspend fun deleteTask(id: ObjectId): Boolean {

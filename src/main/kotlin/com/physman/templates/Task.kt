@@ -1,28 +1,29 @@
 package com.physman.templates
 
-import com.physman.task.Task
+import com.physman.image.ImageView
+import com.physman.task.TaskView
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.taskTemplate(task: Task, imageLinks: List<String?>? = null) {
+fun FlowContent.taskTemplate(taskView: TaskView) {
     article(classes = "flex-col task") {
         header {
             h2 {
-                +task.title
+                +taskView.task.title
             }
-            a(href = "/solutions/creation-form?taskId=${task.id}") {
+            a(href = "/solutions/creation-form?taskId=${taskView.task.id}") {
                 +"Create solution"}
         }
         div {
-            if (task.additionalNotes != null) {
-                +"Notes: ${task.additionalNotes}"
+            if (taskView.task.additionalNotes != null) {
+                +"Notes: ${taskView.task.additionalNotes}"
             }
         }
 
-        imageLinks?.let {
-            div {
-                it.forEach { imageLink ->
-                    a(href = imageLink)
+        div {
+            taskView.images.forEach { imageView: ImageView ->
+                a(href=imageView.link) {
+                    attributes["alt"] = imageView.image.originalFilename
                 }
             }
         }

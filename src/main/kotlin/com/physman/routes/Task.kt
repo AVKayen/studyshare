@@ -35,10 +35,10 @@ fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: Solutio
     globalFormRouter.routeFormValidators(taskCreationForm)
 
     get {
-        val tasks = taskRepository.getTasks()
+        val taskViews = taskRepository.getTasks()
         call.respondHtml {
             body {
-                for (task in tasks) {
+                for (task in taskViews) {
                     taskPreviewTemplate(task)
                 }
             }
@@ -74,11 +74,7 @@ fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: Solutio
             return@post
         }
 
-        call.respondHtml(HttpStatusCode.OK) {
-            body {
-//                taskTemplate(newTask, imageLinks)
-            }
-        }
+        call.response.status(HttpStatusCode.NoContent)
     }
 
     route("/{id}") {
@@ -86,8 +82,8 @@ fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: Solutio
             val objectIds = validateObjectIds(call, "id") ?: return@get
             val taskId = objectIds["id"]!!
 
-            val task = taskRepository.getTask(taskId)
-            if(task == null) {
+            val taskView = taskRepository.getTask(taskId)
+            if(taskView == null) {
                 call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
                 return@get
             }
@@ -98,7 +94,7 @@ fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: Solutio
             call.respondHtml(HttpStatusCode.OK) {
                 index("Task") {
 
-                    taskTemplate(task, emptyList())
+                    taskTemplate(taskView)
 
                     for (solution in solutions){
                         solutionTemplate(solution, taskId.toString())

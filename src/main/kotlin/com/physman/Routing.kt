@@ -3,7 +3,6 @@ package com.physman
 import com.physman.authentication.user.UserRepository
 import com.physman.routes.*
 import com.physman.forms.*
-import com.physman.image.ImageRepository
 import com.physman.task.TaskRepository
 import com.physman.solution.SolutionRepository
 import io.ktor.server.application.*
@@ -14,7 +13,6 @@ import io.ktor.server.routing.*
 import java.io.File
 
 fun Application.configureRouting(
-    imageRepository: ImageRepository,
     solutionRepository: SolutionRepository,
     taskRepository: TaskRepository,
     userRepository: UserRepository
@@ -42,10 +40,6 @@ fun Application.configureRouting(
 
         route("/tasks") {
             taskRouter(taskRepository, solutionRepository)
-        }
-
-        route("/images") {
-            imageRouter(imageRepository)
         }
 
         authenticate("USER") {

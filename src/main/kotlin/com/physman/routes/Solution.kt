@@ -7,7 +7,6 @@ import com.physman.forms.globalFormRouter
 import com.physman.solution.Solution
 import com.physman.solution.SolutionRepository
 import com.physman.templates.index
-import com.physman.templates.solutionTemplate
 import com.physman.utils.additionalNotesValidator
 import com.physman.utils.titleValidator
 import com.physman.utils.validateObjectIds
@@ -65,7 +64,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(newSolution, taskId.toString())
+//                solutionTemplate(newSolution, taskId.toString())
             }
         }
     }

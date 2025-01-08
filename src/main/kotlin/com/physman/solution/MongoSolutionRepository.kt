@@ -52,8 +52,13 @@ class MongoSolutionRepository(
         }
     }
 
-    override suspend fun getSolutions(taskId: ObjectId): List<Solution> {
+    override suspend fun getSolutions(taskId: ObjectId): List<SolutionView> {
         val filter = Filters.eq(Solution::taskId.name, taskId)
-        return solutionCollection.find(filter).toList()
+        return solutionCollection.find(filter).toList().map { solution: Solution ->
+            SolutionView(
+                solution = solution,
+                images = imageRepository.getImages(solution.imageIds)
+            )
+        }
     }
 }

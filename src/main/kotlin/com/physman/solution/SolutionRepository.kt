@@ -9,5 +9,5 @@ interface SolutionRepository {
 //    suspend fun updateSolution(id: ObjectId, solutionUpdate: SolutionUpdate): Solution?
     suspend fun upvoteSolution(id: ObjectId, userId: ObjectId): Boolean
     suspend fun deleteSolutions(taskId: ObjectId): Boolean
-    suspend fun getSolutions(taskId: ObjectId): List<Solution>
+    suspend fun getSolutions(taskId: ObjectId): List<SolutionView>
 }
