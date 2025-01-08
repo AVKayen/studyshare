@@ -1,16 +1,14 @@
 package com.physman.image
 import com.google.cloud.storage.Blob
-import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
+import com.google.cloud.storage.BlobId
+import com.google.cloud.storage.BlobInfo
+import com.google.cloud.storage.Storage
+import com.google.cloud.storage.StorageOptions
 import com.mongodb.client.model.Filters.eq
-import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import kotlinx.coroutines.flow.first
-import org.bson.types.Binary
+import kotlinx.coroutines.flow.firstOrNull
 
-class CloudImageRepository(private val projectId: String, private val bucketName: String, private val database: MongoDatabase) : ImageRepository {
+class MongoGCloudImageRepository(projectId: String, private val bucketName: String, database: MongoDatabase) : ImageRepository {
     private val storage: Storage = StorageOptions.newBuilder().setProjectId(projectId).build().service
     private val images = database.getCollection<Image>("images")
 
@@ -33,7 +31,7 @@ class CloudImageRepository(private val projectId: String, private val bucketName
         return image
     }
 
-    override suspend fun deleteImage(id: String): Unit {
+    override suspend fun deleteImage(id: String) {
         val image: Image = images.findOneAndDelete(eq("id", id)) ?: return
         val blob: Blob? = storage.get(bucketName, image.serverLocation)
 
@@ -47,7 +45,7 @@ class CloudImageRepository(private val projectId: String, private val bucketName
     }
 
     override suspend fun getImageLink(id: String): String? {
-        val image: Image = images.find(eq("id", id)).first() ?: return null
+        val image: Image = images.find(eq("id", id)).firstOrNull() ?: return null
         return "https://storage.googleapis.com/$bucketName/${image.serverLocation}"
     }
 }

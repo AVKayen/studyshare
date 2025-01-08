@@ -1,19 +1,12 @@
 package com.physman.task
 
-import com.physman.solution.Solution
-import com.physman.solution.SolutionUpdate
+import org.bson.types.ObjectId
 
+// TODO Add update method
 interface TaskRepository {
-    suspend fun getAllTasks(): List<Task>
-    suspend fun createTask(task: Task): Task
-    suspend fun getTask(id: String): Task?
-    suspend fun deleteTask(id: String): Task?
-    suspend fun updateTask(id: String, taskUpdate: TaskUpdate): Task?
-
-    suspend fun getAllSolutions(taskId: String): MutableList<Solution>?
-    suspend fun createSolution(taskId: String, solution: Solution): Solution?
-    suspend fun getSolution(taskId: String, solutionId: String): Solution?
-    suspend fun deleteSolution(taskId: String, solutionId: String): Solution?
-    suspend fun updateSolution(taskId: String, solutionId: String, solutionUpdate: SolutionUpdate): Solution?
-    suspend fun upvoteSolution(taskId: String, solutionId: String): Solution?
+    suspend fun getTasks(): List<Task>
+    suspend fun createTask(task: Task): Boolean
+    suspend fun getTask(id: ObjectId): Task?
+    suspend fun deleteTask(id: ObjectId): Boolean
+//    suspend fun updateTask(id: ObjectId, taskUpdate: TaskUpdate): Task?
 }

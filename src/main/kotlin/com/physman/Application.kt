@@ -1,29 +1,32 @@
 package com.physman
 
-import com.physman.image.CloudImageRepository
+import com.physman.image.MongoGCloudImageRepository
 import com.physman.authentication.user.MongoUserRepository
 import com.physman.task.InMemoryTaskRepository
 import com.physman.authentication.configureSecurity
 import io.ktor.server.application.*
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.physman.solution.MongoSolutionRepository
+import com.physman.task.MongoTaskRepository
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
 }
 
-val mongodbConnectionString = System.getenv("MONGODB_CONNECTION_STRING")
-val mongodbClient = MongoClient.create(mongodbConnectionString)
-val database = mongodbClient.getDatabase("studyshare")
-val taskRepository = InMemoryTaskRepository()
-val imageRepository = CloudImageRepository("skillful-fx-446014-k1", "studyshare-files", database)
-val userRepository = MongoUserRepository(database)
-
 fun Application.module() {
+    val mongodbClient = MongoClient.create(System.getenv("MONGODB_CONNECTION_STRING"))
+    val database = mongodbClient.getDatabase("studyshare")
+
+    val imageRepository = MongoGCloudImageRepository("skillful-fx-446014-k1", "studyshare-files", database)
+    val solutionRepository = MongoSolutionRepository(database, imageRepository)
+    val taskRepository = MongoTaskRepository(database, imageRepository, solutionRepository)
+
     configureSecurity(userRepository)
     configureRouting(
-        taskRepository = taskRepository,
         imageRepository = imageRepository,
+        solutionRepository = solutionRepository,
+        taskRepository = taskRepository,
         userRepository = userRepository,
     )
 }

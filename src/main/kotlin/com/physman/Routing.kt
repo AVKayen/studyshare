@@ -12,7 +12,12 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.io.File
 
-fun Application.configureRouting(taskRepository: TaskRepository, imageRepository: ImageRepository, userRepository: UserRepository) {
+fun Application.configureRouting(
+    imageRepository: ImageRepository,
+    solutionRepository: SolutionRepository,
+    taskRepository: TaskRepository,
+    userRepository: UserRepository
+) {
     routing {
         staticFiles("/static", File("static"))
 
@@ -30,8 +35,12 @@ fun Application.configureRouting(taskRepository: TaskRepository, imageRepository
             formExampleRouter()
         }
 
+        route("/solutions") {
+            solutionRouter(solutionRepository)
+        }
+
         route("/tasks") {
-            taskRouter(taskRepository)
+            taskRouter(taskRepository, solutionRepository)
         }
 
         route("/images") {
