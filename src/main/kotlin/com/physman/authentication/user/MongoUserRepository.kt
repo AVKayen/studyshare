@@ -14,7 +14,7 @@ class MongoUserRepository(database: MongoDatabase) : UserRepository {
     }
 
     override suspend fun getUserById(id: String): User? {
-        return users.find(eq(User::id.name, id)).firstOrNull()
+        return users.find(eq("_id", id)).firstOrNull()
     }
 
     override suspend fun getUserByName(name: String): User? {
@@ -22,7 +22,7 @@ class MongoUserRepository(database: MongoDatabase) : UserRepository {
     }
 
     override suspend fun deleteUser(id: String) {
-        users.findOneAndDelete(eq(User::id.name, id))
+        users.findOneAndDelete(eq("_id", id))
     }
 
     override suspend fun login(name: String, password: String): UserSession? {
