@@ -3,6 +3,7 @@ package com.physman.authentication.user
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.mongodb.client.model.Filters.*
 import kotlinx.coroutines.flow.firstOrNull
+import org.bson.types.ObjectId
 import org.mindrot.jbcrypt.BCrypt
 
 class MongoUserRepository(database: MongoDatabase) : UserRepository {
@@ -14,7 +15,7 @@ class MongoUserRepository(database: MongoDatabase) : UserRepository {
     }
 
     override suspend fun getUserById(id: String): User? {
-        return users.find(eq("_id", id)).firstOrNull()
+        return users.find(eq("_id", ObjectId(id))).firstOrNull()
     }
 
     override suspend fun getUserByName(name: String): User? {
@@ -22,7 +23,7 @@ class MongoUserRepository(database: MongoDatabase) : UserRepository {
     }
 
     override suspend fun deleteUser(id: String) {
-        users.findOneAndDelete(eq("_id", id))
+        users.findOneAndDelete(eq("_id", ObjectId(id)))
     }
 
     override suspend fun login(name: String, password: String): UserSession? {
