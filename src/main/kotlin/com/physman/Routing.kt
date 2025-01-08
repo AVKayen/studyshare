@@ -1,9 +1,9 @@
 package com.physman
 
+import com.physman.authentication.user.UserRepository
 import com.physman.routes.*
 import com.physman.forms.*
 import com.physman.image.ImageRepository
-import com.physman.solution.SolutionRepository
 import com.physman.task.TaskRepository
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -15,7 +15,8 @@ import java.io.File
 fun Application.configureRouting(
     imageRepository: ImageRepository,
     solutionRepository: SolutionRepository,
-    taskRepository: TaskRepository
+    taskRepository: TaskRepository,
+    userRepository: UserRepository
 ) {
     routing {
         staticFiles("/static", File("static"))
@@ -25,7 +26,7 @@ fun Application.configureRouting(
         }
 
         route("/auth") {
-            authRouter()
+            authRouter(userRepository)
         }
         route("/forms") {
             configureForms(globalFormRouter)

@@ -107,7 +107,7 @@ class Form(
     }
 
     // TODO: Add some styling to the error (or even entire form)
-    private suspend fun respondFormError(call: RoutingCall, error: String) {
+    suspend fun respondFormError(call: RoutingCall, error: String) {
         call.respondHtml {
             body {
                 div {

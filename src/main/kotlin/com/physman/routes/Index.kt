@@ -1,6 +1,6 @@
 package com.physman.routes
 
-import com.physman.authentication.UserSession
+import com.physman.authentication.user.UserSession
 import com.physman.templates.*
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -16,7 +16,7 @@ fun Route.homeRouter() {
             call.respondHtml(HttpStatusCode.OK) {
                 index(title = "String") {
                     h1 {
-                        +userSession.username
+                        +userSession.name
                     }
                 }
             }
