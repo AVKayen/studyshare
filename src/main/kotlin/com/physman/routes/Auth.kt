@@ -80,7 +80,7 @@ fun Route.authRouter(userRepository: UserRepository) {
             try {
                 session = userRepository.register(username, password)
             } catch (e: Exception) {
-                registerForm.respondFormError(call, e.toString())
+                registerForm.respondFormError(call, e.message!!)
                 return@post
             }
             call.sessions.set(session)
