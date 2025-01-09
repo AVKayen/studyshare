@@ -39,7 +39,7 @@ fun Application.configureRouting(
         }
 
         route("/tasks") {
-            taskRouter(taskRepository, solutionRepository)
+            taskRouter(taskRepository)
         }
 
         authenticate("USER") {

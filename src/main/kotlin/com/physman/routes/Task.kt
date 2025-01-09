@@ -1,11 +1,9 @@
 package com.physman.routes
 
 import com.physman.forms.*
-import com.physman.solution.SolutionRepository
 import com.physman.task.Task
 import com.physman.task.TaskRepository
 import com.physman.templates.index
-import com.physman.templates.solutionTemplate
 import com.physman.templates.taskPreviewTemplate
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -17,10 +15,11 @@ import com.physman.utils.validateObjectIds
 import io.ktor.server.response.*
 import kotlinx.html.InputType
 import kotlinx.html.body
+import kotlinx.html.div
+import kotlinx.html.span
 
 
-
-fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: SolutionRepository) {
+fun Route.taskRouter(taskRepository: TaskRepository) {
 
     val taskCreationForm = Form("Create a new task", "taskForm", mapOf(
 //        "hx-target" to "#task-list",
@@ -88,16 +87,18 @@ fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: Solutio
                 return@get
             }
 
-            val solutions = solutionRepository.getSolutions(taskId)
-            // TODO Sorry, I've broken the sorting
-
             call.respondHtml(HttpStatusCode.OK) {
                 index("Task") {
 
                     taskTemplate(taskView)
 
-                    for (solution in solutions){
-                        solutionTemplate(solution, taskId.toString())
+                    div {
+                        attributes["hx-get"] = "/solutions?taskId=${taskView.task.id}"
+                        attributes["hx-trigger"] = "load"
+
+                        span(classes = "htmx-indicator") {
+                            +"Loading..."
+                        }
                     }
                 }
             }

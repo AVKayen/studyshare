@@ -7,6 +7,7 @@ import com.physman.forms.globalFormRouter
 import com.physman.solution.Solution
 import com.physman.solution.SolutionRepository
 import com.physman.templates.index
+import com.physman.templates.solutionTemplate
 import com.physman.utils.additionalNotesValidator
 import com.physman.utils.titleValidator
 import com.physman.utils.validateObjectIds
@@ -44,6 +45,22 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                 solutionCreationForm.render(this, "/solutions?taskId=$taskId")
             }
         }
+    }
+
+    get {
+        val objectIds = validateObjectIds(call, "taskId") ?: return@get
+        val taskId = objectIds["taskId"]!!
+
+        val solutions = solutionRepository.getSolutions(taskId = taskId)
+
+        call.respondHtml {
+            body {
+                for (solution in solutions) {
+                    solutionTemplate(solution, taskId.toString())
+                }
+            }
+        }
+
     }
 
     post {
