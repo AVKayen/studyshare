@@ -93,7 +93,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val userSession = call.sessions.get<UserSession>()!! //idk if this can be null
             val userId = ObjectId(userSession.id)
 
-            solutionRepository.upvoteSolution(solutionId, userId) // TODO use a real userId
+            solutionRepository.upvoteSolution(solutionId, userId)
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
