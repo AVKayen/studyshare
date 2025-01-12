@@ -3,14 +3,14 @@ package com.physman.routes
 import com.physman.forms.*
 import com.physman.task.Task
 import com.physman.task.TaskRepository
+import com.physman.task.additionalNotesValidator
+import com.physman.task.titleValidator
 import com.physman.templates.index
 import com.physman.templates.taskPreviewTemplate
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.routing.*
 import com.physman.templates.taskTemplate
-import com.physman.utils.additionalNotesValidator
-import com.physman.utils.titleValidator
 import com.physman.utils.validateObjectIds
 import io.ktor.server.response.*
 import kotlinx.html.InputType

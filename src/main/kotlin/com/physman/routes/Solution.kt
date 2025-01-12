@@ -4,10 +4,10 @@ import com.physman.authentication.user.UserSession
 import com.physman.forms.*
 import com.physman.solution.Solution
 import com.physman.solution.SolutionRepository
+import com.physman.solution.additionalNotesValidator
+import com.physman.solution.titleValidator
 import com.physman.templates.index
 import com.physman.templates.solutionTemplate
-import com.physman.utils.additionalNotesValidator
-import com.physman.utils.titleValidator
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
