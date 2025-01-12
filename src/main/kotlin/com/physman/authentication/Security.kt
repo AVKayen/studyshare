@@ -1,6 +1,5 @@
 package com.physman.authentication
 
-import com.physman.authentication.user.UserRepository
 import com.physman.authentication.user.UserSession
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -11,7 +10,7 @@ val validateUserSession: suspend ApplicationCall.(UserSession) -> UserSession? =
     if (session.name.isNotEmpty()) session else null
 }
 
-fun Application.configureSecurity(userRepository: UserRepository) {
+fun Application.configureSecurity() {
     install(Sessions) {
         // Sessions are stored in the server's in-memory database
         cookie<UserSession>("SESSION", SessionStorageMemory()) {
@@ -26,6 +25,7 @@ fun Application.configureSecurity(userRepository: UserRepository) {
                 validateUserSession
             }
             challenge {
+                call.response.headers.append("HX-Redirect", "/auth/login")
                 call.respondRedirect("/auth/login")
             }
         }

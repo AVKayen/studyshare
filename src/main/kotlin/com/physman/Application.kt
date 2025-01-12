@@ -22,7 +22,7 @@ fun Application.module() {
     val taskRepository = MongoTaskRepository(database, imageRepository, solutionRepository)
     val userRepository = MongoUserRepository(database)
 
-    configureSecurity(userRepository)
+    configureSecurity()
     configureRouting(
         solutionRepository = solutionRepository,
         taskRepository = taskRepository,
