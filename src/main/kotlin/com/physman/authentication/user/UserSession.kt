@@ -13,5 +13,4 @@ data class UserSession(
 
     val id: String = ObjectId().toHexString(),
     val name: String,
-
 )

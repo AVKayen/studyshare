@@ -8,6 +8,7 @@ import kotlinx.html.*
 fun FlowContent.solutionTemplate(solutionView: SolutionView) {
 
     val upvoteCountSpanId = "upvote-count-${solutionView.solution.id}"
+    val upvoteButtonId = "upvote-btn-${solutionView.solution.id}"
 
     article(classes = "flex-col-solution") {
         header {
@@ -23,8 +24,13 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
 
         div {
             button {
+                attributes["id"] = upvoteButtonId
                 attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
                 attributes["hx-target"] = "#$upvoteCountSpanId"
+
+                if (solutionView.isUpvoted) {
+                    attributes["disabled"] = "true"
+                }
 
                 +"upvote button"
             }

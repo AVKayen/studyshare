@@ -14,8 +14,7 @@ import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import kotlinx.html.InputType
-import kotlinx.html.body
+import kotlinx.html.*
 import org.bson.types.ObjectId
 
 
@@ -51,7 +50,10 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
         val objectIds = validateObjectIds(call, "taskId") ?: return@get
         val taskId = objectIds["taskId"]!!
 
-        val solutions = solutionRepository.getSolutions(taskId = taskId)
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+
+        val solutions = solutionRepository.getSolutions(taskId = taskId, userId = userId)
 
         call.respondHtml {
             body {
@@ -98,6 +100,14 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             call.respondHtml(HttpStatusCode.OK) {
                 body {
                     +newUpvoteCount.toString()
+
+                    button {
+                        attributes["id"] = "upvote-btn-$solutionId"
+                        attributes["hx-swap-oob"] = "true"
+                        attributes["disabled"] = "true"
+
+                        +"upvote button"
+                    }
                 }
             }
         }

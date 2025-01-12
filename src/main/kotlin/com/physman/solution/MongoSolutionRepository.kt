@@ -35,9 +35,9 @@ class MongoSolutionRepository(
         val filter = Filters.eq("_id", id)
         val updates = Updates.addToSet(Solution::upvotes.name, userId)
 
-        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0 // TODO: handle error (solution does not exist)
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
         if (solution.upvotes.contains(userId)) {
-            return solution.upvoteCount() // TODO: handle error (user has already upvoted this solution)
+            return solution.upvoteCount()
         }
 
         return solution.upvoteCount() + 1
@@ -51,12 +51,13 @@ class MongoSolutionRepository(
         solutionCollection.deleteMany(filter)
     }
 
-    override suspend fun getSolutions(taskId: ObjectId): List<SolutionView> {
+    override suspend fun getSolutions(taskId: ObjectId, userId: ObjectId): List<SolutionView> {
         val filter = Filters.eq(Solution::taskId.name, taskId)
         return solutionCollection.find(filter).toList().map { solution: Solution ->
             SolutionView(
                 solution = solution,
-                attachments = attachmentRepository.getAttachments(solution.attachmentIds)
+                attachments = attachmentRepository.getAttachments(solution.attachmentIds),
+                isUpvoted = solution.upvotes.contains(userId)
             )
         }
     }
