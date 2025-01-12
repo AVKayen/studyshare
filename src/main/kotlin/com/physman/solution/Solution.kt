@@ -2,6 +2,11 @@ package com.physman.solution
 
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
+import com.physman.task.titleValidator
+import com.physman.task.additionalNotesValidator
+
+val titleValidator = titleValidator
+val additionalNotesValidator = additionalNotesValidator
 
 data class Solution(
     @BsonId
