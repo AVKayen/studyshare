@@ -84,10 +84,11 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
         }
     }
 
-    // TODO create and return a real media link
     override suspend fun getAttachmentLink(attachment: Attachment): String {
         val blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, attachment.blobName)).build()
-        val url = storage.signUrl(blobInfo, 30,
+        val url = storage.signUrl(
+            blobInfo,
+            30,
             TimeUnit.MINUTES,
             Storage.SignUrlOption.withV4Signature()
         )
