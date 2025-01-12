@@ -6,6 +6,7 @@ import com.physman.forms.UploadFileData
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
 import java.nio.file.Files
+import java.util.concurrent.TimeUnit
 
 
 class MongoGCloudAttachmentRepository(private val bucketName: String, database: MongoDatabase) : AttachmentRepository {
@@ -85,9 +86,11 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
 
     // TODO create and return a real media link
     override suspend fun getAttachmentLink(attachment: Attachment): String {
-//        val blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, attachment.blobName)).build()
-//        val url = storage.signUrl(blobInfo, 30, TimeUnit.MINUTES, Storage.SignUrlOption.withV4Signature())
-//        return url.toString()
-        return "/static/placeholder_image.jpg"
+        val blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, attachment.blobName)).build()
+        val url = storage.signUrl(blobInfo, 30,
+            TimeUnit.MINUTES,
+            Storage.SignUrlOption.withV4Signature()
+        )
+        return url.toString()
     }
 }
