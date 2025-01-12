@@ -1,8 +1,8 @@
 package com.physman.solution
 
-import com.physman.image.ImageView
+import com.physman.attachment.AttachmentView
 
 data class SolutionView(
     val solution: Solution,
-    val images: List<ImageView>
+    val attachments: List<AttachmentView>
 )

@@ -11,7 +11,7 @@ data class Solution(
     val title: String,
     val additionalNotes: String? = null,
     val upvotes: List<ObjectId> = emptyList(), // Ids of users who upvoted the solution
-    val imageIds: List<ObjectId> = emptyList()
+    val attachmentIds: List<ObjectId> = emptyList()
 ) : Comparable<Solution> {
     override fun compareTo(other: Solution): Int {
         return -1 * compareValues(this.upvotes.size, other.upvotes.size)

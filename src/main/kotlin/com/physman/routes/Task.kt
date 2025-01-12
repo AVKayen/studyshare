@@ -18,7 +18,7 @@ import kotlinx.html.body
 import kotlinx.html.div
 import kotlinx.html.span
 
-
+// TODO: Error handling
 fun Route.taskRouter(taskRepository: TaskRepository) {
 
     val taskCreationForm = Form("Create a new task", "taskForm", mapOf(
@@ -61,17 +61,13 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
         val formSubmissionData: FormSubmissionData = taskCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
-        val files = formSubmissionData.files!!
-
-        formSubmissionData.cleanup()
+        val files = formSubmissionData.files
+        print(files)
 
         val newTask = Task(title = title, additionalNotes = additionalNotes)
 
-        val success = taskRepository.createTask(newTask)
-        if (!success) {
-            call.respondText(text = "Task has not been created.", status = HttpStatusCode.BadRequest)
-            return@post
-        }
+        taskRepository.createTask(newTask, files)
+        formSubmissionData.cleanup()
 
         call.response.status(HttpStatusCode.NoContent)
     }
@@ -108,11 +104,8 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             val objectIds = validateObjectIds(call, "id") ?: return@delete
             val taskId = objectIds["id"]!!
 
-            val success = taskRepository.deleteTask(taskId)
-            if(!success) {
-                call.respondText(text = "Task has not been deleted.", status = HttpStatusCode.BadRequest)
-                return@delete
-            }
+            taskRepository.deleteTask(taskId)
+
             call.response.status(HttpStatusCode.NoContent)
         }
     }

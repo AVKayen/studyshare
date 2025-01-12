@@ -1,6 +1,6 @@
 package com.physman.templates
 
-import com.physman.image.ImageView
+import com.physman.attachment.AttachmentView
 import com.physman.task.TaskView
 import kotlinx.html.FlowContent
 import kotlinx.html.*
@@ -21,9 +21,19 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
         }
 
         div {
-            taskView.images.forEach { imageView: ImageView ->
-                a(href=imageView.link) {
-                    attributes["alt"] = imageView.image.originalFilename
+            taskView.attachments.forEach { attachmentView: AttachmentView ->
+                if (attachmentView.attachment.isImage()) {
+                    img(src = attachmentView.link, alt = attachmentView.attachment.originalFilename)
+                }
+            }
+        }
+
+        div {
+            taskView.attachments.forEach { attachmentView: AttachmentView ->
+                if (!attachmentView.attachment.isImage()) {
+                    a(href=attachmentView.link) {
+                        +attachmentView.attachment.originalFilename
+                    }
                 }
             }
         }

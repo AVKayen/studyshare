@@ -1,4 +1,4 @@
-package com.physman.image
+package com.physman.attachment
 
 //class InMemoryImageRepository : ImageRepository {
 //    private val images = mutableMapOf<String, Image>()

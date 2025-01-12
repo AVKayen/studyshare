@@ -1,11 +1,11 @@
 package com.physman.templates
 
-import com.physman.image.ImageView
+import com.physman.attachment.AttachmentView
 import com.physman.solution.SolutionView
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.solutionTemplate(solutionView: SolutionView, taskId: String) {
+fun FlowContent.solutionTemplate(solutionView: SolutionView) {
 
     article(classes = "flex-col-solution") {
         header {
@@ -30,9 +30,19 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView, taskId: String) {
         }
 
         div {
-            solutionView.images.forEach { imageView: ImageView ->
-                a(href=imageView.link) {
-                    attributes["alt"] = imageView.image.originalFilename
+            solutionView.attachments.forEach { attachmentView: AttachmentView ->
+                if (attachmentView.attachment.isImage()) {
+                    img(src = attachmentView.link, alt = attachmentView.attachment.originalFilename)
+                }
+            }
+        }
+
+        div {
+            solutionView.attachments.forEach { attachmentView: AttachmentView ->
+                if (!attachmentView.attachment.isImage()) {
+                    a(href=attachmentView.link) {
+                        +attachmentView.attachment.originalFilename
+                    }
                 }
             }
         }

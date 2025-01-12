@@ -1,55 +1,49 @@
 package com.physman.solution
 
-import com.mongodb.MongoException
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import com.physman.image.ImageRepository
+import com.physman.attachment.AttachmentRepository
+import com.physman.forms.UploadFileData
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
 
-// TODO implement images
+// TODO: error handling
 class MongoSolutionRepository(
     mongoDatabase: MongoDatabase,
-    private val imageRepository: ImageRepository
+    private val attachmentRepository: AttachmentRepository
 ) : SolutionRepository {
+
     private val solutionCollection = mongoDatabase.getCollection<Solution>("solutions")
 
-    override suspend fun createSolution(solution: Solution): Boolean {
-        try {
-            solutionCollection.insertOne(solution)
-            return true
-        } catch (e: MongoException) {
-            return false
-        }
+    override suspend fun createSolution(solution: Solution, files: List<UploadFileData>) {
+
+        val attachments = attachmentRepository.createAttachments(files)
+
+        val solutionWithAttachments = solution.copy(
+            attachmentIds = attachments.map { it.id }
+        )
+        solutionCollection.insertOne(solutionWithAttachments)
     }
 
-    override suspend fun deleteSolution(id: ObjectId): Boolean {
-        return try {
-            solutionCollection.deleteOne(Filters.eq("_id", id)).deletedCount == 1L
-        } catch (e: MongoException) {
-            false
-        }
+    override suspend fun deleteSolution(id: ObjectId) {
+        val solution = solutionCollection.findOneAndDelete(Filters.eq("_id", id)) ?: return
+        attachmentRepository.deleteAttachments(solution.attachmentIds)
     }
 
-    override suspend fun upvoteSolution(id: ObjectId, userId: ObjectId): Boolean {
+    override suspend fun upvoteSolution(id: ObjectId, userId: ObjectId) {
         val filter = Filters.eq("_id", id)
         val updates = Updates.addToSet(Solution::upvotes.name, userId)
 
-        return try {
-            solutionCollection.updateOne(filter, updates).modifiedCount == 1L
-        } catch (e: MongoException) {
-            false
-        }
+        solutionCollection.updateOne(filter, updates)
     }
 
-    override suspend fun deleteSolutions(taskId: ObjectId): Boolean {
+    override suspend fun deleteSolutions(taskId: ObjectId) {
         val filter = Filters.eq(Solution::taskId.name, taskId)
-        return try {
-            return solutionCollection.deleteMany(filter).deletedCount > 0
-        } catch (e: MongoException) {
-            false
+        solutionCollection.find(filter).collect { solution: Solution ->
+            attachmentRepository.deleteAttachments(solution.attachmentIds)
         }
+        solutionCollection.deleteMany(filter)
     }
 
     override suspend fun getSolutions(taskId: ObjectId): List<SolutionView> {
@@ -57,7 +51,7 @@ class MongoSolutionRepository(
         return solutionCollection.find(filter).toList().map { solution: Solution ->
             SolutionView(
                 solution = solution,
-                images = imageRepository.getImages(solution.imageIds)
+                attachments = attachmentRepository.getAttachments(solution.attachmentIds)
             )
         }
     }

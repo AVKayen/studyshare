@@ -9,5 +9,5 @@ data class Task(
 
     val title: String,
     val additionalNotes: String? = null,
-    val imageIds: List<ObjectId> = emptyList(),
+    val attachmentIds: List<ObjectId> = emptyList(),
 )
