@@ -65,8 +65,8 @@ fun Route.authRouter(userRepository: UserRepository) {
                 index("Register") {
                     registerForm.render(this, "/auth/register")
                     div {
-                        a("/auth/register") {
-                            +"Don't have an account? Register here"
+                        a("/auth/login") {
+                            +"Already have an account? Log in here"
                         }
                     }
                 }
