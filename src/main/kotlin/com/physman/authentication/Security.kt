@@ -1,9 +1,10 @@
 package com.physman.authentication
 
 import com.physman.authentication.user.UserSession
+import com.physman.utils.smartRedirect
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
-import io.ktor.server.response.*
+import io.ktor.server.request.*
 import io.ktor.server.sessions.*
 
 val validateUserSession: suspend ApplicationCall.(UserSession) -> UserSession? = { session ->
@@ -25,8 +26,9 @@ fun Application.configureSecurity() {
                 validateUserSession
             }
             challenge {
-                call.response.headers.append("HX-Redirect", "/auth/login")
-                call.respondRedirect("/auth/login")
+                val redirectAfterLoginUrl = call.request.path()
+                val redirectUrl = "/auth/login?redirectUrl=$redirectAfterLoginUrl"
+                call.smartRedirect(redirectUrl)
             }
         }
     }

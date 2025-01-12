@@ -5,13 +5,13 @@ import com.physman.forms.Form
 import com.physman.forms.TextlikeInput
 import com.physman.forms.globalFormRouter
 import com.physman.templates.index
+import com.physman.utils.smartRedirect
 import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.html.InputType
 import kotlinx.html.a
-import kotlinx.html.body
 import kotlinx.html.div
 
 
@@ -33,18 +33,22 @@ fun Route.authRouter(userRepository: UserRepository) {
 
     route("/login") {
         get {
+            val redirectUrl = call.queryParameters["redirectUrl"] ?: "/"
             call.respondHtml {
                 index("Login") {
-                    loginForm.render(this, "/auth/login")
+                    loginForm.render(this, "/auth/login?redirectUrl=$redirectUrl")
                     div {
-                        a("/auth/register") {
-                            +"Don't have an account? Register here"
+                        +"Don't have an account? "
+                        a("/auth/register?redirectUrl=$redirectUrl") {
+                            +"Register here."
                         }
                     }
                 }
             }
         }
         post {
+            val redirectUrl = call.queryParameters["redirectUrl"] ?: "/"
+
             val formSubmissionData = loginForm.validateSubmission(call) ?: return@post
             val username = formSubmissionData.fields["name"]!!
             val password = formSubmissionData.fields["password"]!!
@@ -54,25 +58,28 @@ fun Route.authRouter(userRepository: UserRepository) {
                 return@post
             }
             call.sessions.set(session)
-            call.response.headers.append("HX-Redirect", "/")
-            call.respondText("Redirecting to home...")
+            call.smartRedirect(redirectUrl)
         }
     }
 
     route ("/register") {
         get {
+            val redirectUrl = call.queryParameters["redirectUrl"] ?: "/"
             call.respondHtml {
                 index("Register") {
-                    registerForm.render(this, "/auth/register")
+                    registerForm.render(this, "/auth/register?redirectUrl=$redirectUrl")
                     div {
-                        a("/auth/login") {
-                            +"Already have an account? Log in here"
+                        +"Already have an account? "
+                        a("/auth/login?redirectUrl=$redirectUrl") {
+                            +"Log in here."
                         }
                     }
                 }
             }
         }
         post {
+            val redirectUrl = call.queryParameters["redirectUrl"] ?: "/"
+
             val formSubmissionData = registerForm.validateSubmission(call) ?: return@post
             val username = formSubmissionData.fields["name"]!!
             val password = formSubmissionData.fields["password"]!!
@@ -84,8 +91,7 @@ fun Route.authRouter(userRepository: UserRepository) {
                 return@post
             }
             call.sessions.set(session)
-            call.response.headers.append("HX-Redirect", "/")
-            call.respondRedirect("/")
+            call.smartRedirect(redirectUrl)
         }
     }
 

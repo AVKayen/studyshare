@@ -24,25 +24,27 @@ fun Application.configureRouting(
             call.respondText("Running!")
         }
 
-        route("/auth") {
-            authRouter(userRepository)
-        }
         route("/forms") {
             configureForms(globalFormRouter)
         }
+
+        route("/auth") {
+            authRouter(userRepository)
+        }
+
         route("/form-example") {
             formExampleRouter()
         }
 
-        route("/solutions") {
-            solutionRouter(solutionRepository)
-        }
-
-        route("/tasks") {
-            taskRouter(taskRepository)
-        }
-
         authenticate("USER") {
+
+            route("/solutions") {
+                solutionRouter(solutionRepository)
+            }
+
+            route("/tasks") {
+                taskRouter(taskRepository)
+            }
             route("/") {
                 homeRouter()
             }
