@@ -16,18 +16,6 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
 
     private fun uploadAttachments(attachment: Attachment, content: ByteArray) {
         val blobName = attachment.blobName
-
-//        var blob: Blob? = storage.get(bucketName, blobName)
-//
-//        if (blob == null) {
-//            val blobId = BlobId.of(bucketName, blobName)
-//            val blobInfo = BlobInfo.newBuilder(blobId).setContentType(attachment.mime ?: "").build()
-//            blob = storage.create(blobInfo)
-//        }
-//
-//        val precondition: Storage.BlobTargetOption = Storage.BlobTargetOption.generationMatch(blob!!.generation)
-//        storage.create(blob, content, precondition)
-
         val blobId = BlobId.of(bucketName, blobName)
         val blobInfo = BlobInfo.newBuilder(blobId).setContentType(attachment.mime ?: "application/octet-stream").build()
         storage.create(blobInfo, content)
