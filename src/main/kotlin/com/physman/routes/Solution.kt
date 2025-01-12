@@ -90,14 +90,14 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val objectIds = validateObjectIds(call, "id") ?: return@get
             val solutionId = objectIds["id"]!!
 
-            val userSession = call.sessions.get<UserSession>()!! //idk if this can be null
+            val userSession = call.sessions.get<UserSession>()!!
             val userId = ObjectId(userSession.id)
 
-            solutionRepository.upvoteSolution(solutionId, userId)
+            val newUpvoteCount = solutionRepository.upvoteSolution(solutionId, userId)
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-//                    solutionTemplate(upvotedSolution, taskId)
+                    +newUpvoteCount.toString()
                 }
             }
         }

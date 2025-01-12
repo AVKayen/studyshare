@@ -7,17 +7,24 @@ import kotlinx.html.*
 
 fun FlowContent.solutionTemplate(solutionView: SolutionView) {
 
+    val upvoteCountSpanId = "upvote-count-${solutionView.solution.id}"
+
     article(classes = "flex-col-solution") {
         header {
             h2 {
-                +"+${solutionView.solution.upvoteCount()} ${solutionView.solution.title}"
+                span {
+                    attributes["id"] = upvoteCountSpanId
+                    +solutionView.solution.upvoteCount().toString()
+                }
+                +" "
+                +solutionView.solution.title
             }
         }
 
         div {
             button {
                 attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
-                attributes["hx-swap"] = "none" // TODO change this to replace the current upvote count
+                attributes["hx-target"] = "#$upvoteCountSpanId"
 
                 +"upvote button"
             }

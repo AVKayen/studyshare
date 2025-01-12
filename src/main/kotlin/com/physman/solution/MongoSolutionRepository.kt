@@ -31,11 +31,16 @@ class MongoSolutionRepository(
         attachmentRepository.deleteAttachments(solution.attachmentIds)
     }
 
-    override suspend fun upvoteSolution(id: ObjectId, userId: ObjectId) {
+    override suspend fun upvoteSolution(id: ObjectId, userId: ObjectId): Int {
         val filter = Filters.eq("_id", id)
         val updates = Updates.addToSet(Solution::upvotes.name, userId)
 
-        solutionCollection.updateOne(filter, updates)
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0 // TODO: handle error (solution does not exist)
+        if (solution.upvotes.contains(userId)) {
+            return solution.upvoteCount() // TODO: handle error (user has already upvoted this solution)
+        }
+
+        return solution.upvoteCount() + 1
     }
 
     override suspend fun deleteSolutions(taskId: ObjectId) {
