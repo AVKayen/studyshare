@@ -1,5 +1,6 @@
 package com.physman.routes
 
+import com.physman.authentication.user.UserSession
 import com.physman.forms.*
 import com.physman.solution.Solution
 import com.physman.solution.SolutionRepository
@@ -12,6 +13,7 @@ import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
 import kotlinx.html.InputType
 import kotlinx.html.body
 import org.bson.types.ObjectId
@@ -88,7 +90,10 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val objectIds = validateObjectIds(call, "id") ?: return@get
             val solutionId = objectIds["id"]!!
 
-            solutionRepository.upvoteSolution(solutionId, ObjectId()) // TODO use a real userId
+            val userSession = call.sessions.get<UserSession>()!! //idk if this can be null
+            val userId = ObjectId(userSession.id)
+
+            solutionRepository.upvoteSolution(solutionId, userId) // TODO use a real userId
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
