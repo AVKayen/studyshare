@@ -1,11 +1,9 @@
 package com.physman.routes
 
 import com.physman.forms.*
-import com.physman.solution.SolutionRepository
 import com.physman.task.Task
 import com.physman.task.TaskRepository
 import com.physman.templates.index
-import com.physman.templates.solutionTemplate
 import com.physman.templates.taskPreviewTemplate
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -17,10 +15,11 @@ import com.physman.utils.validateObjectIds
 import io.ktor.server.response.*
 import kotlinx.html.InputType
 import kotlinx.html.body
+import kotlinx.html.div
+import kotlinx.html.span
 
-
-
-fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: SolutionRepository) {
+// TODO: Error handling
+fun Route.taskRouter(taskRepository: TaskRepository) {
 
     val taskCreationForm = Form("Create a new task", "taskForm", mapOf(
 //        "hx-target" to "#task-list",
@@ -35,10 +34,10 @@ fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: Solutio
     globalFormRouter.routeFormValidators(taskCreationForm)
 
     get {
-        val tasks = taskRepository.getTasks()
+        val taskViews = taskRepository.getTasks()
         call.respondHtml {
             body {
-                for (task in tasks) {
+                for (task in taskViews) {
                     taskPreviewTemplate(task)
                 }
             }
@@ -62,23 +61,15 @@ fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: Solutio
         val formSubmissionData: FormSubmissionData = taskCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
-        val files = formSubmissionData.files!!
-
-        formSubmissionData.cleanup()
+        val files = formSubmissionData.files
+        print(files)
 
         val newTask = Task(title = title, additionalNotes = additionalNotes)
 
-        val success = taskRepository.createTask(newTask)
-        if (!success) {
-            call.respondText(text = "Task has not been created.", status = HttpStatusCode.BadRequest)
-            return@post
-        }
+        taskRepository.createTask(newTask, files)
+        formSubmissionData.cleanup()
 
-        call.respondHtml(HttpStatusCode.OK) {
-            body {
-//                taskTemplate(newTask, imageLinks)
-            }
-        }
+        call.response.status(HttpStatusCode.NoContent)
     }
 
     route("/{id}") {
@@ -86,22 +77,24 @@ fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: Solutio
             val objectIds = validateObjectIds(call, "id") ?: return@get
             val taskId = objectIds["id"]!!
 
-            val task = taskRepository.getTask(taskId)
-            if(task == null) {
+            val taskView = taskRepository.getTask(taskId)
+            if(taskView == null) {
                 call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
                 return@get
             }
 
-            val solutions = solutionRepository.getSolutions(taskId)
-            // TODO Sorry, I've broken the sorting
-
             call.respondHtml(HttpStatusCode.OK) {
                 index("Task") {
 
-                    taskTemplate(task, emptyList())
+                    taskTemplate(taskView)
 
-                    for (solution in solutions){
-                        solutionTemplate(solution, taskId.toString())
+                    div {
+                        attributes["hx-get"] = "/solutions?taskId=${taskView.task.id}"
+                        attributes["hx-trigger"] = "load"
+
+                        span(classes = "htmx-indicator") {
+                            +"Loading..."
+                        }
                     }
                 }
             }
@@ -111,11 +104,8 @@ fun Route.taskRouter(taskRepository: TaskRepository, solutionRepository: Solutio
             val objectIds = validateObjectIds(call, "id") ?: return@delete
             val taskId = objectIds["id"]!!
 
-            val success = taskRepository.deleteTask(taskId)
-            if(!success) {
-                call.respondText(text = "Task has not been deleted.", status = HttpStatusCode.BadRequest)
-                return@delete
-            }
+            taskRepository.deleteTask(taskId)
+
             call.response.status(HttpStatusCode.NoContent)
         }
     }

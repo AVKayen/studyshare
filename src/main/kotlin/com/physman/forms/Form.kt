@@ -26,7 +26,8 @@ const val MAX_FILE_SIZE_BYTES: Long = MAX_FILE_SIZE * 1024 * 1024
 
 class UploadFileData(
     val filePath: java.nio.file.Path,
-    val originalName: String
+    val originalName: String,
+    val mimeType: String?,
 ) {
     fun deleteFile() {
         filePath.deleteIfExists()
@@ -35,14 +36,12 @@ class UploadFileData(
 
 class FormSubmissionData(
     val fields: Map<String, String>,
-    val files: List<UploadFileData>?
+    val files: List<UploadFileData> = emptyList()
 ) {
     // To be called in the router after finished working with the submission data
     fun cleanup() {
-        files?.let {
-            it.forEach { uploadFileData ->
-                uploadFileData.deleteFile()
-            }
+        files.forEach { uploadFileData ->
+            uploadFileData.deleteFile()
         }
     }
 }
@@ -185,7 +184,8 @@ class Form(
 
                     files.add(UploadFileData(
                         filePath = tempFilePath,
-                        originalName = part.originalFileName ?: "unknown"
+                        originalName = part.originalFileName ?: "unknown",
+                        mimeType = part.contentType?.toString()
                     ))
                 }
 
@@ -226,7 +226,6 @@ class Form(
             val fields = validateFormParameters(call) ?: return null
             return FormSubmissionData(
                 fields = fields,
-                files = null
             )
         }
         return validateMultipartData(call)

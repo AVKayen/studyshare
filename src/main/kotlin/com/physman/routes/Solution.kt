@@ -1,9 +1,6 @@
 package com.physman.routes
 
-import com.physman.forms.Form
-import com.physman.forms.FormSubmissionData
-import com.physman.forms.TextlikeInput
-import com.physman.forms.globalFormRouter
+import com.physman.forms.*
 import com.physman.solution.Solution
 import com.physman.solution.SolutionRepository
 import com.physman.templates.index
@@ -25,7 +22,8 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             "hx-swap" to "none" // because currently this form is on an empty page
         ))
     solutionCreationForm.addInput(TextlikeInput("title", "title", InputType.text, titleValidator))
-        solutionCreationForm.addInput(TextlikeInput("additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+    solutionCreationForm.addInput(TextlikeInput("additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+    solutionCreationForm.addInput(FileInput("select files", "files", listOf(), inputAttributes = mapOf("multiple" to "true")))
 
     globalFormRouter.routeFormValidators(solutionCreationForm)
 
@@ -47,6 +45,22 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
         }
     }
 
+    get {
+        val objectIds = validateObjectIds(call, "taskId") ?: return@get
+        val taskId = objectIds["taskId"]!!
+
+        val solutions = solutionRepository.getSolutions(taskId = taskId)
+
+        call.respondHtml {
+            body {
+                for (solution in solutions) {
+                    solutionTemplate(solution)
+                }
+            }
+        }
+
+    }
+
     post {
         val objectIds = validateObjectIds(call, "taskId") ?: return@post
         val taskId = objectIds["taskId"]!!
@@ -57,15 +71,13 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
 
         val newSolution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId)
 
-        val success = solutionRepository.createSolution(newSolution)
-        if (!success) {
-            call.respondText(text = "Solution has not been created.", status = HttpStatusCode.BadRequest)
-            return@post
-        }
+        solutionRepository.createSolution(newSolution, formSubmissionData.files)
+        formSubmissionData.cleanup()
+
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(newSolution, taskId.toString())
+//                solutionTemplate(newSolution, taskId.toString())
             }
         }
     }
@@ -76,12 +88,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val objectIds = validateObjectIds(call, "id") ?: return@get
             val solutionId = objectIds["id"]!!
 
-            val success = solutionRepository.upvoteSolution(solutionId, ObjectId()) // TODO use a real userId
-
-            if (!success) {
-                call.respondText(text = "Solution has not been upvoted.", status = HttpStatusCode.NotFound)
-                return@get
-            }
+            solutionRepository.upvoteSolution(solutionId, ObjectId()) // TODO use a real userId
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
@@ -94,11 +101,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val objectIds = validateObjectIds(call, "id") ?: return@delete
             val solutionId = objectIds["id"]!!
 
-            val success = solutionRepository.deleteSolution(solutionId)
-            if(!success) {
-                call.respondText(text = "Solution has not been deleted.", status = HttpStatusCode.NotFound)
-                return@delete
-            }
+            solutionRepository.deleteSolution(solutionId)
             call.response.status(HttpStatusCode.NoContent)
         }
     }
