@@ -13,13 +13,13 @@ class MongoGCloudImageRepository(projectId: String, private val bucketName: Stri
     private val images = database.getCollection<Image>("images")
 
 
-    override suspend fun createImage(image: Image, content: ByteArray): Image {
+    override suspend fun createImage(image: Image, content: ByteArray, mimeType: String): Image {
         val objectId = image.serverLocation
         var blob: Blob? = storage.get(bucketName, objectId)
 
         if (blob == null) {
             val blobId = BlobId.of(bucketName, objectId)
-            val blobInfo = BlobInfo.newBuilder(blobId).build()
+            val blobInfo = BlobInfo.newBuilder(blobId).setContentType(mimeType).build()
             blob = storage.create(blobInfo)
         }
 

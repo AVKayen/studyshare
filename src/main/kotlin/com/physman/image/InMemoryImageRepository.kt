@@ -3,7 +3,7 @@ package com.physman.image
 class InMemoryImageRepository : ImageRepository {
     private val images = mutableMapOf<String, Image>()
 
-    override suspend fun createImage(image: Image, content: ByteArray): Image {
+    override suspend fun createImage(image: Image, content: ByteArray, mimeType: String): Image {
         images[image.id] = image
         return image
     }
