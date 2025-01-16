@@ -72,7 +72,7 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
         }
     }
 
-    override suspend fun getAttachmentLink(attachment: Attachment): String {
+    private fun getAttachmentLink(attachment: Attachment): String {
         val blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, attachment.blobName)).build()
         val url = storage.signUrl(
             blobInfo,
