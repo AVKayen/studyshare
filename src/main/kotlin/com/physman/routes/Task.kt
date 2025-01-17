@@ -1,5 +1,6 @@
 package com.physman.routes
 
+import com.physman.authentication.user.UserSession
 import com.physman.forms.*
 import com.physman.task.Task
 import com.physman.task.TaskRepository
@@ -13,10 +14,8 @@ import io.ktor.server.routing.*
 import com.physman.templates.taskTemplate
 import com.physman.utils.validateObjectIds
 import io.ktor.server.response.*
-import kotlinx.html.InputType
-import kotlinx.html.body
-import kotlinx.html.div
-import kotlinx.html.span
+import io.ktor.server.sessions.*
+import kotlinx.html.*
 
 // TODO: Error handling
 fun Route.taskRouter(taskRepository: TaskRepository) {
@@ -83,8 +82,15 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                 return@get
             }
 
+            val userSession = call.sessions.get<UserSession>()!!
+
             call.respondHtml(HttpStatusCode.OK) {
-                index("Task") {
+                index(
+                    title = "StudyShare",
+                    username = userSession.name,
+                    breadcrumbs = mapOf("tasks" to "/"),
+                    lastBreadcrumb = taskView.task.title
+                ) {
 
                     taskTemplate(taskView)
 
@@ -92,8 +98,8 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                         attributes["hx-get"] = "/solutions?taskId=${taskView.task.id}"
                         attributes["hx-trigger"] = "load"
 
-                        span(classes = "htmx-indicator") {
-                            +"Loading..."
+                        article(classes = "htmx-indicator") {
+                            attributes["aria-busy"] = "true"
                         }
                     }
                 }

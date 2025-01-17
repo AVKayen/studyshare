@@ -109,7 +109,7 @@ class Form(
     suspend fun respondFormError(call: RoutingCall, error: String) {
         call.respondHtml {
             body {
-                div {
+                div(classes = "form-error") {
                     attributes["id"] = "${formName}Error"
                     attributes["hx-swap-oob"] = "true"
 

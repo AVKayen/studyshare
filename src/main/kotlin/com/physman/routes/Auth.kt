@@ -10,9 +10,7 @@ import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import kotlinx.html.InputType
-import kotlinx.html.a
-import kotlinx.html.div
+import kotlinx.html.*
 
 
 fun Route.authRouter(userRepository: UserRepository) {
@@ -36,12 +34,15 @@ fun Route.authRouter(userRepository: UserRepository) {
             val redirectUrl = call.queryParameters["redirectUrl"] ?: "/"
             call.respondHtml {
                 index("Login") {
-                    loginForm.render(this, "/auth/login?redirectUrl=$redirectUrl")
-                    div {
+                    section {
+                        loginForm.render(this, "/auth/login?redirectUrl=$redirectUrl")
+                    }
+                    section {
                         +"Don't have an account? "
                         a("/auth/register?redirectUrl=$redirectUrl") {
-                            +"Register here."
+                            +"Register here"
                         }
+                        +"."
                     }
                 }
             }
@@ -67,12 +68,15 @@ fun Route.authRouter(userRepository: UserRepository) {
             val redirectUrl = call.queryParameters["redirectUrl"] ?: "/"
             call.respondHtml {
                 index("Register") {
-                    registerForm.render(this, "/auth/register?redirectUrl=$redirectUrl")
-                    div {
+                    section {
+                        registerForm.render(this, "/auth/register?redirectUrl=$redirectUrl")
+                    }
+                    section {
                         +"Already have an account? "
                         a("/auth/login?redirectUrl=$redirectUrl") {
-                            +"Log in here."
+                            +"Log in here"
                         }
+                        +"."
                     }
                 }
             }
