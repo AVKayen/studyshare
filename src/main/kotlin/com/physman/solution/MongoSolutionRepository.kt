@@ -5,6 +5,8 @@ import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.physman.attachment.AttachmentRepository
 import com.physman.forms.UploadFileData
+import com.physman.task.TaskView
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
 
@@ -26,6 +28,7 @@ class MongoSolutionRepository(
         solutionCollection.insertOne(solutionWithAttachments)
     }
 
+    //TODO: delete comments
     override suspend fun deleteSolution(id: ObjectId) {
         val solution = solutionCollection.findOneAndDelete(Filters.eq("_id", id)) ?: return
         attachmentRepository.deleteAttachments(solution.attachmentIds)
@@ -60,5 +63,10 @@ class MongoSolutionRepository(
                 isUpvoted = solution.upvotes.contains(userId)
             )
         }
+    }
+
+    override suspend fun getSolution(solutionId: ObjectId): Solution? {
+        val filter = Filters.eq(Solution::id.name, solutionId)
+        return solutionCollection.find(filter).firstOrNull()
     }
 }

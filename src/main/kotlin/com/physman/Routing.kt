@@ -1,6 +1,7 @@
 package com.physman
 
 import com.physman.authentication.user.UserRepository
+import com.physman.comment.CommentRepository
 import com.physman.routes.*
 import com.physman.forms.*
 import com.physman.task.TaskRepository
@@ -15,6 +16,7 @@ import java.io.File
 fun Application.configureRouting(
     solutionRepository: SolutionRepository,
     taskRepository: TaskRepository,
+    commentRepository: CommentRepository,
     userRepository: UserRepository
 ) {
     routing {
@@ -45,6 +47,11 @@ fun Application.configureRouting(
             route("/tasks") {
                 taskRouter(taskRepository)
             }
+
+            route("/comments") {
+                commentRouter(commentRepository)
+            }
+
             route("/") {
                 homeRouter()
             }

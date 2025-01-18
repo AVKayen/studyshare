@@ -4,7 +4,9 @@ import com.mongodb.client.model.Filters
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.physman.forms.UploadFileData
 import com.physman.attachment.AttachmentRepository
+import com.physman.solution.Solution
 import com.physman.solution.SolutionRepository
+import com.physman.solution.SolutionView
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
@@ -46,7 +48,14 @@ class MongoTaskRepository(
         )
     }
 
-    override suspend fun deleteTask(id: ObjectId) {
+//     override suspend fun getTaskBySolution(solutionId: ObjectId): TaskView? {
+//         val solution = solutionRepository.getSolution(solutionId) ?: return null
+//         val task = getTask(solution.taskId)
+//         return task
+//     }
+
+
+     override suspend fun deleteTask(id: ObjectId) {
         val filter = Filters.eq("_id", id)
         val task = taskCollection.findOneAndDelete(filter) ?: return
 
