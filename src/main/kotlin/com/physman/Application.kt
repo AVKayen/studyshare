@@ -26,6 +26,30 @@ fun Application.module() {
     val taskRepository = MongoTaskRepository(database, imageRepository, commentRepository, solutionRepository)
     val userRepository = MongoUserRepository(database)
 
+    install(StatusPages) {
+        exception<Throwable> { call, cause ->
+            call.respondHtml(HttpStatusCode.InternalServerError) {
+                index("Error") {
+                    h1 {
+                        +"A server error occurred: ${cause.localizedMessage}."
+                    }
+                    p {
+                        +"It's not your fault, it's ours. Please try again later."
+                    }
+                }
+            }
+        }
+        status(HttpStatusCode.NotFound) { call, _ -> // cause is redundant to know (it's always page not found)
+            call.respondHtml {
+                index("Not Found") {
+                    h1 {
+                        +"Page not found"
+                    }
+                }
+            }
+        }
+    }
+
     configureSecurity()
     configureRouting(
         solutionRepository = solutionRepository,
