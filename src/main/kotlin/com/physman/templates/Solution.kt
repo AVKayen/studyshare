@@ -59,5 +59,10 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
                 }
             }
         }
+
+        div {
+            a(href = "/comments/comment?parentId=${solutionView.solution.id}") {
+                +"Comment"}
+        }
     }
 }

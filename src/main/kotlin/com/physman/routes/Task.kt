@@ -87,6 +87,14 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                 index("Task") {
 
                     taskTemplate(taskView)
+                    div {
+                        attributes["hx-get"] = "/comments?parentId=${taskView.task.id}"
+                        attributes["hx-trigger"] = "load"
+
+                        span(classes = "htmx-indicator") {
+                            +"Loading..."
+                        }
+                    }
 
                     div {
                         attributes["hx-get"] = "/solutions?taskId=${taskView.task.id}"

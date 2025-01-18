@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.physman.forms.UploadFileData
 import com.physman.attachment.AttachmentRepository
+import com.physman.comment.CommentRepository
 import com.physman.solution.SolutionRepository
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
@@ -11,9 +12,10 @@ import org.bson.types.ObjectId
 
  // TODO: error handling
 class MongoTaskRepository(
-    mongoDatabase: MongoDatabase,
-    private val attachmentRepository: AttachmentRepository,
-    private val solutionRepository: SolutionRepository
+     mongoDatabase: MongoDatabase,
+     private val attachmentRepository: AttachmentRepository,
+     private val commentRepository: CommentRepository,
+     private val solutionRepository: SolutionRepository
 ) : TaskRepository {
     private val taskCollection = mongoDatabase.getCollection<Task>("tasks")
 
@@ -45,11 +47,11 @@ class MongoTaskRepository(
             attachments = attachmentRepository.getAttachments(task.attachmentIds)
         )
     }
+     override suspend fun deleteTask(id: ObjectId) {
+         val filter = Filters.eq("_id", id)
+         val task = taskCollection.findOneAndDelete(filter) ?: return
 
-    override suspend fun deleteTask(id: ObjectId) {
-        val filter = Filters.eq("_id", id)
-        val task = taskCollection.findOneAndDelete(filter) ?: return
-
+         commentRepository.deleteComments(id)
         solutionRepository.deleteSolutions(taskId = task.id)
         attachmentRepository.deleteAttachments(task.attachmentIds)
     }

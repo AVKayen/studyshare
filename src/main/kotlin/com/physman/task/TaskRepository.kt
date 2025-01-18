@@ -8,6 +8,7 @@ interface TaskRepository {
     suspend fun getTasks(): List<TaskView>
     suspend fun createTask(task: Task, files: List<UploadFileData>)
     suspend fun getTask(id: ObjectId): TaskView?
+//    suspend fun getTaskBySolution(solutionId: ObjectId): TaskView?
     suspend fun deleteTask(id: ObjectId)
 //    suspend fun updateTask(id: ObjectId, taskUpdate: TaskUpdate): Task?
 }

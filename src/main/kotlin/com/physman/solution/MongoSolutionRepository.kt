@@ -4,13 +4,16 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.physman.attachment.AttachmentRepository
+import com.physman.comment.CommentRepository
 import com.physman.forms.UploadFileData
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
 
 // TODO: error handling
 class MongoSolutionRepository(
     mongoDatabase: MongoDatabase,
+    private val commentRepository: CommentRepository,
     private val attachmentRepository: AttachmentRepository
 ) : SolutionRepository {
 
@@ -29,6 +32,7 @@ class MongoSolutionRepository(
     override suspend fun deleteSolution(id: ObjectId) {
         val solution = solutionCollection.findOneAndDelete(Filters.eq("_id", id)) ?: return
         attachmentRepository.deleteAttachments(solution.attachmentIds)
+        commentRepository.deleteComments(id)
     }
 
     override suspend fun upvoteSolution(id: ObjectId, userId: ObjectId): Int {
@@ -47,6 +51,7 @@ class MongoSolutionRepository(
         val filter = Filters.eq(Solution::taskId.name, taskId)
         solutionCollection.find(filter).collect { solution: Solution ->
             attachmentRepository.deleteAttachments(solution.attachmentIds)
+            commentRepository.deleteComments(solution.id)
         }
         solutionCollection.deleteMany(filter)
     }
@@ -60,5 +65,10 @@ class MongoSolutionRepository(
                 isUpvoted = solution.upvotes.contains(userId)
             )
         }
+    }
+
+    override suspend fun getSolution(solutionId: ObjectId): Solution? {
+        val filter = Filters.eq(Solution::id.name, solutionId)
+        return solutionCollection.find(filter).firstOrNull()
     }
 }

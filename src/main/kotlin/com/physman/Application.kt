@@ -6,11 +6,13 @@ import com.physman.authentication.configureSecurity
 import io.ktor.server.application.*
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
+import com.physman.comment.MongoCommentRepository
 import com.physman.solution.MongoSolutionRepository
 import com.physman.task.MongoTaskRepository
+import io.ktor.server.netty.*
 
 fun main(args: Array<String>) {
-    io.ktor.server.netty.EngineMain.main(args)
+    EngineMain.main(args)
 }
 
 fun Application.module() {
@@ -19,8 +21,9 @@ fun Application.module() {
     val database = mongodbClient.getDatabase("studyshare")
 
     val imageRepository = MongoGCloudAttachmentRepository(bucketName = "studyshare-files", database = database)
-    val solutionRepository = MongoSolutionRepository(database, imageRepository)
-    val taskRepository = MongoTaskRepository(database, imageRepository, solutionRepository)
+    val commentRepository = MongoCommentRepository(database)
+    val solutionRepository = MongoSolutionRepository(database, commentRepository, imageRepository)
+    val taskRepository = MongoTaskRepository(database, imageRepository, commentRepository, solutionRepository)
     val userRepository = MongoUserRepository(database)
 
     configureSecurity()
@@ -28,5 +31,6 @@ fun Application.module() {
         solutionRepository = solutionRepository,
         taskRepository = taskRepository,
         userRepository = userRepository,
+        commentRepository = commentRepository,
     )
 }
