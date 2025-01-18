@@ -3,7 +3,7 @@ name: Deploy to Google App Engine
 on:
   push:
     branches:
-      - google-app-engine-integration
+      - main
   workflow_dispatch:
 
 jobs:
