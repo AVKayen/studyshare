@@ -53,12 +53,20 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        val solutions = solutionRepository.getSolutions(taskId = taskId, userId = userId)
+        val solutionViews = solutionRepository.getSolutions(taskId = taskId, userId = userId)
 
         call.respondHtml {
             body {
-                for (solution in solutions) {
-                    solutionTemplate(solution)
+                for (solutionView in solutionViews) {
+                    solutionTemplate(solutionView)
+                    div {
+                        attributes["hx-get"] = "/comments?parentId=${solutionView.solution.id}"
+                        attributes["hx-trigger"] = "load"
+
+                        span(classes = "htmx-indicator") {
+                            +"Loading..."
+                        }
+                    }
                 }
             }
         }

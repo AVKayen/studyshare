@@ -7,11 +7,12 @@ import kotlinx.html.*
 
 fun FlowContent.commentTemplate(comment: Comment) {
     //TODO: beautify it ;)
-    article(classes = "flex-col task") {
-            h2 {
-                +comment.content
+    //also, there is a bit of htmx in task, solution and comment routes, you might want to change it
+
+            h6 {
+                +"Comment:".plus(comment.content)
             }
 
-    }
+
 }
 
