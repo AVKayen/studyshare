@@ -1,6 +1,5 @@
 package com.physman.task
 
-import com.physman.utils.Id
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 
@@ -25,10 +24,10 @@ val additionalNotesValidator = fun(additionalNotes: String): String? {
 }
 
 data class Task (
-     val id: ObjectId = ObjectId(),
+    @BsonId
+    val id: ObjectId = ObjectId(),
 
     val title: String,
     val additionalNotes: String? = null,
     val attachmentIds: List<ObjectId> = emptyList()
 )
-// add override and : Id
