@@ -20,9 +20,9 @@ fun Application.module() {
     val database = mongodbClient.getDatabase("studyshare")
 
     val imageRepository = MongoGCloudAttachmentRepository(bucketName = "studyshare-files", database = database)
-    val solutionRepository = MongoSolutionRepository(database, imageRepository)
-    val taskRepository = MongoTaskRepository(database, imageRepository, solutionRepository)
-    val commentRepository = MongoCommentRepository(database, solutionRepository)
+    val commentRepository = MongoCommentRepository(database)
+    val solutionRepository = MongoSolutionRepository(database, commentRepository, imageRepository)
+    val taskRepository = MongoTaskRepository(database, imageRepository, commentRepository, solutionRepository)
     val userRepository = MongoUserRepository(database)
 
     configureSecurity()

@@ -7,7 +7,5 @@ interface CommentRepository {
     suspend fun createComment(comment: Comment)
     suspend fun deleteComment(id: ObjectId)
     suspend fun deleteComments(parentId: ObjectId)
-
-    suspend fun getTaskIdFromSolution(solutionId: ObjectId) : ObjectId?
 }
 
