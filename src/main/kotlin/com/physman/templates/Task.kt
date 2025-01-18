@@ -13,6 +13,7 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
             }
             a(href = "/solutions/creation-form?taskId=${taskView.task.id}") {
                 +"Create solution"}
+
         }
         div {
             if (taskView.task.additionalNotes != null) {
@@ -36,6 +37,11 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
                     }
                 }
             }
+        }
+
+        div {
+            a(href = "/comments/comment?parentId=${taskView.task.id}") {
+                +"Comment"}
         }
     }
 }
