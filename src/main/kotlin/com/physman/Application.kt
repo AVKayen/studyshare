@@ -9,14 +9,19 @@ import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.physman.comment.MongoCommentRepository
 import com.physman.solution.MongoSolutionRepository
 import com.physman.task.MongoTaskRepository
+import com.physman.templates.index
+import io.ktor.http.*
+import io.ktor.server.html.*
 import io.ktor.server.netty.*
+import io.ktor.server.plugins.statuspages.StatusPages
+import kotlinx.html.*
 
 fun main(args: Array<String>) {
     EngineMain.main(args)
 }
 
 fun Application.module() {
-    val environment: Environment = Environment(true)
+    val environment = Environment(true)
     val mongodbClient = MongoClient.create(environment.MONGODB_CONNECTION_STRING)
     val database = mongodbClient.getDatabase("studyshare")
 
