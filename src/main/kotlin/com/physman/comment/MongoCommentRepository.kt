@@ -2,7 +2,6 @@ package com.physman.comment
 
 import com.mongodb.client.model.Filters
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
-import com.physman.attachment.AttachmentRepository
 import com.physman.solution.SolutionRepository
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
