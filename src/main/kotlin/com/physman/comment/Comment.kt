@@ -7,6 +7,7 @@ data class Comment(
     @BsonId
     val id: ObjectId = ObjectId(),
 
+    val parentId: ObjectId,
     val content: String,
     // TODO: add author field
 
