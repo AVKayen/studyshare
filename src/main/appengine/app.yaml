@@ -1,0 +1,2 @@
+runtime: java21
+entrypoint: 'java -jar fizykamanager-all.jar'
