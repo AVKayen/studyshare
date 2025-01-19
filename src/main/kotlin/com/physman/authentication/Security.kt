@@ -8,10 +8,6 @@ import io.ktor.server.request.*
 import io.ktor.server.sessions.*
 import java.security.SecureRandom
 
-val validateUserSession: suspend ApplicationCall.(UserSession) -> UserSession? = { session ->
-    if (session.name.isNotEmpty()) session else null
-}
-
 fun Application.configureSecurity() {
     install(Sessions) {
         val sessionEncryptKey: ByteArray = SecureRandom().generateSeed(16)
@@ -29,7 +25,7 @@ fun Application.configureSecurity() {
         // Validate authentication, redirect to /login on fail
         session<UserSession>("USER") {
             validate {
-                validateUserSession
+                it
             }
             challenge {
                 val redirectAfterLoginUrl = call.request.headers["HX-Current-URL"] ?: call.request.path()
