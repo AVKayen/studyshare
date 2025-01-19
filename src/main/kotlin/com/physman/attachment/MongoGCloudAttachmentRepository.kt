@@ -6,13 +6,16 @@ import com.physman.forms.UploadFileData
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
 import java.nio.file.Files
+import java.time.Instant
 import java.util.concurrent.TimeUnit
+import java.time.ZonedDateTime.parse
+import java.time.format.DateTimeFormatter.ofPattern
 
 
 class MongoGCloudAttachmentRepository(private val bucketName: String, database: MongoDatabase) : AttachmentRepository {
     private val storage: Storage = StorageOptions.getDefaultInstance().service
     private val attachmentCollection = database.getCollection<Attachment>("attachments")
-
+    private val expiresAfterMinutes = 30L
 
     private fun uploadAttachments(attachment: Attachment, content: ByteArray) {
         val blobName = attachment.blobName
@@ -72,13 +75,27 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
         }
     }
 
-    private fun getAttachmentLink(attachment: Attachment): String {
+    private suspend fun getAttachmentLink(attachment: Attachment): String {
+        val cachedUrl = attachment.cachedUrl
+        if (cachedUrl != null) {
+            val urlParts = cachedUrl.trim().split('&')
+            val signatureTimeString = urlParts.find { it.startsWith("X-Goog-Date") }?.substringAfter("=")
+            val signatureTime: Instant? = signatureTimeString?.let { parse(it, ofPattern("yyyyMMdd'T'HHmmssX")).toInstant() }
+            val expirationTime: Instant? = signatureTime?.plusSeconds(expiresAfterMinutes * 60)
+            if (expirationTime != null && Instant.now().isBefore(expirationTime.minusSeconds(300))) {
+                return cachedUrl
+            }
+        }
         val blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, attachment.blobName)).build()
         val url = storage.signUrl(
             blobInfo,
-            30,
+            expiresAfterMinutes,
             TimeUnit.MINUTES,
             Storage.SignUrlOption.withV4Signature()
+        )
+        attachmentCollection.updateOne(
+            Filters.eq("_id", attachment.id),
+            org.bson.Document("\$set", org.bson.Document("cachedUrl", url.toString()))
         )
         return url.toString()
     }

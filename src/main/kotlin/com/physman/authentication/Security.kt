@@ -6,6 +6,7 @@ import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.sessions.*
+import java.security.SecureRandom
 
 val validateUserSession: suspend ApplicationCall.(UserSession) -> UserSession? = { session ->
     if (session.name.isNotEmpty()) session else null
@@ -13,9 +14,14 @@ val validateUserSession: suspend ApplicationCall.(UserSession) -> UserSession? =
 
 fun Application.configureSecurity() {
     install(Sessions) {
-        // Sessions are stored in the server's in-memory database
+        val sessionEncryptKey: ByteArray = SecureRandom().generateSeed(16)
+        val sessionSignKey: ByteArray = SecureRandom().generateSeed(16)
         cookie<UserSession>("SESSION", SessionStorageMemory()) {
             cookie.extensions["SameSite"] = "lax"
+            cookie.httpOnly = true
+            cookie.path = "/"
+            cookie.maxAgeInSeconds = 60 * 60 * 24 * 7 // a week
+            transform(SessionTransportTransformerEncrypt(sessionEncryptKey, sessionSignKey))
         }
     }
 

@@ -9,9 +9,10 @@ fun HEAD.headTags() {
     script { src = "https://unpkg.com/hyperscript.org@0.9.13"}
     // picoCSS defaults
     link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css")
-    // custom CSS
-    link(rel = "stylesheet", href = "/static/styles.css")
-
+    // custom CSS TODO: add CI for this
+    link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
+    
+    // config for htmx
     meta(name = "htmx-config", content = """
         {
             "responseHandling":[

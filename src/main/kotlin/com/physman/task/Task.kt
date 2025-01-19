@@ -23,11 +23,11 @@ val additionalNotesValidator = fun(additionalNotes: String): String? {
     return null
 }
 
-data class Task(
+data class Task (
     @BsonId
     val id: ObjectId = ObjectId(),
 
     val title: String,
     val additionalNotes: String? = null,
-    val attachmentIds: List<ObjectId> = emptyList(),
+    val attachmentIds: List<ObjectId> = emptyList()
 )
