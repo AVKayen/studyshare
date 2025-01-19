@@ -1,11 +1,9 @@
 package com.physman.forms
 
 import io.ktor.http.*
-import io.ktor.server.html.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.html.body
 
 class FormRouter {
     val forms: MutableSet<Form> = mutableSetOf()
@@ -39,15 +37,12 @@ fun Route.configureForms(forms: FormRouter) {
             val formParameters = call.receiveParameters()
             val inputtedString = formParameters[inputName].toString()
 
-            call.respondHtml(HttpStatusCode.OK) {
-                body {
-                    inputElement.render(
-                        flowContent = this,
-                        inputtedString = inputtedString,
-                        validationUrl = form.validatorsRoute!!,
-                        replacePreviousInput = true
-                    )
-                }
+            val error = inputElement.validate?.invoke(inputtedString)
+
+            if (error != null) {
+                inputElement.respondInputError(call, error)
+            } else {
+                call.response.status(HttpStatusCode.NoContent)
             }
         }
     }
