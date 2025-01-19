@@ -16,7 +16,7 @@ import org.bson.types.ObjectId
 
 
 fun Route.commentRouter(commentRepository: CommentRepository) {
-    val commentCreationForm = Form("Create a new comment", "commentForm", mapOf(
+    val commentCreationForm = Form("Create a new comment", "commentForm", formAttributes = mapOf(
             "hx-swap" to "none" // because currently this form is on an empty page
         ))
     commentCreationForm.addInput(TextlikeInput("content", "content", InputType.text, commentValidator))
