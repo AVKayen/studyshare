@@ -14,6 +14,8 @@ class TextlikeInput(
     val validate : ((String) -> String?)?
 ) : ControlledInput {
 
+    private val errorTagId = "$inputName-error"
+
     init {
         if (inputName != URLEncoder.encode(inputName, StandardCharsets.UTF_8.toString())) {
             throw IllegalArgumentException("Invalid inputName. $inputName is not url-safe.")
@@ -28,8 +30,8 @@ class TextlikeInput(
             on htmx:afterRequest
                 if event.srcElement is me
                     if event.detail.successful
-                        log event.details
                         me.setAttribute("aria-invalid", false)
+                        set #$errorTagId's innerHTML to ""
                     else
                         me.setAttribute("aria-invalid", true)
                     end
@@ -52,7 +54,7 @@ class TextlikeInput(
 
             }
             small {
-                attributes["id"] = "$inputName-error"
+                attributes["id"] = errorTagId
             }
         }
     }
@@ -61,7 +63,7 @@ class TextlikeInput(
         call.respondHtml(status = HttpStatusCode.UnprocessableEntity) {
             body {
                 small {
-                    attributes["id"] = "$inputName-error"
+                    attributes["id"] = errorTagId
                     attributes["hx-swap-oob"] = "true"
 
                     +error
