@@ -41,7 +41,12 @@ fun Route.configureForms(forms: FormRouter) {
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-                    inputElement.render(this, inputtedString, form.validatorsRoute!!)
+                    inputElement.render(
+                        flowContent = this,
+                        inputtedString = inputtedString,
+                        validationUrl = form.validatorsRoute!!,
+                        replacePreviousInput = true
+                    )
                 }
             }
         }

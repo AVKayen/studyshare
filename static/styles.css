@@ -1,5 +1,5 @@
 body {
-    padding: 1rem;
+    // padding: 1rem;
 }
 
 .flex {
@@ -14,4 +14,18 @@ body {
 .task {
     margin-bottom: 3rem;
     border-radius: 0.25rem;
+}
+
+.form-error {
+    color: var(--pico-del-color);
+    margin-bottom: var(--pico-spacing);
+}
+
+.modal-content {
+    min-width: 50%;
+}
+
+.modal-btn-container {
+    display: flex;
+    justify-content: center;
 }

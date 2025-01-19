@@ -32,7 +32,7 @@ fun Application.configureSecurity() {
                 validateUserSession
             }
             challenge {
-                val redirectAfterLoginUrl = call.request.path()
+                val redirectAfterLoginUrl = call.request.headers["HX-Current-URL"] ?: call.request.path()
                 val redirectUrl = "/auth/login?redirectUrl=$redirectAfterLoginUrl"
                 call.smartRedirect(redirectUrl)
             }

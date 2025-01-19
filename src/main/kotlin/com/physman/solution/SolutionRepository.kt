@@ -5,7 +5,7 @@ import org.bson.types.ObjectId
 
 // TODO Add update method
 interface SolutionRepository {
-    suspend fun createSolution(solution: Solution, files: List<UploadFileData>)
+    suspend fun createSolution(solution: Solution, files: List<UploadFileData>, userId: ObjectId): SolutionView
     suspend fun deleteSolution(id: ObjectId)
 //    suspend fun updateSolution(id: ObjectId, solutionUpdate: SolutionUpdate): Solution?
     suspend fun upvoteSolution(id: ObjectId, userId: ObjectId): Int

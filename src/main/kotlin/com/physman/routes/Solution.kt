@@ -6,7 +6,7 @@ import com.physman.solution.Solution
 import com.physman.solution.SolutionRepository
 import com.physman.solution.additionalNotesValidator
 import com.physman.solution.titleValidator
-import com.physman.templates.index
+import com.physman.templates.formModalDialog
 import com.physman.templates.solutionTemplate
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
@@ -19,29 +19,28 @@ import org.bson.types.ObjectId
 
 
 fun Route.solutionRouter(solutionRepository: SolutionRepository) {
-    val solutionCreationForm = Form("Create a new solution", "solutionForm", mapOf(
-            "hx-swap" to "none" // because currently this form is on an empty page
-        ))
+    val solutionCreationForm = Form("Create a new solution", "solutionForm", formAttributes = mapOf(
+        "hx-target" to "#solution-list",
+        "hx-swap" to "beforeend"
+    ))
     solutionCreationForm.addInput(TextlikeInput("title", "title", InputType.text, titleValidator))
     solutionCreationForm.addInput(TextlikeInput("additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
     solutionCreationForm.addInput(FileInput("select files", "files", listOf(), inputAttributes = mapOf("multiple" to "true")))
 
     globalFormRouter.routeFormValidators(solutionCreationForm)
 
-    get("/creation-form") {
+    get("/creation-modal") {
         val taskId = call.request.queryParameters["taskId"]
         if (taskId == null) {
             call.respondText("Task Id not specified.", status = HttpStatusCode.BadRequest)
             return@get
         }
         call.respondHtml {
-//            body {
-//                taskCreationForm.render(this, "/tasks/$taskId/solutions")
-//            }
-
-            // index because of lack of htmx needed for testing (htmx is served with index page only)
-            index("This won't be index") {
-                solutionCreationForm.render(this, "/solutions?taskId=$taskId")
+            body {
+                formModalDialog(
+                    form = solutionCreationForm,
+                    callbackUrl = "/solutions?taskId=$taskId"
+                )
             }
         }
     }
@@ -57,39 +56,44 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
 
         call.respondHtml {
             body {
-                for (solutionView in solutionViews) {
-                    solutionTemplate(solutionView)
-                    div {
-                        attributes["hx-get"] = "/comments?parentId=${solutionView.solution.id}"
-                        attributes["hx-trigger"] = "load"
+                div {
+                    attributes["id"] = "solution-list"
+                  
+                    for (solutionView in solutionViews) {
+                        solutionTemplate(solutionView)
+                        div {
+                            attributes["hx-get"] = "/comments?parentId=${solutionView.solution.id}"
+                            attributes["hx-trigger"] = "load"
 
-                        span(classes = "htmx-indicator") {
-                            +"Loading..."
+                            article(classes = "htmx-indicator") {
+                                attributes["aria-busy"] = "true"
+                            }
                         }
                     }
                 }
             }
         }
-
     }
 
     post {
         val objectIds = validateObjectIds(call, "taskId") ?: return@post
         val taskId = objectIds["taskId"]!!
 
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+
         val formSubmissionData: FormSubmissionData = solutionCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
 
-        val newSolution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId)
+        val solution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId)
 
-        solutionRepository.createSolution(newSolution, formSubmissionData.files)
+        val solutionView = solutionRepository.createSolution(solution, formSubmissionData.files, userId)
         formSubmissionData.cleanup()
-
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-//                solutionTemplate(newSolution, taskId.toString())
+                solutionTemplate(solutionView)
             }
         }
     }

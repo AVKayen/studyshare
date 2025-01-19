@@ -19,7 +19,7 @@ class MongoSolutionRepository(
 
     private val solutionCollection = mongoDatabase.getCollection<Solution>("solutions")
 
-    override suspend fun createSolution(solution: Solution, files: List<UploadFileData>) {
+    override suspend fun createSolution(solution: Solution, files: List<UploadFileData>, userId: ObjectId): SolutionView {
 
         val attachments = attachmentRepository.createAttachments(files)
 
@@ -27,6 +27,12 @@ class MongoSolutionRepository(
             attachmentIds = attachments.map { it.id }
         )
         solutionCollection.insertOne(solutionWithAttachments)
+
+        return SolutionView(
+            solution = solutionWithAttachments,
+            attachments = attachmentRepository.getAttachments(solution.attachmentIds),
+            isUpvoted = solution.upvotes.contains(userId)
+        )
     }
 
     override suspend fun deleteSolution(id: ObjectId) {

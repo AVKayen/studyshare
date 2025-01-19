@@ -14,9 +14,24 @@ fun Route.homeRouter() {
         get {
             val userSession = call.sessions.get<UserSession>()!!
             call.respondHtml(HttpStatusCode.OK) {
-                index(title = "String") {
-                    h1 {
-                        +userSession.name
+                index(
+                    title = "StudyShare",
+                    username = userSession.name
+                ) {
+                    section(classes = "modal-btn-container") {
+                        formModalOpenButton(
+                            buttonText = "Create a task",
+                            modalUrl = "/tasks/creation-modal"
+                        )
+                    }
+                    div {
+                        attributes["hx-get"] = "/tasks"
+                        attributes["hx-trigger"] = "load"
+                        attributes["hx-swap"] = "outerHTML"
+
+                        article(classes = "htmx-indicator") {
+                            attributes["aria-busy"] = "true"
+                        }
                     }
                 }
             }

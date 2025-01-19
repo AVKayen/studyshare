@@ -1,27 +1,25 @@
 package com.physman.routes
 
+import com.physman.authentication.user.UserSession
 import com.physman.forms.*
 import com.physman.task.Task
 import com.physman.task.TaskRepository
 import com.physman.task.additionalNotesValidator
 import com.physman.task.titleValidator
-import com.physman.templates.index
-import com.physman.templates.taskPreviewTemplate
+import com.physman.templates.*
+import com.physman.utils.smartRedirect
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.routing.*
-import com.physman.templates.taskTemplate
 import com.physman.utils.validateObjectIds
 import io.ktor.server.response.*
-import kotlinx.html.InputType
-import kotlinx.html.body
-import kotlinx.html.div
-import kotlinx.html.span
+import io.ktor.server.sessions.*
+import kotlinx.html.*
 
 // TODO: Error handling
 fun Route.taskRouter(taskRepository: TaskRepository) {
 
-    val taskCreationForm = Form("Create a new task", "taskForm", mapOf(
+    val taskCreationForm = Form("Create a new task", "taskForm", formAttributes = mapOf(
 //        "hx-target" to "#task-list",
 //        "hx-swap" to "beforeend"
           "hx-swap" to "none" // because the form is on an empty page now
@@ -44,15 +42,13 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
         }
     }
 
-    get("/creation-form") {
+    get("/creation-modal") {
         call.respondHtml {
-//            body {
-//                taskCreationForm.render(this, "/tasks")
-//            }
-
-            // index because of lack of htmx needed for testing (htmx is served with index page only)
-            index("This won't be index") {
-                taskCreationForm.render(this, "/tasks")
+            body {
+                formModalDialog(
+                    form = taskCreationForm,
+                    callbackUrl = "/tasks"
+                )
             }
         }
     }
@@ -62,14 +58,13 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
         val files = formSubmissionData.files
-        print(files)
 
-        val newTask = Task(title = title, additionalNotes = additionalNotes)
+        val task = Task(title = title, additionalNotes = additionalNotes)
 
-        taskRepository.createTask(newTask, files)
+        taskRepository.createTask(task, files)
         formSubmissionData.cleanup()
 
-        call.response.status(HttpStatusCode.NoContent)
+        call.smartRedirect(redirectUrl = "/tasks/${task.id}")
     }
 
     route("/{id}") {
@@ -83,8 +78,15 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                 return@get
             }
 
+            val userSession = call.sessions.get<UserSession>()!!
+
             call.respondHtml(HttpStatusCode.OK) {
-                index("Task") {
+                index(
+                    title = "StudyShare",
+                    username = userSession.name,
+                    breadcrumbs = mapOf("tasks" to "/"),
+                    lastBreadcrumb = taskView.task.title
+                ) {
 
                     taskTemplate(taskView)
                     div {
@@ -96,12 +98,20 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                         }
                     }
 
+                    section(classes = "modal-btn-container") {
+                        formModalOpenButton(
+                            buttonText = "Create a solution",
+                            modalUrl = "/solutions/creation-modal?taskId=$taskId"
+                        )
+                    }
+
                     div {
                         attributes["hx-get"] = "/solutions?taskId=${taskView.task.id}"
                         attributes["hx-trigger"] = "load"
+                        attributes["hx-swap"] = "outerHTML"
 
-                        span(classes = "htmx-indicator") {
-                            +"Loading..."
+                        article(classes = "htmx-indicator") {
+                            attributes["aria-busy"] = "true"
                         }
                     }
                 }
