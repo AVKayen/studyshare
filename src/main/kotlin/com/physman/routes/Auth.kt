@@ -17,14 +17,38 @@ fun Route.authRouter(userRepository: UserRepository) {
     val loginForm = Form("Login", "loginForm", formAttributes = mapOf(
         "hx-swap" to "none"
     ))
-    loginForm.addInput(TextlikeInput("Username", "name", InputType.text, usernameValidatorOnLogin))
-    loginForm.addInput(TextlikeInput("Password", "password", InputType.password, passwordValidatorOnLogin))
+    loginForm.addInput(TextlikeInput(
+        "Username",
+        "name",
+        InputType.text,
+        usernameValidatorOnLogin,
+        500
+    ))
+    loginForm.addInput(TextlikeInput(
+        "Password",
+        "password",
+        InputType.password,
+        passwordValidatorOnLogin,
+        500
+    ))
 
     val registerForm = Form("Register", "registerForm", formAttributes = mapOf(
         "hx-swap" to "none"
     ))
-    registerForm.addInput(TextlikeInput("Username", "name", InputType.text, usernameValidatorOnRegister))
-    registerForm.addInput(TextlikeInput("Password", "password", InputType.password, passwordValidatorOnRegister))
+
+    registerForm.addInput(TextlikeInput(
+        "Username",
+        "name",
+        InputType.text,
+        usernameValidatorOnRegister
+    ))
+    registerForm.addInput(TextlikeInput(
+        "Password",
+        "password",
+        InputType.password,
+        passwordValidatorOnRegister,
+        500
+    ))
 
     globalFormRouter.routeFormValidators(loginForm)
     globalFormRouter.routeFormValidators(registerForm)
