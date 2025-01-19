@@ -163,16 +163,7 @@ class Form(
             val inputValue: String = fields[input.inputName]?.first() ?: ""
             val error = input.validate?.invoke(inputValue)
             if (error != null) {
-                call.respondHtml(status = HttpStatusCode.UnprocessableEntity) {
-                    body {
-                        input.render(
-                            flowContent = this,
-                            inputtedString = inputValue,
-                            validationUrl = validatorsRoute!!,
-                            replacePreviousInput = true
-                        )
-                    }
-                }
+                input.respondInputError(call, error)
                 return null
             }
             validatedFields[input.inputName] = inputValue
