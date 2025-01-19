@@ -1,5 +1,5 @@
 body {
-    padding: 1rem;
+    // padding: 1rem;
 }
 
 .flex {
@@ -19,4 +19,13 @@ body {
 .form-error {
     color: var(--pico-del-color);
     margin-bottom: var(--pico-spacing);
+}
+
+.modal-content {
+    min-width: 50%;
+}
+
+.modal-btn-container {
+    display: flex;
+    justify-content: center;
 }

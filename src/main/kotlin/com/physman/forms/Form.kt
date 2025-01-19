@@ -49,6 +49,7 @@ class FormSubmissionData(
 class Form(
     private val formTitle: String,
     val formName: String,
+    private val submitBtnText: String = "Submit",
     private val formAttributes: Map<String, String>? = null
 ) {
     var validatorsRoute: String? = null
@@ -68,21 +69,16 @@ class Form(
         inputs = inputs.plus(input)
     }
 
-    fun render(flowContent: FlowContent, callbackUrl: String) {
-        flowContent.form {
-            attributes["hx-post"] = callbackUrl
+    fun renderFormTitle(flowContent: FlowContent) {
+        flowContent.h1 {
+            +this@Form.formTitle
+        }
+    }
 
-            if (isMultipart) {
-                attributes["hx-encoding"] = "multipart/form-data"
-            }
-
-            if(this@Form.formAttributes != null) {
-                attributes.putAll(formAttributes)
-            }
-
-            h1 { + this@Form.formTitle }
-
+    fun renderInputFields(flowContent: FlowContent) {
+        flowContent.div {
             for (input in this@Form.inputs) {
+
                 if (input is TextlikeInput) {
                     if (validatorsRoute != null) {
                         input.render(flowContent, validationUrl = this@Form.validatorsRoute!!)
@@ -99,15 +95,53 @@ class Form(
             div {
                 attributes["id"] = "${formName}Error"
             }
-            button {
-                +"Submit"
-            }
         }
     }
 
-    // TODO: Add some styling to the error (or even entire form)
+    fun renderFormSubmit(flowContent: FlowContent, submitBtnHyperscript: String? = null) {
+        flowContent.button {
+            if (submitBtnHyperscript != null) {
+                attributes["_"] = submitBtnHyperscript
+            }
+            +submitBtnText
+        }
+    }
+
+    fun renderFormElement(
+        flowContent: FlowContent,
+        callbackUrl: String,
+        formHyperscript: String? = null,
+        formContent: FORM.() -> Unit
+    ) {
+        flowContent.form {
+            attributes["hx-post"] = callbackUrl
+
+            if (formHyperscript != null) {
+                attributes["_"] = formHyperscript
+            }
+
+            if (isMultipart) {
+                attributes["hx-encoding"] = "multipart/form-data"
+            }
+
+            if(this@Form.formAttributes != null) {
+                attributes.putAll(formAttributes)
+            }
+
+            formContent()
+        }
+    }
+
+    fun render(flowContent: FlowContent, callbackUrl: String, submitBtnHyperscript: String? = null) {
+        renderFormElement(flowContent = flowContent, callbackUrl = callbackUrl) {
+            renderFormTitle(flowContent)
+            renderInputFields(flowContent)
+            renderFormSubmit(flowContent, submitBtnHyperscript = submitBtnHyperscript)
+        }
+    }
+
     suspend fun respondFormError(call: RoutingCall, error: String) {
-        call.respondHtml {
+        call.respondHtml(status = HttpStatusCode.UnprocessableEntity) {
             body {
                 div(classes = "form-error") {
                     attributes["id"] = "${formName}Error"
@@ -129,9 +163,14 @@ class Form(
             val inputValue: String = fields[input.inputName]?.first() ?: ""
             val error = input.validate?.invoke(inputValue)
             if (error != null) {
-                call.respondHtml {
+                call.respondHtml(status = HttpStatusCode.UnprocessableEntity) {
                     body {
-                        input.render(this, inputValue, validatorsRoute!!)
+                        input.render(
+                            flowContent = this,
+                            inputtedString = inputValue,
+                            validationUrl = validatorsRoute!!,
+                            replacePreviousInput = true
+                        )
                     }
                 }
                 return null

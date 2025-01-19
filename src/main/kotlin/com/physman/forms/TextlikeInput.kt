@@ -17,12 +17,19 @@ class TextlikeInput(
         }
     }
 
-    fun render(flowContent: FlowContent, inputtedString: String? = null, validationUrl: String) {
+    fun render(
+        flowContent: FlowContent,
+        inputtedString: String? = null,
+        validationUrl: String,
+        replacePreviousInput: Boolean = false
+    ) {
         val error: String? = if(inputtedString != null) this.validate?.invoke(inputtedString) else null
         flowContent.div {
 
             attributes["id"] = "${inputName}Div"
-            attributes["hx-swap-oob"] = "true"
+            if (replacePreviousInput) {
+                attributes["hx-swap-oob"] = "true"
+            }
             label {
                 attributes["for"] = inputName
                 +inputLabel
