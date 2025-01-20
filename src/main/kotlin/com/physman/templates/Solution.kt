@@ -6,15 +6,15 @@ import kotlinx.html.FlowContent
 import kotlinx.html.*
 
 fun FlowContent.solutionTemplate(solutionView: SolutionView) {
-
-    val upvoteCountSpanId = "upvote-count-${solutionView.solution.id}"
+    val voteCountSpanId = "vote-count-${solutionView.solution.id}"
     val upvoteButtonId = "upvote-btn-${solutionView.solution.id}"
+    val downvoteButtonId = "downvote-btn-${solutionView.solution.id}"
 
     article(classes = "flex-col-solution") {
         header {
             h2 {
                 span {
-                    attributes["id"] = upvoteCountSpanId
+                    attributes["id"] = voteCountSpanId
                     +solutionView.solution.voteCount().toString()
                 }
                 +" "
@@ -26,13 +26,24 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
             button {
                 attributes["id"] = upvoteButtonId
                 attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
-                attributes["hx-target"] = "#$upvoteCountSpanId"
+                attributes["hx-target"] = "#$voteCountSpanId"
 
                 if (solutionView.isUpvoted) {
                     attributes["disabled"] = "true"
                 }
 
                 +"upvote button"
+            }
+            button {
+                attributes["id"] = downvoteButtonId
+                attributes["hx-get"] = "/solutions/${solutionView.solution.id}/downvote"
+                attributes["hx-target"] = "#$voteCountSpanId"
+
+                if (solutionView.isDownvoted) {
+                    attributes["disabled"] = "true"
+                }
+
+                +"downvote button"
             }
         }
 

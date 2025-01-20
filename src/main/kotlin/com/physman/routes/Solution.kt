@@ -124,6 +124,30 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             }
         }
 
+        get ("/downvote") {
+            val objectIds = validateObjectIds(call, "id") ?: return@get
+            val solutionId = objectIds["id"]!!
+
+            val userSession = call.sessions.get<UserSession>()!!
+            val userId = ObjectId(userSession.id)
+
+            val newDownvoteCount = solutionRepository.downvoteSolution(solutionId, userId)
+
+            call.respondHtml(HttpStatusCode.OK) {
+                body {
+                    +newDownvoteCount.toString()
+
+                    button {
+                        attributes["id"] = "downvote-btn-$solutionId"
+                        attributes["hx-swap-oob"] = "true"
+                        attributes["disabled"] = "true"
+
+                        +"downvote button"
+                    }
+                }
+            }
+        }
+
         delete {
             val objectIds = validateObjectIds(call, "id") ?: return@delete
             val solutionId = objectIds["id"]!!
