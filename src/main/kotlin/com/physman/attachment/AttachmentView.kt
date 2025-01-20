@@ -2,5 +2,6 @@ package com.physman.attachment
 
 data class AttachmentView(
     val attachment: Attachment,
-    val link: String,
+    val url: String,
+    val thumbnailUrl: String?
 )
