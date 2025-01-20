@@ -118,17 +118,19 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val userSession = call.sessions.get<UserSession>()!!
             val userId = ObjectId(userSession.id)
 
-            val newUpvoteCount = solutionRepository.upvote(solutionId, userId)
+            val newVoteCount = solutionRepository.upvote(solutionId, userId)
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-                    +newUpvoteCount.toString()
+                    +newVoteCount.toString()
 
                     button {
                         attributes["id"] = "upvote-btn-$solutionId"
                         attributes["hx-swap-oob"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/remove-upvote"
+                        attributes["hx-target"] = "vote-count-${solutionId}"
 
-                        +"upvote button"
+                        +"remove upvote button"
                     }
                 }
             }
@@ -141,17 +143,19 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val userSession = call.sessions.get<UserSession>()!!
             val userId = ObjectId(userSession.id)
 
-            val newDownvoteCount = solutionRepository.downvote(solutionId, userId)
+            val newVoteCount = solutionRepository.downvote(solutionId, userId)
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-                    +newDownvoteCount.toString()
+                    +newVoteCount.toString()
 
                     button {
                         attributes["id"] = "downvote-btn-$solutionId"
                         attributes["hx-swap-oob"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/remove-downvote"
+                        attributes["hx-target"] = "vote-count-${solutionId}"
 
-                        +"downvote button"
+                        +"remove downvote button"
                     }
                 }
             }
@@ -165,15 +169,18 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val userSession = call.sessions.get<UserSession>()!!
             val userId = ObjectId(userSession.id)
 
-            val newUpvoteCount = solutionRepository.removeUpvote(solutionId, userId)
+            val newVoteCount = solutionRepository.removeUpvote(solutionId, userId)
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-                    +newUpvoteCount.toString()
+                    +newVoteCount.toString()
 
                     button {
                         attributes["id"] = "upvote-btn-$solutionId"
                         attributes["hx-swap-oob"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/upvote"
+                        attributes["hx-target"] = "vote-count-${solutionId}"
+
 
                         +"upvote button"
                     }
@@ -188,15 +195,17 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val userSession = call.sessions.get<UserSession>()!!
             val userId = ObjectId(userSession.id)
 
-            val newDownvoteCount = solutionRepository.removeDownvote(solutionId, userId)
+            val newVoteCount = solutionRepository.removeDownvote(solutionId, userId)
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-                    +newDownvoteCount.toString()
+                    +newVoteCount.toString()
 
                     button {
                         attributes["id"] = "downvote-btn-$solutionId"
                         attributes["hx-swap-oob"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/downvote"
+                        attributes["hx-target"] = "vote-count-${solutionId}"
 
                         +"downvote button"
                     }

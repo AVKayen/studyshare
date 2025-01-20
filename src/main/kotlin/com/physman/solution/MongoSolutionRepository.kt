@@ -71,7 +71,6 @@ class MongoSolutionRepository(
 
 
     //votes
-    //TODO: add vote removal
     //TODO: if upvoted: -downvote
     override suspend fun upvote(id: ObjectId, userId: ObjectId): Int {
         val filter = Filters.eq("_id", id)
