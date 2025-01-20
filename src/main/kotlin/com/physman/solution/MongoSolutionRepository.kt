@@ -41,31 +41,7 @@ class MongoSolutionRepository(
         attachmentRepository.deleteAttachments(solution.attachmentIds)
         commentRepository.deleteComments(id)
     }
-    //TODO: add vote removal
-    //TODO: if upvoted: -downvote
-    override suspend fun upvoteSolution(id: ObjectId, userId: ObjectId): Int {
-        val filter = Filters.eq("_id", id)
-        val updates = Updates.addToSet(Solution::upvotes.name, userId)
 
-        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
-        if (solution.upvotes.contains(userId)) {
-            return solution.voteCount()
-        }
-
-        return solution.voteCount() + 1
-    }
-
-    override suspend fun downvoteSolution(id: ObjectId, userId: ObjectId): Int {
-        val filter = Filters.eq("_id", id)
-        val updates = Updates.addToSet(Solution::downvotes.name, userId)
-
-        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
-        if (solution.downvotes.contains(userId)) {
-            return solution.voteCount()
-        }
-
-        return solution.voteCount() - 1
-    }
 
     override suspend fun deleteSolutions(taskId: ObjectId) {
         val filter = Filters.eq(Solution::taskId.name, taskId)
@@ -91,5 +67,41 @@ class MongoSolutionRepository(
     override suspend fun getSolution(solutionId: ObjectId): Solution? {
         val filter = Filters.eq(Solution::id.name, solutionId)
         return solutionCollection.find(filter).firstOrNull()
+    }
+
+
+    //votes
+    //TODO: add vote removal
+    //TODO: if upvoted: -downvote
+    override suspend fun upvote(id: ObjectId, userId: ObjectId): Int {
+        val filter = Filters.eq("_id", id)
+        val updates = Updates.addToSet(Solution::upvotes.name, userId)
+
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+        if (solution.upvotes.contains(userId)) {
+            return solution.voteCount()
+        }
+
+        return solution.voteCount() + 1
+    }
+
+    override suspend fun downvote(id: ObjectId, userId: ObjectId): Int {
+        val filter = Filters.eq("_id", id)
+        val updates = Updates.addToSet(Solution::downvotes.name, userId)
+
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+        if (solution.downvotes.contains(userId)) {
+            return solution.voteCount()
+        }
+
+        return solution.voteCount() - 1
+    }
+
+    override suspend fun removeUpvote(id: ObjectId, userId: ObjectId): Int {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun removeDownvote(id: ObjectId, userId: ObjectId): Int {
+        TODO("Not yet implemented")
     }
 }

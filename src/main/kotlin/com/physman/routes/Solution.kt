@@ -107,7 +107,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val userSession = call.sessions.get<UserSession>()!!
             val userId = ObjectId(userSession.id)
 
-            val newUpvoteCount = solutionRepository.upvoteSolution(solutionId, userId)
+            val newUpvoteCount = solutionRepository.upvote(solutionId, userId)
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
@@ -131,7 +131,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val userSession = call.sessions.get<UserSession>()!!
             val userId = ObjectId(userSession.id)
 
-            val newDownvoteCount = solutionRepository.downvoteSolution(solutionId, userId)
+            val newDownvoteCount = solutionRepository.downvote(solutionId, userId)
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
