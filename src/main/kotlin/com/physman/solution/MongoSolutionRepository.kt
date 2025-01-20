@@ -31,7 +31,8 @@ class MongoSolutionRepository(
         return SolutionView(
             solution = solutionWithAttachments,
             attachments = attachmentRepository.getAttachments(solution.attachmentIds),
-            isUpvoted = solution.upvotes.contains(userId)
+            isUpvoted = solution.upvotes.contains(userId),
+            isDownvoted = solution.downvotes.contains(userId)
         )
     }
 
@@ -40,17 +41,30 @@ class MongoSolutionRepository(
         attachmentRepository.deleteAttachments(solution.attachmentIds)
         commentRepository.deleteComments(id)
     }
-
+    //TODO: add vote removal
+    //TODO: if upvoted: -downvote
     override suspend fun upvoteSolution(id: ObjectId, userId: ObjectId): Int {
         val filter = Filters.eq("_id", id)
         val updates = Updates.addToSet(Solution::upvotes.name, userId)
 
         val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
         if (solution.upvotes.contains(userId)) {
-            return solution.upvoteCount()
+            return solution.voteCount()
         }
 
-        return solution.upvoteCount() + 1
+        return solution.voteCount() + 1
+    }
+
+    override suspend fun downvoteSolution(id: ObjectId, userId: ObjectId): Int {
+        val filter = Filters.eq("_id", id)
+        val updates = Updates.addToSet(Solution::downvotes.name, userId)
+
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+        if (solution.downvotes.contains(userId)) {
+            return solution.voteCount()
+        }
+
+        return solution.voteCount() - 1
     }
 
     override suspend fun deleteSolutions(taskId: ObjectId) {
@@ -68,7 +82,8 @@ class MongoSolutionRepository(
             SolutionView(
                 solution = solution,
                 attachments = attachmentRepository.getAttachments(solution.attachmentIds),
-                isUpvoted = solution.upvotes.contains(userId)
+                isUpvoted = solution.upvotes.contains(userId),
+                isDownvoted = solution.downvotes.contains(userId)
             )
         }
     }

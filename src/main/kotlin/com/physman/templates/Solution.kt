@@ -15,7 +15,7 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
             h2 {
                 span {
                     attributes["id"] = upvoteCountSpanId
-                    +solutionView.solution.upvoteCount().toString()
+                    +solutionView.solution.voteCount().toString()
                 }
                 +" "
                 +solutionView.solution.title
