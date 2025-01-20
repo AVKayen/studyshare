@@ -6,42 +6,49 @@ import kotlinx.html.FlowContent
 import kotlinx.html.*
 
 fun FlowContent.taskTemplate(taskView: TaskView) {
-    article(classes = "flex-col task") {
+    val images = taskView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage() }
+    val nonImages =
+        taskView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage() }
+    article(classes = "task") {
         header {
             h2 {
                 +taskView.task.title
             }
-            a(href = "/solutions/creation-form?taskId=${taskView.task.id}") {
-                +"Create solution"}
 
         }
-        div {
+        p {
             if (taskView.task.additionalNotes != null) {
-                +"Notes: ${taskView.task.additionalNotes}"
+                +"${taskView.task.additionalNotes}"
+            }
+        }
+        section {
+            classes = setOf("gallery")
+            images.forEach { attachmentView: AttachmentView ->
+                img(src = attachmentView.link, alt = attachmentView.attachment.originalFilename)
             }
         }
 
-        div {
-            taskView.attachments.forEach { attachmentView: AttachmentView ->
-                if (attachmentView.attachment.isImage()) {
-                    img(src = attachmentView.link, alt = attachmentView.attachment.originalFilename)
+        section {
+            classes = setOf("attachments")
+            nonImages.forEach { attachmentView: AttachmentView ->
+                a(href = attachmentView.link) {
+                    +attachmentView.attachment.originalFilename
                 }
             }
         }
-
         div {
-            taskView.attachments.forEach { attachmentView: AttachmentView ->
-                if (!attachmentView.attachment.isImage()) {
-                    a(href=attachmentView.link) {
-                        +attachmentView.attachment.originalFilename
-                    }
-                }
-            }
+            classes = setOf("button-container")
+            formModalOpenButton(
+                buttonText = "Create a solution",
+                modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}"
+            )
+            showCommentsButton(taskView.task.id)
+            // TODO: Button to comment :DDDDD
+            // TODO: Hide comments button
         }
-
         div {
-            a(href = "/comments/comment?parentId=${taskView.task.id}") {
-                +"Comment"}
+            id = "comments-${taskView.task.id}"
+            classes = setOf("comments")
         }
     }
 }

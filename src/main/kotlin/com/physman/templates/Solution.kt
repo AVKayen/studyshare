@@ -10,59 +10,64 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
     val upvoteCountSpanId = "upvote-count-${solutionView.solution.id}"
     val upvoteButtonId = "upvote-btn-${solutionView.solution.id}"
 
-    article(classes = "flex-col-solution") {
+    val images = solutionView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage() }
+    val nonImages =
+        solutionView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage() }
+
+    article(classes = "solution") {
         header {
-            h2 {
+            div {
+                classes = setOf("upvotes")
+                span {
+                    button {
+                        classes = setOf("voting-button")
+                        attributes["id"] = upvoteButtonId
+                        attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
+                        attributes["hx-target"] = "#$upvoteCountSpanId"
+
+                        if (solutionView.isUpvoted) {
+                            attributes["disabled"] = "true"
+                        }
+
+                        +"up"
+                    }
+                }
                 span {
                     attributes["id"] = upvoteCountSpanId
                     +solutionView.solution.upvoteCount().toString()
                 }
-                +" "
+                span {
+                    // down
+                }
+            }
+            h2 {
                 +solutionView.solution.title
             }
         }
 
-        div {
-            button {
-                attributes["id"] = upvoteButtonId
-                attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
-                attributes["hx-target"] = "#$upvoteCountSpanId"
-
-                if (solutionView.isUpvoted) {
-                    attributes["disabled"] = "true"
-                }
-
-                +"upvote button"
+        section {
+            classes = setOf("gallery")
+            images.forEach { attachmentView: AttachmentView ->
+                img(src = attachmentView.link, alt = attachmentView.attachment.originalFilename)
             }
         }
 
-        div {
-            if (solutionView.solution.additionalNotes != null) {
-                +"Notes: ${solutionView.solution.additionalNotes}"
-            }
-        }
-
-        div {
-            solutionView.attachments.forEach { attachmentView: AttachmentView ->
-                if (attachmentView.attachment.isImage()) {
-                    img(src = attachmentView.link, alt = attachmentView.attachment.originalFilename)
+        section {
+            classes = setOf("attachments")
+            nonImages.forEach { attachmentView: AttachmentView ->
+                a(href = attachmentView.link) {
+                    +attachmentView.attachment.originalFilename
                 }
             }
         }
 
         div {
-            solutionView.attachments.forEach { attachmentView: AttachmentView ->
-                if (!attachmentView.attachment.isImage()) {
-                    a(href=attachmentView.link) {
-                        +attachmentView.attachment.originalFilename
-                    }
-                }
-            }
+            classes = setOf("button-container")
+            showCommentsButton(solutionView.solution.id)
         }
-
         div {
-            a(href = "/comments/comment?parentId=${solutionView.solution.id}") {
-                +"Comment"}
+            id = "comments-${solutionView.solution.id}"
+            classes = setOf("comments")
         }
     }
 }

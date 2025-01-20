@@ -61,14 +61,6 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                   
                     for (solutionView in solutionViews) {
                         solutionTemplate(solutionView)
-                        div {
-                            attributes["hx-get"] = "/comments?parentId=${solutionView.solution.id}"
-                            attributes["hx-trigger"] = "load"
-
-                            article(classes = "htmx-indicator") {
-                                attributes["aria-busy"] = "true"
-                            }
-                        }
                     }
                 }
             }

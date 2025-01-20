@@ -1,14 +1,24 @@
 body {
-    // padding: 1rem;
+    padding: 1rem;
 }
 
 .flex {
     display: flex;
 }
 
-.flex-col {
+article {
     display: flex;
     flex-direction: column;
+}
+
+article > header > h2 {
+    margin-bottom: 0;
+}
+article > header {
+    margin-bottom: 0.5rem;
+}
+p {
+    margin-bottom: 0.5rem;
 }
 
 .task {
@@ -25,7 +35,75 @@ body {
     min-width: 50%;
 }
 
+@media (max-width: 768px) {
+    .modal-content {
+        min-width: 90%;
+    }
+
+}
+
 .modal-btn-container {
     display: flex;
     justify-content: center;
+}
+
+summary {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+
+.dropdown-icon {
+    display: block;
+}
+
+nav {
+    display: flex;
+    align-content: flex-end;
+}
+
+@media (max-width: 768px) {
+    .breadcrumb {
+        display: none;
+    }
+
+}
+
+.nav-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0 !important;
+}
+
+.container {
+    padding: 0;
+}
+
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+}
+
+.quasi-button, .btn {
+    background-color: var(--pico-background-color) !important;
+    color: var(--pico-color);
+    box-shadow: var(--pico-box-shadow);
+    border: none;
+    padding: 0.5rem 1rem;
+    margin: 0.5rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
 }
