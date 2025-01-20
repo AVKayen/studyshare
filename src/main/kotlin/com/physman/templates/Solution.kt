@@ -23,24 +23,31 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
         }
 
         div {
+            //TODO: styling is needed. the buttons work correctly if reloaded after each use
             button {
                 attributes["id"] = upvoteButtonId
-                attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
                 attributes["hx-target"] = "#$voteCountSpanId"
 
-                if (solutionView.isUpvoted) {
-                    attributes["disabled"] = "true"
+                if (!solutionView.isUpvoted) {
+                    attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
+
+                } else {
+                    attributes["hx-get"] = "/solutions/${solutionView.solution.id}/remove-upvote"
+
                 }
 
                 +"upvote button"
             }
             button {
                 attributes["id"] = downvoteButtonId
-                attributes["hx-get"] = "/solutions/${solutionView.solution.id}/downvote"
                 attributes["hx-target"] = "#$voteCountSpanId"
 
-                if (solutionView.isDownvoted) {
-                    attributes["disabled"] = "true"
+                if (!solutionView.isUpvoted) {
+                    attributes["hx-get"] = "/solutions/${solutionView.solution.id}/downvote"
+
+                } else {
+                    attributes["hx-get"] = "/solutions/${solutionView.solution.id}/remove-downvote"
+
                 }
 
                 +"downvote button"

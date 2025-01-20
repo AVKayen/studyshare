@@ -98,10 +98,26 @@ class MongoSolutionRepository(
     }
 
     override suspend fun removeUpvote(id: ObjectId, userId: ObjectId): Int {
-        TODO("Not yet implemented")
+        val filter = Filters.eq("_id", id)
+        val updates = Updates.pull(Solution::upvotes.name, userId)
+
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+        if (!solution.upvotes.contains(userId)) {
+            return solution.voteCount()
+        }
+
+        return solution.voteCount() - 1
     }
 
     override suspend fun removeDownvote(id: ObjectId, userId: ObjectId): Int {
-        TODO("Not yet implemented")
+        val filter = Filters.eq("_id", id)
+        val updates = Updates.pull(Solution::downvotes.name, userId)
+
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+        if (!solution.downvotes.contains(userId)) {
+            return solution.voteCount()
+        }
+
+        return solution.voteCount() + 1
     }
 }
