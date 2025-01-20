@@ -32,8 +32,8 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
     private fun createThumbnail(path: Path): Path {
         val thumbnailPath = createTempFile(suffix = ".jpg")
         Thumbnails.of(path.toFile())
-            .size(200, 200) // Scale the image to fit in a 200x200 box
-//            .outputQuality(0.9)
+            .size(450, 450) // Scale the image to fit in a 450x450 box
+//            .outputQuality()
             .outputFormat("jpg")
             .toFile(thumbnailPath.toFile())
 
