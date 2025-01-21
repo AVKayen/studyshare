@@ -25,12 +25,9 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
 
                     if (!solutionView.isUpvoted) {
                         attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
-                        +"upvote button"
 
                     } else {
                         attributes["hx-get"] = "/solutions/${solutionView.solution.id}/remove-upvote"
-                        +"remove upvote button"
-
                     }
 
                     span {
@@ -52,17 +49,15 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
 
                     if (!solutionView.isDownvoted) {
                         attributes["hx-get"] = "/solutions/${solutionView.solution.id}/downvote"
-                        +"downvote button"
 
                     } else {
                         attributes["hx-get"] = "/solutions/${solutionView.solution.id}/remove-downvote"
-                        +"remove downvote button"
 
                     }
 
                     span {
                         classes = setOf("material-symbols-rounded", "voting-icon")
-                        +"add"
+                        +"remove"
                     }
                 }
             }

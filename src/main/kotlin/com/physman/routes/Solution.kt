@@ -116,12 +116,16 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                     +newVoteCount.toString()
 
                     button {
+                        classes = setOf("voting-button")
                         attributes["id"] = "upvote-btn-${solutionId}"
                         attributes["hx-swap-oob"] = "true"
                         attributes["hx-get"] = "/solutions/${solutionId}/remove-upvote"
                         attributes["hx-target"] = "#vote-count-${solutionId}"
 
-                        +"remove upvote button"
+                        span {
+                            classes = setOf("material-symbols-rounded", "voting-icon")
+                            +"add"
+                        }
                     }
                 }
             }
@@ -141,12 +145,16 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                     +newVoteCount.toString()
 
                     button {
+                        classes = setOf("voting-button")
                         attributes["id"] = "downvote-btn-${solutionId}"
                         attributes["hx-swap-oob"] = "true"
                         attributes["hx-get"] = "/solutions/${solutionId}/remove-downvote"
                         attributes["hx-target"] = "#vote-count-${solutionId}"
 
-                        +"remove downvote button"
+                        span {
+                            classes = setOf("material-symbols-rounded", "voting-icon")
+                            +"remove"
+                        }
                     }
                 }
             }
@@ -167,13 +175,17 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                     +newVoteCount.toString()
 
                     button {
+                        classes = setOf("voting-button")
                         attributes["id"] = "upvote-btn-${solutionId}"
                         attributes["hx-swap-oob"] = "true"
                         attributes["hx-get"] = "/solutions/${solutionId}/upvote"
                         attributes["hx-target"] = "#vote-count-${solutionId}"
 
 
-                        +"upvote button"
+                        span {
+                            classes = setOf("material-symbols-rounded", "voting-icon")
+                            +"add"
+                        }
                     }
                 }
             }
@@ -193,12 +205,16 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                     +newVoteCount.toString()
 
                     button {
+                        classes = setOf("voting-button")
                         attributes["id"] = "downvote-btn-$solutionId"
                         attributes["hx-swap-oob"] = "true"
                         attributes["hx-get"] = "/solutions/${solutionId}/downvote"
                         attributes["hx-target"] = "#vote-count-${solutionId}"
 
-                        +"downvote button"
+                        span {
+                            classes = setOf("material-symbols-rounded", "voting-icon")
+                            +"remove"
+                        }
                     }
                 }
             }
