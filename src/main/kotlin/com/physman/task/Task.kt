@@ -29,5 +29,6 @@ data class Task (
 
     val title: String,
     val additionalNotes: String? = null,
+    val commentAmount: Int = 0,
     val attachmentIds: List<ObjectId> = emptyList()
 )

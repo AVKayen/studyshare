@@ -49,7 +49,7 @@ fun Application.configureRouting(
             }
 
             route("/comments") {
-                commentRouter(commentRepository)
+                commentRouter(commentRepository, solutionRepository)
             }
 
             route("/") {

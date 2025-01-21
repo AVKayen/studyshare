@@ -70,6 +70,16 @@ class MongoSolutionRepository(
     }
 
 
+    override suspend fun updateCommentAmount(solutionId: ObjectId, amount: Int): Int {
+        val filter = Filters.eq("_id", solutionId)
+        val updates = Updates.inc(Solution::commentAmount.name, amount)
+
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+
+        return solution.commentAmount + 1
+    }
+
+
     //votes
     //TODO: if upvoted remove downvote and vice versa
     override suspend fun upvote(id: ObjectId, userId: ObjectId): Int {

@@ -15,6 +15,7 @@ data class Solution(
     val taskId: ObjectId,
     val title: String,
     val additionalNotes: String? = null,
+    val commentAmount: Int = 0,
     val upvotes: List<ObjectId> = emptyList(), // Ids of users who upvoted the solution
     val downvotes: List<ObjectId> = emptyList(),
     val attachmentIds: List<ObjectId> = emptyList()

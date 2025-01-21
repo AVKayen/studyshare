@@ -12,6 +12,8 @@ interface SolutionRepository {
     suspend fun deleteSolutions(taskId: ObjectId)
     suspend fun deleteSolution(id: ObjectId)
 
+    suspend fun updateCommentAmount(solutionId: ObjectId, amount: Int): Int
+
     suspend fun upvote(id: ObjectId, userId: ObjectId): Int
     suspend fun downvote(id: ObjectId, userId: ObjectId): Int
     suspend fun removeUpvote(id: ObjectId, userId: ObjectId): Int
