@@ -110,7 +110,6 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
 
 
         //votes
-        //TODO: add redirection to buttons
         get ("/upvote") {
             val objectIds = validateObjectIds(call, "id") ?: return@get
             val solutionId = objectIds["id"]!!
@@ -134,9 +133,6 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                     }
                 }
             }
-//            call.respondHtml(HttpStatusCode.OK) {
-//                attributes["hx-target"] = "#downvote-btn-$solutionId"
-//            }
         }
 
         get ("/downvote") {
@@ -208,7 +204,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                         attributes["id"] = "downvote-btn-$solutionId"
                         attributes["hx-swap-oob"] = "true"
                         attributes["hx-get"] = "/solutions/${solutionId}/downvote"
-                        attributes["hx-target"] = "#vote-count-$solutionId"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
 
                         +"downvote button"
                     }
