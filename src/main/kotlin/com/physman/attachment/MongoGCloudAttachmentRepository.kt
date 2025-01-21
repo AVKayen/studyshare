@@ -66,8 +66,8 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
         return attachments
     }
 
-    private fun deleteUploadedAttachment(attachment: Attachment) {
-        val blob: Blob? = storage.get(bucketName, attachment.blobName)
+    private fun deleteUploadedFile(blobName: String) {
+        val blob: Blob? = storage.get(bucketName, blobName)
 
         if (blob != null) {
             storage.delete(blob.blobId)
@@ -81,7 +81,10 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
     override suspend fun deleteAttachments(attachmentIds: List<ObjectId>) {
         val filter = Filters.`in`("_id", attachmentIds)
         attachmentCollection.find(filter).collect { attachment: Attachment ->
-            deleteUploadedAttachment(attachment)
+            deleteUploadedFile(attachment.blobName)
+            attachment.thumbnailBlobName?.let { thumbnailBlobName: String ->
+                deleteUploadedFile(thumbnailBlobName)
+            }
         }
 
         attachmentCollection.deleteMany(filter)
