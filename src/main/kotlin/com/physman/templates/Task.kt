@@ -22,7 +22,8 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
             }
         }
         div {
-
+            a(href = "/comments/comment?parentId=${taskView.task.id}?post-type=task") {
+                +"Comment"}
         }
 
 

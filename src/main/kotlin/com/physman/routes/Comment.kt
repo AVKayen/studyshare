@@ -25,8 +25,10 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
     globalFormRouter.routeFormValidators(commentCreationForm)
 
+    //TODO: redo these
     get("/comment") {
         val parentId = call.request.queryParameters["parentId"]
+        val postType = call.request.queryParameters["parentId"]
         if (parentId == null) {
                 call.respondText("No id specified.", status = HttpStatusCode.BadRequest)
                 return@get
@@ -35,7 +37,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
         call.respondHtml {
             index("This won't be index") {
                 //TODO: maybe separate tasks from solutions
-                commentCreationForm.render(this, "/comments?parentId=$parentId")
+                commentCreationForm.render(this, "/comments?parentId=$parentId?post-type=$postType")
             }
         }
     }
@@ -60,6 +62,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     route("/{post-type}")
     {
         post {
+            println("EOOOOOOOOO")
             val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
             val parentId = objectIds["parentId"]
             val postType = call.request.queryParameters["post-type"]
