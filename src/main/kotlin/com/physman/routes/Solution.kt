@@ -125,15 +125,18 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                     +newVoteCount.toString()
 
                     button {
-                        attributes["id"] = "upvote-btn-$solutionId"
+                        attributes["id"] = "upvote-btn-${solutionId}"
                         attributes["hx-swap-oob"] = "true"
                         attributes["hx-get"] = "/solutions/${solutionId}/remove-upvote"
-                        attributes["hx-target"] = "#vote-count-$solutionId"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
 
                         +"remove upvote button"
                     }
                 }
             }
+//            call.respondHtml(HttpStatusCode.OK) {
+//                attributes["hx-target"] = "#downvote-btn-$solutionId"
+//            }
         }
 
         get ("/downvote") {
@@ -150,10 +153,10 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                     +newVoteCount.toString()
 
                     button {
-                        attributes["id"] = "downvote-btn-$solutionId"
+                        attributes["id"] = "downvote-btn-${solutionId}"
                         attributes["hx-swap-oob"] = "true"
                         attributes["hx-get"] = "/solutions/${solutionId}/remove-downvote"
-                        attributes["hx-target"] = "#vote-count-$solutionId"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
 
                         +"remove downvote button"
                     }
@@ -176,10 +179,10 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                     +newVoteCount.toString()
 
                     button {
-                        attributes["id"] = "upvote-btn-$solutionId"
+                        attributes["id"] = "upvote-btn-${solutionId}"
                         attributes["hx-swap-oob"] = "true"
                         attributes["hx-get"] = "/solutions/${solutionId}/upvote"
-                        attributes["hx-target"] = "#vote-count-$solutionId"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
 
 
                         +"upvote button"
