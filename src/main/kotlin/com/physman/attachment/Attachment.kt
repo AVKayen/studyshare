@@ -9,16 +9,17 @@ data class Attachment(
     val id: ObjectId = ObjectId(),
     val originalFilename: String,
     val mime: String?,
-    val blobName: String = "$id.${originalFilename.substringAfterLast('.')}",
     val cachedUrl: String? = null,
     val cachedThumbnailUrl: String? = null,
+    val isImage: Boolean = false
 ) {
-    fun isImage(): Boolean {
-        return mime?.startsWith("image/") ?: false
-    }
+    val blobName: String
+        get() = "$id.${originalFilename.substringAfterLast('.')}"
 
-     val thumbnailBlobName: String?
-         get() {
-             return if (isImage()) "thumb.$blobName" else null
-         }
+    val thumbnailBlobName: String
+        get() {
+            return "thumb.$blobName"
+        }
+
+    fun hasImageMimeType(): Boolean = mime?.startsWith("image/") ?: false
 }

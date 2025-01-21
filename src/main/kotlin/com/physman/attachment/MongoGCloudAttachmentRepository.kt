@@ -50,13 +50,18 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
             )
             uploadFile(attachment.blobName, attachment.mime, Files.readAllBytes(file.filePath))
 
-            // Create and upload a thumbnail
-            attachment.thumbnailBlobName?.let { thumbnailBlobName: String ->
-                val thumbnailPath = createThumbnail(file.filePath)
-                uploadFile(thumbnailBlobName, "image/jpg", Files.readAllBytes(thumbnailPath))
-                thumbnailPath.deleteIfExists()
+            if (attachment.hasImageMimeType()) {
+                try {
+                    val thumbnailPath = createThumbnail(file.filePath)
+                    uploadFile(attachment.thumbnailBlobName, "image/jpg", Files.readAllBytes(thumbnailPath))
+                    attachments.add(attachment.copy(isImage = true)) // File is an image and the thumbnail was created
+                    thumbnailPath.deleteIfExists()
+                } catch (e: net.coobird.thumbnailator.tasks.UnsupportedFormatException) {
+                    attachments.add(attachment)
+                }
+            } else {
+                attachments.add(attachment)
             }
-            attachments.add(attachment)
         }
 
         if (attachments.size > 0) {
@@ -82,8 +87,8 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
         val filter = Filters.`in`("_id", attachmentIds)
         attachmentCollection.find(filter).collect { attachment: Attachment ->
             deleteUploadedFile(attachment.blobName)
-            attachment.thumbnailBlobName?.let { thumbnailBlobName: String ->
-                deleteUploadedFile(thumbnailBlobName)
+            if (attachment.isImage) {
+                deleteUploadedFile(attachment.thumbnailBlobName)
             }
         }
 
@@ -138,15 +143,22 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
             url = newUrl
         }
 
-        var thumbnailUrl: String? = null
-        attachment.thumbnailBlobName?.let { thumbnailBlobName: String ->
-            if (attachment.cachedThumbnailUrl != null && isCachedUrlValid(attachment.cachedThumbnailUrl)) {
-                thumbnailUrl = attachment.cachedThumbnailUrl
-            } else {
-                val newUrl = signUrl(thumbnailBlobName)
-                updateCachedThumbnailUrl(attachment.id, newUrl)
-                thumbnailUrl = newUrl
-            }
+        if (!attachment.isImage) {
+            return AttachmentView(
+                attachment = attachment,
+                url = url,
+                thumbnailUrl = null
+            )
+        }
+
+        val thumbnailUrl: String?
+
+        if (attachment.cachedThumbnailUrl != null && isCachedUrlValid(attachment.cachedThumbnailUrl)) {
+            thumbnailUrl = attachment.cachedThumbnailUrl
+        } else {
+            val newUrl = signUrl(attachment.thumbnailBlobName)
+            updateCachedThumbnailUrl(attachment.id, newUrl)
+            thumbnailUrl = newUrl
         }
 
         return AttachmentView(
