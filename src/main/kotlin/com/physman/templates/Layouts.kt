@@ -11,7 +11,8 @@ fun HEAD.headTags() {
     link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css")
     // material icons
     link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded")
-    // custom CSS TODO: add CI for this
+    // custom CSS TODO: for prod, change this to a GCP file
+    // link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
     link(rel = "stylesheet", href = "/static/styles.css")
     
     // config for htmx
