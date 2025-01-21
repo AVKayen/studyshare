@@ -83,7 +83,7 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
             imageAttachmentTemplate(images)
             nonImageAttachmentTemplate(nonImageAttachments)
             // TODO: Hiding comments, button to comment, comment count
-            showCommentsButton(solutionView.solution.id, 2137)
+            showCommentsButton(solutionView.solution)
             div {
                 id = "comments-${solutionView.solution.id}"
                 classes = setOf("comments")

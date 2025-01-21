@@ -10,7 +10,7 @@ class MongoCommentRepository(
     mongoDatabase: MongoDatabase,
 ) : CommentRepository {
 
-    private val commentCollection = mongoDatabase.getCollection<Comment>("comments")
+    private val commentCollection = mongoDatabase.getCollection<Comment>("BoberComments2")
 
 
     override suspend fun createComment(comment: Comment) {
