@@ -16,9 +16,9 @@ fun FlowContent.commentTemplate(comment: Comment) {
 
 }
 
-fun FlowContent.showCommentsButton(parentId: ObjectId) {
+fun FlowContent.showCommentsButton(parentId: ObjectId, commentCount: Int) {
     button {
-        classes = setOf("btn comment-button")
+        classes = setOf("btn comment-button outline")
         attributes["hx-get"] = "/comments?parentId=${parentId}"
         attributes["hx-trigger"] = "click"
         attributes["hx-target"] = "#comments-${parentId}"
@@ -26,6 +26,6 @@ fun FlowContent.showCommentsButton(parentId: ObjectId) {
             classes = setOf("material-symbols-rounded", "comment-icon")
             +"comment"
         }
-        +"Show comments (commentCount())"
+        +"Show $commentCount comments"
     }
 }
