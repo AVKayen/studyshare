@@ -6,8 +6,9 @@ import kotlinx.html.FlowContent
 import kotlinx.html.*
 
 fun FlowContent.solutionTemplate(solutionView: SolutionView) {
-    val upvoteCountSpanId = "upvote-count-${solutionView.solution.id}"
+    val voteCountSpanId = "vote-count-${solutionView.solution.id}"
     val upvoteButtonId = "upvote-btn-${solutionView.solution.id}"
+    val downvoteButtonId = "downvote-btn-${solutionView.solution.id}"
 
     val images = solutionView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage() }
     val nonImageAttachments =
@@ -20,11 +21,16 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
                 button {
                     classes = setOf("voting-button")
                     attributes["id"] = upvoteButtonId
-                    attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
-                    attributes["hx-target"] = "#$upvoteCountSpanId"
+                    attributes["hx-target"] = "#$voteCountSpanId"
 
-                    if (solutionView.isUpvoted) {
-                        attributes["disabled"] = "true"
+                    if (!solutionView.isUpvoted) {
+                        attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
+                        +"upvote button"
+
+                    } else {
+                        attributes["hx-get"] = "/solutions/${solutionView.solution.id}/remove-upvote"
+                        +"remove upvote button"
+
                     }
 
                     span {
@@ -34,25 +40,37 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
                 }
             }
             span {
-                attributes["id"] = upvoteCountSpanId
+                attributes["id"] = voteCountSpanId
                 +solutionView.solution.upvoteCount().toString()
             }
+
             span {
                 button {
                     classes = setOf("voting-button")
-                    /*attributes["id"] = upvoteButtonId
-                    attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
-                    attributes["hx-target"] = "#$upvoteCountSpanId"
+                    attributes["id"] = downvoteButtonId
+                    attributes["hx-target"] = "#$voteCountSpanId"
 
-                    if (solutionView.isUpvoted) {
-                        attributes["disabled"] = "true"
-                    }*/
+                    if (!solutionView.isDownvoted) {
+                        attributes["hx-get"] = "/solutions/${solutionView.solution.id}/downvote"
+                        +"downvote button"
+
+                    } else {
+                        attributes["hx-get"] = "/solutions/${solutionView.solution.id}/remove-downvote"
+                        +"remove downvote button"
+
+                    }
 
                     span {
                         classes = setOf("material-symbols-rounded", "voting-icon")
-                        +"remove"
+                        +"add"
                     }
                 }
+            }
+        }
+
+        div {
+            if (solutionView.solution.additionalNotes != null) {
+                +"Notes: ${solutionView.solution.additionalNotes}"
             }
         }
         div {
@@ -69,13 +87,12 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
 
             imageAttachmentTemplate(images)
             nonImageAttachmentTemplate(nonImageAttachments)
-            // TODO: Hiding coments, button to comment, comment count
+            // TODO: Hiding comments, button to comment, comment count
             showCommentsButton(solutionView.solution.id, 2137)
             div {
                 id = "comments-${solutionView.solution.id}"
                 classes = setOf("comments")
             }
         }
-
     }
 }

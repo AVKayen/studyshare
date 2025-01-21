@@ -92,6 +92,16 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
 
     route("/{id}") {
 
+        delete {
+            val objectIds = validateObjectIds(call, "id") ?: return@delete
+            val solutionId = objectIds["id"]!!
+
+            solutionRepository.deleteSolution(solutionId)
+            call.response.status(HttpStatusCode.NoContent)
+        }
+
+
+        //votes
         get ("/upvote") {
             val objectIds = validateObjectIds(call, "id") ?: return@get
             val solutionId = objectIds["id"]!!
@@ -99,16 +109,69 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val userSession = call.sessions.get<UserSession>()!!
             val userId = ObjectId(userSession.id)
 
-            val newUpvoteCount = solutionRepository.upvoteSolution(solutionId, userId)
+            val newVoteCount = solutionRepository.upvote(solutionId, userId)
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-                    +newUpvoteCount.toString()
+                    +newVoteCount.toString()
 
                     button {
-                        attributes["id"] = "upvote-btn-$solutionId"
+                        attributes["id"] = "upvote-btn-${solutionId}"
                         attributes["hx-swap-oob"] = "true"
-                        attributes["disabled"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/remove-upvote"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
+
+                        +"remove upvote button"
+                    }
+                }
+            }
+        }
+
+        get ("/downvote") {
+            val objectIds = validateObjectIds(call, "id") ?: return@get
+            val solutionId = objectIds["id"]!!
+
+            val userSession = call.sessions.get<UserSession>()!!
+            val userId = ObjectId(userSession.id)
+
+            val newVoteCount = solutionRepository.downvote(solutionId, userId)
+
+            call.respondHtml(HttpStatusCode.OK) {
+                body {
+                    +newVoteCount.toString()
+
+                    button {
+                        attributes["id"] = "downvote-btn-${solutionId}"
+                        attributes["hx-swap-oob"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/remove-downvote"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
+
+                        +"remove downvote button"
+                    }
+                }
+            }
+        }
+
+
+        get ("/remove-upvote") {
+            val objectIds = validateObjectIds(call, "id") ?: return@get
+            val solutionId = objectIds["id"]!!
+
+            val userSession = call.sessions.get<UserSession>()!!
+            val userId = ObjectId(userSession.id)
+
+            val newVoteCount = solutionRepository.removeUpvote(solutionId, userId)
+
+            call.respondHtml(HttpStatusCode.OK) {
+                body {
+                    +newVoteCount.toString()
+
+                    button {
+                        attributes["id"] = "upvote-btn-${solutionId}"
+                        attributes["hx-swap-oob"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/upvote"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
+
 
                         +"upvote button"
                     }
@@ -116,12 +179,29 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             }
         }
 
-        delete {
-            val objectIds = validateObjectIds(call, "id") ?: return@delete
+        get ("/remove-downvote") {
+            val objectIds = validateObjectIds(call, "id") ?: return@get
             val solutionId = objectIds["id"]!!
 
-            solutionRepository.deleteSolution(solutionId)
-            call.response.status(HttpStatusCode.NoContent)
+            val userSession = call.sessions.get<UserSession>()!!
+            val userId = ObjectId(userSession.id)
+
+            val newVoteCount = solutionRepository.removeDownvote(solutionId, userId)
+
+            call.respondHtml(HttpStatusCode.OK) {
+                body {
+                    +newVoteCount.toString()
+
+                    button {
+                        attributes["id"] = "downvote-btn-$solutionId"
+                        attributes["hx-swap-oob"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/downvote"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
+
+                        +"downvote button"
+                    }
+                }
+            }
         }
     }
 }

@@ -93,7 +93,7 @@ package com.physman.task
 //        return updatedSolution
 //    }
 //
-//    override suspend fun upvoteSolution(taskId: String, solutionId: String): Task.Solution? {
+//    override suspend fun upvote(taskId: String, solutionId: String): Task.Solution? {
 //       val solution = getSolution(taskId, solutionId) ?: return null
 //        solution.upvotes += 1
 //        return solution
