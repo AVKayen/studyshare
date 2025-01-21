@@ -18,10 +18,14 @@ fun FlowContent.commentTemplate(comment: Comment) {
 
 fun FlowContent.showCommentsButton(parentId: ObjectId) {
     button {
-        classes = setOf("btn")
+        classes = setOf("btn comment-button")
         attributes["hx-get"] = "/comments?parentId=${parentId}"
         attributes["hx-trigger"] = "click"
         attributes["hx-target"] = "#comments-${parentId}"
+        span {
+            classes = setOf("material-symbols-rounded", "comment-icon")
+            +"comment"
+        }
         +"Show comments (commentCount())"
     }
 }

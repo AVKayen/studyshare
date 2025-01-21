@@ -14,16 +14,17 @@ article {
 article > header > h2 {
     margin-bottom: 0;
 }
+
 article > header {
     margin-bottom: 0.5rem;
 }
+
 p {
     margin-bottom: 0.5rem;
 }
 
 .task {
-    margin-bottom: 3rem;
-    border-radius: 0.25rem;
+    margin-bottom: 0;
 }
 
 .form-error {
@@ -73,7 +74,7 @@ nav {
 .nav-title {
     font-size: 2rem;
     font-weight: bold;
-    margin: 0 !important;
+    margin: 0 0 0.5rem 0;
 }
 
 .container {
@@ -106,4 +107,60 @@ nav {
     margin: 0.5rem;
     border-radius: 0.25rem;
     cursor: pointer;
+}
+
+.solution {
+    display: flex;
+    padding: 0.5rem;
+}
+
+.solution-voting {
+    display: flex;
+    align-items: center;
+}
+
+.solution-content {
+    margin-left: 1rem;
+}
+
+.voting-button {
+    margin: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+}
+
+@media (max-width: 768px) {
+    .solution {
+        flex-direction: column;
+    }
+    .solution-voting {
+        flex-direction: row;
+    }
+}
+
+@media (min-width: 768px) {
+    .solution {
+        flex-direction: row;
+    }
+    .solution-voting {
+        flex-direction: column;
+    }
+}
+
+.comment-button {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    color: var(--pico-color);
+}
+
+.comment-icon {
+    height: fit-content;
+}
+
+.comments {
+    margin-left: 1rem;
 }

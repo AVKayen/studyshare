@@ -6,68 +6,76 @@ import kotlinx.html.FlowContent
 import kotlinx.html.*
 
 fun FlowContent.solutionTemplate(solutionView: SolutionView) {
-
     val upvoteCountSpanId = "upvote-count-${solutionView.solution.id}"
     val upvoteButtonId = "upvote-btn-${solutionView.solution.id}"
 
     val images = solutionView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage() }
-    val nonImages =
+    val nonImageAttachments =
         solutionView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage() }
 
     article(classes = "solution") {
-        header {
-            div {
-                classes = setOf("upvotes")
-                span {
-                    button {
-                        classes = setOf("voting-button")
-                        attributes["id"] = upvoteButtonId
-                        attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
-                        attributes["hx-target"] = "#$upvoteCountSpanId"
+        div {
+            classes = setOf("solution-voting")
+            span {
+                button {
+                    classes = setOf("voting-button")
+                    attributes["id"] = upvoteButtonId
+                    attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
+                    attributes["hx-target"] = "#$upvoteCountSpanId"
 
-                        if (solutionView.isUpvoted) {
-                            attributes["disabled"] = "true"
-                        }
+                    if (solutionView.isUpvoted) {
+                        attributes["disabled"] = "true"
+                    }
 
-                        +"up"
+                    span {
+                        classes = setOf("material-symbols-rounded", "voting-icon")
+                        +"add"
                     }
                 }
-                span {
-                    attributes["id"] = upvoteCountSpanId
-                    +solutionView.solution.upvoteCount().toString()
-                }
-                span {
-                    // down
-                }
             }
-            h2 {
-                +solutionView.solution.title
+            span {
+                attributes["id"] = upvoteCountSpanId
+                +solutionView.solution.upvoteCount().toString()
             }
-        }
+            span {
+                button {
+                    classes = setOf("voting-button")
+                    /*attributes["id"] = upvoteButtonId
+                    attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
+                    attributes["hx-target"] = "#$upvoteCountSpanId"
 
-        section {
-            classes = setOf("gallery")
-            images.forEach { attachmentView: AttachmentView ->
-                img(src = attachmentView.link, alt = attachmentView.attachment.originalFilename)
-            }
-        }
+                    if (solutionView.isUpvoted) {
+                        attributes["disabled"] = "true"
+                    }*/
 
-        section {
-            classes = setOf("attachments")
-            nonImages.forEach { attachmentView: AttachmentView ->
-                a(href = attachmentView.link) {
-                    +attachmentView.attachment.originalFilename
+                    span {
+                        classes = setOf("material-symbols-rounded", "voting-icon")
+                        +"remove"
+                    }
                 }
             }
         }
-
         div {
-            classes = setOf("button-container")
+            classes = setOf("solution-content")
+            header {
+                div {
+                    classes = setOf("upvotes")
+
+                }
+                h2 {
+                    +solutionView.solution.title
+                }
+            }
+
+            imageAttachmentTemplate(images)
+            nonImageAttachmentTemplate(nonImageAttachments)
+            // TODO: Hiding coments, button to comment
             showCommentsButton(solutionView.solution.id)
+            div {
+                id = "comments-${solutionView.solution.id}"
+                classes = setOf("comments")
+            }
         }
-        div {
-            id = "comments-${solutionView.solution.id}"
-            classes = setOf("comments")
-        }
+
     }
 }
