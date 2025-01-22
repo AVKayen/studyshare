@@ -1,15 +1,21 @@
 package com.physman.attachment
+
 import com.google.cloud.storage.*
 import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.physman.forms.UploadFileData
 import kotlinx.coroutines.flow.toList
+import kotlin.io.path.createTempFile
+import net.coobird.thumbnailator.Thumbnails
 import org.bson.types.ObjectId
 import java.nio.file.Files
+import java.nio.file.Path
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import java.time.ZonedDateTime.parse
 import java.time.format.DateTimeFormatter.ofPattern
+import kotlin.io.path.deleteIfExists
 
 
 class MongoGCloudAttachmentRepository(private val bucketName: String, database: MongoDatabase) : AttachmentRepository {
@@ -17,23 +23,48 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
     private val attachmentCollection = database.getCollection<Attachment>("attachments")
     private val expiresAfterMinutes = 30L
 
-    private fun uploadAttachments(attachment: Attachment, content: ByteArray) {
-        val blobName = attachment.blobName
+    private fun uploadFile(blobName: String, mimeType: String?, content: ByteArray) {
         val blobId = BlobId.of(bucketName, blobName)
-        val blobInfo = BlobInfo.newBuilder(blobId).setContentType(attachment.mime ?: "application/octet-stream").build()
+        val blobInfo = BlobInfo.newBuilder(blobId).setContentType(mimeType ?: "application/octet-stream").build()
         storage.create(blobInfo, content)
+    }
+
+    private fun createThumbnail(path: Path): Path {
+        val thumbnailPath = createTempFile(suffix = ".jpg")
+        Thumbnails.of(path.toFile())
+            .size(450, 450) // Scale the image to fit in a 450x450 box
+//            .outputQuality()
+            .outputFormat("jpg")
+            .toFile(thumbnailPath.toFile())
+
+        return thumbnailPath
     }
 
     override suspend fun createAttachments(files: List<UploadFileData>): List<Attachment> {
         val attachments = mutableListOf<Attachment>()
 
         files.forEach { file: UploadFileData ->
+
             val attachment = Attachment(
-                originalFilename = file.originalName,
-                mime = file.mimeType
+                originalFilename = file.originalName
             )
-            uploadAttachments(attachment, Files.readAllBytes(file.filePath))
-            attachments.add(attachment)
+
+            uploadFile(attachment.blobName, file.mimeType, Files.readAllBytes(file.filePath))
+
+            if (file.mimeType?.startsWith("image/") == true) {
+                try {
+                    val thumbnailPath = createThumbnail(file.filePath)
+
+                    uploadFile(attachment.thumbnailBlobName, "image/jpg", Files.readAllBytes(thumbnailPath))
+                    attachments.add(attachment.copy(isImage = true)) // File is an image and the thumbnail was created
+
+                    thumbnailPath.deleteIfExists()
+                } catch (e: net.coobird.thumbnailator.tasks.UnsupportedFormatException) {
+                    attachments.add(attachment)
+                }
+            } else {
+                attachments.add(attachment)
+            }
         }
 
         if (attachments.size > 0) {
@@ -43,8 +74,8 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
         return attachments
     }
 
-    private fun deleteUploadedAttachment(attachment: Attachment) {
-        val blob: Blob? = storage.get(bucketName, attachment.blobName)
+    private fun deleteUploadedFile(blobName: String) {
+        val blob: Blob? = storage.get(bucketName, blobName)
 
         if (blob != null) {
             storage.delete(blob.blobId)
@@ -58,7 +89,10 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
     override suspend fun deleteAttachments(attachmentIds: List<ObjectId>) {
         val filter = Filters.`in`("_id", attachmentIds)
         attachmentCollection.find(filter).collect { attachment: Attachment ->
-            deleteUploadedAttachment(attachment)
+            deleteUploadedFile(attachment.blobName)
+            if (attachment.isImage) {
+                deleteUploadedFile(attachment.thumbnailBlobName)
+            }
         }
 
         attachmentCollection.deleteMany(filter)
@@ -67,36 +101,73 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
 
     override suspend fun getAttachments(attachmentIds: List<ObjectId>): List<AttachmentView> {
         val filter = Filters.`in`("_id", attachmentIds)
-        return attachmentCollection.find(filter).toList().map { attachment: Attachment ->
-            AttachmentView(
-                attachment = attachment,
-                link = getAttachmentLink(attachment)
-            )
-        }
+        return attachmentCollection.find(filter).toList().map { getAttachmentView(it) }
     }
 
-    private suspend fun getAttachmentLink(attachment: Attachment): String {
-        val cachedUrl = attachment.cachedUrl
-        if (cachedUrl != null) {
-            val urlParts = cachedUrl.trim().split('&')
-            val signatureTimeString = urlParts.find { it.startsWith("X-Goog-Date") }?.substringAfter("=")
-            val signatureTime: Instant? = signatureTimeString?.let { parse(it, ofPattern("yyyyMMdd'T'HHmmssX")).toInstant() }
-            val expirationTime: Instant? = signatureTime?.plusSeconds(expiresAfterMinutes * 60)
-            if (expirationTime != null && Instant.now().isBefore(expirationTime.minusSeconds(300))) {
-                return cachedUrl
-            }
-        }
-        val blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, attachment.blobName)).build()
+    private fun isCachedUrlValid(cachedUrl: String): Boolean {
+        val urlParts = cachedUrl.trim().split('&')
+        val signatureTimeString = urlParts.find { it.startsWith("X-Goog-Date") }?.substringAfter("=")
+        val signatureTime: Instant? = signatureTimeString?.let { parse(it, ofPattern("yyyyMMdd'T'HHmmssX")).toInstant() }
+        val expirationTime: Instant? = signatureTime?.plusSeconds(expiresAfterMinutes * 60)
+        return expirationTime != null && Instant.now().isBefore(expirationTime.minusSeconds(300))
+    }
+
+    private fun signUrl(blobName: String): String {
+        val blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, blobName)).build()
         val url = storage.signUrl(
             blobInfo,
             expiresAfterMinutes,
             TimeUnit.MINUTES,
             Storage.SignUrlOption.withV4Signature()
         )
-        attachmentCollection.updateOne(
-            Filters.eq("_id", attachment.id),
-            org.bson.Document("\$set", org.bson.Document("cachedUrl", url.toString()))
-        )
         return url.toString()
+    }
+
+    private suspend fun updateCachedUrl(attachmentId: ObjectId, url: String) {
+        val filter = Filters.eq("_id", attachmentId)
+        val updates = Updates.set(Attachment::cachedUrl.name, url)
+        attachmentCollection.updateOne(filter, updates)
+    }
+
+    private suspend fun updateCachedThumbnailUrl(attachmentId: ObjectId, url: String) {
+        val filter = Filters.eq("_id", attachmentId)
+        val updates = Updates.set(Attachment::cachedThumbnailUrl.name, url)
+        attachmentCollection.updateOne(filter, updates)
+    }
+
+    private suspend fun getAttachmentView(attachment: Attachment): AttachmentView {
+
+        val url: String
+        if (attachment.cachedUrl != null && isCachedUrlValid(attachment.cachedUrl)) {
+            url = attachment.cachedUrl
+        } else {
+            val newUrl = signUrl(attachment.blobName)
+            updateCachedUrl(attachment.id, newUrl)
+            url = newUrl
+        }
+
+        if (!attachment.isImage) {
+            return AttachmentView(
+                attachment = attachment,
+                url = url,
+                thumbnailUrl = null
+            )
+        }
+
+        val thumbnailUrl: String?
+
+        if (attachment.cachedThumbnailUrl != null && isCachedUrlValid(attachment.cachedThumbnailUrl)) {
+            thumbnailUrl = attachment.cachedThumbnailUrl
+        } else {
+            val newUrl = signUrl(attachment.thumbnailBlobName)
+            updateCachedThumbnailUrl(attachment.id, newUrl)
+            thumbnailUrl = newUrl
+        }
+
+        return AttachmentView(
+            attachment = attachment,
+            url = url,
+            thumbnailUrl = thumbnailUrl
+        )
     }
 }

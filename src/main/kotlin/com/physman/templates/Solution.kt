@@ -44,16 +44,16 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
 
         div {
             solutionView.attachments.forEach { attachmentView: AttachmentView ->
-                if (attachmentView.attachment.isImage()) {
-                    img(src = attachmentView.link, alt = attachmentView.attachment.originalFilename)
+                if (attachmentView.attachment.isImage) {
+                    img(src = attachmentView.thumbnailUrl, alt = attachmentView.attachment.originalFilename)
                 }
             }
         }
 
         div {
             solutionView.attachments.forEach { attachmentView: AttachmentView ->
-                if (!attachmentView.attachment.isImage()) {
-                    a(href=attachmentView.link) {
+                if (!attachmentView.attachment.isImage) {
+                    a(href=attachmentView.url) {
                         +attachmentView.attachment.originalFilename
                     }
                 }
