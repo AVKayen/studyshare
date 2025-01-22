@@ -62,14 +62,14 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     route("/{post-type}")
     {
         post { //todo: get rid of those prints
-            println("EOOOOOOOOO")
+
             val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
             val parentId = objectIds["parentId"]
             val postType = call.request.queryParameters["post-type"]
-            println("EOOOOOOOOO2")
+
             val formSubmissionData: FormSubmissionData = commentCreationForm.validateSubmission(call) ?: return@post
             val content = formSubmissionData.fields["content"]!!
-            println("EOOOOOOOOO3")
+
             val newComment = Comment(parentId = parentId!!, content = content)
 
             if (postType.equals("task", true)){
@@ -77,13 +77,13 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
             } else if (postType.equals("solution", true)) {
                 solutionRepository.updateCommentAmount(parentId, 1)
             } else {
-                println("EOOOOOOOOO3.5")
+
                 println(call.url())
                 if (postType!=null)
                     println(postType + postType.javaClass)
                 return@post
             }
-            println("EOOOOOOOOO4")
+
             commentRepository.createComment(newComment)
 
             call.respondHtml(HttpStatusCode.OK) {
