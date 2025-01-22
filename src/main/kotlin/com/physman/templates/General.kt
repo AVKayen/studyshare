@@ -8,7 +8,7 @@ fun FlowContent.nonImageAttachmentTemplate(nonImageAttachments: List<AttachmentV
         section {
             classes = setOf("attachments")
             nonImageAttachments.forEach { attachmentView: AttachmentView ->
-                a(href = attachmentView.link) {
+                a(href = attachmentView.url) {
                     +attachmentView.attachment.originalFilename
                 }
             }
@@ -21,7 +21,7 @@ fun FlowContent.imageAttachmentTemplate(images: List<AttachmentView>) {
         section {
             classes = setOf("gallery")
             images.forEach { attachmentView: AttachmentView ->
-                img(src = attachmentView.link, alt = attachmentView.attachment.originalFilename)
+                img(src = attachmentView.thumbnailUrl, alt = attachmentView.attachment.originalFilename)
             }
         }
     }

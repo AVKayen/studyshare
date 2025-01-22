@@ -10,9 +10,9 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
     val upvoteButtonId = "upvote-btn-${solutionView.solution.id}"
     val downvoteButtonId = "downvote-btn-${solutionView.solution.id}"
 
-    val images = solutionView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage() }
+    val images = solutionView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage }
     val nonImageAttachments =
-        solutionView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage() }
+        solutionView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage }
 
     article(classes = "solution") {
         div {

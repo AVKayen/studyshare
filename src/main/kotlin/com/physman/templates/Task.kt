@@ -6,9 +6,9 @@ import kotlinx.html.FlowContent
 import kotlinx.html.*
 
 fun FlowContent.taskTemplate(taskView: TaskView) {
-    val images = taskView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage() }
+    val images = taskView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage }
     val nonImageAttachments =
-        taskView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage() }
+        taskView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage }
     article(classes = "task") {
         header {
             h2 {
