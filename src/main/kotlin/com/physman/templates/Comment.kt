@@ -17,20 +17,37 @@ fun FlowContent.commentTemplate(comment: Comment) {
 
 }
 
-fun FlowContent.showCommentsButton(parentPost: Post) {
-    button {
-        classes = setOf("btn comment-button outline")
-        attributes["hx-get"] = "/comments?parentId=${parentPost.id}&post-type=${className(parentPost)}"
-        attributes["hx-trigger"] = "click"
-        attributes["hx-target"] = "#comments-${parentPost.id}"
-        span {
-            classes = setOf("material-symbols-rounded", "comment-icon")
-            +"comment"
+fun FlowContent.showCommentsAccordion(parentPost: Post) {
+    details {
+        summary {
+            role = "button"
+            classes = setOf("btn comment-button outline")
+            attributes["hx-get"] = "/comments?parentId=${parentPost.id}&post-type=${className(parentPost)}"
+            attributes["hx-trigger"] = "click once"
+            attributes["hx-target"] = "#comments-${parentPost.id}"
+            span {
+                classes = setOf("material-symbols-rounded", "comment-icon")
+                +"comment"
+            }
+            span {
+                id = "comment-amount-${parentPost.id}"
+                commentCountTemplate(parentPost.commentAmount)
+            }
         }
-        +"Show ${parentPost.commentAmount} comments"
-
-        a(href = "/comments/comment?parentId=${parentPost.id}&post-type=${className(parentPost)}") {
-            +"+"}
+        div {
+            id = "comments-${parentPost.id}"
+            classes = setOf("comments")
+        }
     }
+
 }
 
+fun FlowContent.commentCountTemplate(commentAmount: Int) {
+    if (commentAmount == 0) {
+        +"Be the first to comment"
+    } else if (commentAmount == 1) {
+        +"Show 1 comment"
+    } else {
+        +"Show $commentAmount comments"
+    }
+}

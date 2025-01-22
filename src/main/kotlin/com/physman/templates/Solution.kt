@@ -64,11 +64,6 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
         }
 
         div {
-            if (solutionView.solution.additionalNotes != null) {
-                +"Notes: ${solutionView.solution.additionalNotes}"
-            }
-        }
-        div {
             classes = setOf("solution-content")
             header {
                 div {
@@ -80,14 +75,17 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
                 }
             }
 
+            if (!solutionView.solution.additionalNotes.isNullOrBlank()) {
+                p {
+                    +"${solutionView.solution.additionalNotes}"
+                }
+            }
+
             imageAttachmentTemplate(images)
             nonImageAttachmentTemplate(nonImageAttachments)
             // TODO: Hiding comments, button to comment, comment count
-            showCommentsButton(solutionView.solution)
-            div {
-                id = "comments-${solutionView.solution.id}"
-                classes = setOf("comments")
-            }
+            showCommentsAccordion(solutionView.solution)
+
         }
     }
 }

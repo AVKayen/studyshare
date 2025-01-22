@@ -164,3 +164,11 @@ nav {
 .comments {
     margin-left: 1rem;
 }
+
+.solution-content {
+    width: 100%;
+}
+
+summary {
+    width: calc(100% - 1rem) !important;
+}

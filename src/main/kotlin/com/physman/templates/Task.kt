@@ -26,10 +26,6 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
         imageAttachmentTemplate(images)
         nonImageAttachmentTemplate(nonImageAttachments)
         // TODO: Hiding comments, button to comment
-        showCommentsButton(taskView.task)
-        div {
-            id = "comments-${taskView.task.id}"
-            classes = setOf("comments")
-        }
+        showCommentsAccordion(taskView.task)
     }
 }

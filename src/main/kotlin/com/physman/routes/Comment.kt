@@ -6,8 +6,10 @@ import com.physman.comment.commentValidator
 import com.physman.forms.*
 import com.physman.solution.SolutionRepository
 import com.physman.task.TaskRepository
+import com.physman.templates.commentCountTemplate
 import com.physman.templates.commentTemplate
 import com.physman.templates.index
+import com.physman.utils.className
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -46,6 +48,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
         val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@get
         val parentId = objectIds["parentId"]
+        val parentPostClassName = call.request.queryParameters["post-type"]
 
         val comments = commentRepository.getComments(parentId!!)
 
@@ -54,14 +57,31 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
                 for (comment in comments) {
                     commentTemplate(comment)
                 }
+                form {
+                    attributes["hx-post"] = "/comments/comment?parentId=${parentId}&post-type=${parentPostClassName}"
+                    attributes["hx-target"] = "#comments-${parentId}"
+                    textArea {
+                        name = "content"
+                        placeholder = "Write a comment..."
+                    }
+                    button {
+                        type = ButtonType.submit
+                        +"Comment"
+                    }
+                }
+
+                span {
+                    id = "comment-amount-${parentId}"
+                    attributes["hx-swap-oob"] = "true"
+                    commentCountTemplate(comments.size)
+                }
             }
         }
 
     }
 
-    route("/{post-type}")
-    {
-        post { //todo: get rid of those prints
+    route("/comment") {
+        post {
 
             val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
             val parentId = objectIds["parentId"]
@@ -86,11 +106,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
             commentRepository.createComment(newComment)
 
-            call.respondHtml(HttpStatusCode.OK) {
-                body {
-//                solutionTemplate(newSolution, taskId.toString())
-                }
-            }
+            call.respondRedirect("/comments?parentId=${parentId}&post-type=${postType}")
         }
 
         route("/{comment-id}") {
@@ -114,6 +130,4 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
             }
         }
     }
-
-
 }
