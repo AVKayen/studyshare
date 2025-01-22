@@ -21,10 +21,6 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
                     +"${taskView.task.additionalNotes}"
             }
         }
-        div {
-            a(href = "/comments/comment?parentId=${taskView.task.id}&post-type=task") {
-                +"Comment"}
-        }
 
 
         imageAttachmentTemplate(images)

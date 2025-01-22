@@ -27,6 +27,9 @@ fun FlowContent.showCommentsButton(parentPost: Post) {
             +"comment"
         }
         +"Show ${parentPost.commentAmount} comments"
+
+        a(href = "/comments/comment?parentId=${parentPost.id}&post-type=${strip(parentPost.javaClass.toString())}") {
+            +"+"}
     }
 }
 

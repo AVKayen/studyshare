@@ -62,7 +62,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
     route("/{post-type}")
     {
-        post {
+        post { //todo: get rid of those prints
             println("EOOOOOOOOO")
             val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
             val parentId = objectIds["parentId"]
