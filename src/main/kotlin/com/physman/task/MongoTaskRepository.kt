@@ -19,7 +19,7 @@ class MongoTaskRepository(
      private val commentRepository: CommentRepository,
      private val solutionRepository: SolutionRepository
 ) : TaskRepository {
-    private val taskCollection = mongoDatabase.getCollection<Task>("BoberTasks2")
+    private val taskCollection = mongoDatabase.getCollection<Task>("tasks")
 
     override suspend fun createTask(task: Task, files: List<UploadFileData>) {
 

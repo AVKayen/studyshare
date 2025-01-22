@@ -17,7 +17,7 @@ class MongoSolutionRepository(
     private val attachmentRepository: AttachmentRepository
 ) : SolutionRepository {
 
-    private val solutionCollection = mongoDatabase.getCollection<Solution>("BoberSolutions2")
+    private val solutionCollection = mongoDatabase.getCollection<Solution>("solutions")
 
     override suspend fun createSolution(solution: Solution, files: List<UploadFileData>, userId: ObjectId): SolutionView {
 
