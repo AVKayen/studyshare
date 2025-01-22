@@ -2,6 +2,7 @@ package com.physman.templates
 
 import com.physman.comment.Comment
 import com.physman.utils.Post
+import com.physman.utils.className
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
@@ -19,7 +20,7 @@ fun FlowContent.commentTemplate(comment: Comment) {
 fun FlowContent.showCommentsButton(parentPost: Post) {
     button {
         classes = setOf("btn comment-button outline")
-        attributes["hx-get"] = "/comments?parentId=${parentPost.id}&post-type=${strip(parentPost.javaClass.toString())}"
+        attributes["hx-get"] = "/comments?parentId=${parentPost.id}&post-type=${className(parentPost)}"
         attributes["hx-trigger"] = "click"
         attributes["hx-target"] = "#comments-${parentPost.id}"
         span {
@@ -28,17 +29,8 @@ fun FlowContent.showCommentsButton(parentPost: Post) {
         }
         +"Show ${parentPost.commentAmount} comments"
 
-        a(href = "/comments/comment?parentId=${parentPost.id}&post-type=${strip(parentPost.javaClass.toString())}") {
+        a(href = "/comments/comment?parentId=${parentPost.id}&post-type=${className(parentPost)}") {
             +"+"}
     }
 }
 
-//TODO: move this somewhere
-fun strip(str: String): String {
-    val lastDotIndex = str.lastIndexOf('.')
-    return if (lastDotIndex != -1) {
-        str.substring(lastDotIndex + 1)
-    } else {
-        str
-    }
-}

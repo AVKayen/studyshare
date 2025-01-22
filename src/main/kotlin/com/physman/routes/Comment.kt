@@ -26,10 +26,9 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
     globalFormRouter.routeFormValidators(commentCreationForm)
 
-    //TODO: redo these
+
     get("/comment") {
         val parentId = call.request.queryParameters["parentId"]
-        val postType = call.request.queryParameters["post-type"]
         if (parentId == null) {
                 call.respondText("No id specified.", status = HttpStatusCode.BadRequest)
                 return@get
