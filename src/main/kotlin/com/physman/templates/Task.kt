@@ -24,7 +24,7 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
         div {
             taskView.attachments.forEach { attachmentView: AttachmentView ->
                 if (attachmentView.attachment.isImage) {
-                    img(src = attachmentView.url, alt = attachmentView.attachment.originalFilename)
+                    img(src = attachmentView.thumbnailUrl, alt = attachmentView.attachment.originalFilename)
                 }
             }
         }
