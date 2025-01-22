@@ -14,9 +14,6 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
             h2 {
                 +taskView.task.title
             }
-            a(href = "/solutions/creation-form?taskId=${taskView.task.id}") {
-                +"Create solution"}
-
         }
         if (taskView.task.additionalNotes != null) {
             p {
