@@ -23,9 +23,9 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
         "hx-target" to "#solution-list",
         "hx-swap" to "beforeend"
     ))
-    solutionCreationForm.addInput(TextlikeInput("title", "title", InputType.text, titleValidator))
-    solutionCreationForm.addInput(TextlikeInput("additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
-    solutionCreationForm.addInput(FileInput("select files", "files", listOf(), inputAttributes = mapOf("multiple" to "true")))
+    solutionCreationForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))
+    solutionCreationForm.addInput(TextlikeInput("Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+    solutionCreationForm.addInput(FileInput("Upload files", "files", inputAttributes = mapOf("multiple" to "true")))
 
     globalFormRouter.routeFormValidators(solutionCreationForm)
 

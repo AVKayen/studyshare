@@ -25,9 +25,9 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
           "hx-swap" to "none" // because the form is on an empty page now
     ))
 
-    taskCreationForm.addInput(TextlikeInput("title", "title", InputType.text, titleValidator))
-    taskCreationForm.addInput(TextlikeInput("additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
-    taskCreationForm.addInput(FileInput("files", "files", acceptedTypes = listOf("image/*")))
+    taskCreationForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))
+    taskCreationForm.addInput(TextlikeInput("Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+    taskCreationForm.addInput(FileInput("Upload files", "files", inputAttributes = mapOf("multiple" to "true")))
 
     globalFormRouter.routeFormValidators(taskCreationForm)
 
