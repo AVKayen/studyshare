@@ -31,7 +31,8 @@ class MongoSolutionRepository(
         return SolutionView(
             solution = solutionWithAttachments,
             attachments = attachmentRepository.getAttachments(solution.attachmentIds),
-            isUpvoted = solution.upvotes.contains(userId)
+            isUpvoted = solution.upvotes.contains(userId),
+            isDownvoted = solution.downvotes.contains(userId)
         )
     }
 
@@ -41,17 +42,6 @@ class MongoSolutionRepository(
         commentRepository.deleteComments(id)
     }
 
-    override suspend fun upvoteSolution(id: ObjectId, userId: ObjectId): Int {
-        val filter = Filters.eq("_id", id)
-        val updates = Updates.addToSet(Solution::upvotes.name, userId)
-
-        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
-        if (solution.upvotes.contains(userId)) {
-            return solution.upvoteCount()
-        }
-
-        return solution.upvoteCount() + 1
-    }
 
     override suspend fun deleteSolutions(taskId: ObjectId) {
         val filter = Filters.eq(Solution::taskId.name, taskId)
@@ -68,7 +58,8 @@ class MongoSolutionRepository(
             SolutionView(
                 solution = solution,
                 attachments = attachmentRepository.getAttachments(solution.attachmentIds),
-                isUpvoted = solution.upvotes.contains(userId)
+                isUpvoted = solution.upvotes.contains(userId),
+                isDownvoted = solution.downvotes.contains(userId)
             )
         }
     }
@@ -76,5 +67,66 @@ class MongoSolutionRepository(
     override suspend fun getSolution(solutionId: ObjectId): Solution? {
         val filter = Filters.eq(Solution::id.name, solutionId)
         return solutionCollection.find(filter).firstOrNull()
+    }
+
+
+    override suspend fun updateCommentAmount(solutionId: ObjectId, amount: Int): Int {
+        val filter = Filters.eq("_id", solutionId)
+        val updates = Updates.inc(Solution::commentAmount.name, amount)
+
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+
+        return solution.commentAmount + 1
+    }
+
+
+    //votes
+    //TODO: if upvoted remove downvote and vice versa
+    override suspend fun upvote(id: ObjectId, userId: ObjectId): Int {
+        val filter = Filters.eq("_id", id)
+        val updates = Updates.addToSet(Solution::upvotes.name, userId)
+
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+        if (solution.upvotes.contains(userId)) {
+            return solution.voteCount()
+        }
+
+        return solution.voteCount() + 1
+    }
+
+    override suspend fun downvote(id: ObjectId, userId: ObjectId): Int {
+        val filter = Filters.eq("_id", id)
+        val updates = Updates.addToSet(Solution::downvotes.name, userId)
+
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+        if (solution.downvotes.contains(userId)) {
+            return solution.voteCount()
+        }
+
+        return solution.voteCount() - 1
+    }
+
+    override suspend fun removeUpvote(id: ObjectId, userId: ObjectId): Int {
+        val filter = Filters.eq("_id", id)
+        val updates = Updates.pull(Solution::upvotes.name, userId)
+
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+        if (!solution.upvotes.contains(userId)) {
+            return solution.voteCount()
+        }
+
+        return solution.voteCount() - 1
+    }
+
+    override suspend fun removeDownvote(id: ObjectId, userId: ObjectId): Int {
+        val filter = Filters.eq("_id", id)
+        val updates = Updates.pull(Solution::downvotes.name, userId)
+
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+        if (!solution.downvotes.contains(userId)) {
+            return solution.voteCount()
+        }
+
+        return solution.voteCount() + 1
     }
 }

@@ -20,6 +20,5 @@ data class Comment(
 
     val parentId: ObjectId,
     val content: String,
-    // TODO: add author field
 
 )

@@ -4,24 +4,30 @@ import com.physman.comment.Comment
 import com.physman.comment.CommentRepository
 import com.physman.comment.commentValidator
 import com.physman.forms.*
+import com.physman.solution.SolutionRepository
+import com.physman.task.TaskRepository
+import com.physman.templates.commentCountTemplate
 import com.physman.templates.commentTemplate
 import com.physman.templates.index
+import com.physman.utils.className
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.util.*
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
 
-fun Route.commentRouter(commentRepository: CommentRepository) {
+fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
     val commentCreationForm = Form("Create a new comment", "commentForm", formAttributes = mapOf(
             "hx-swap" to "none" // because currently this form is on an empty page
         ))
     commentCreationForm.addInput(TextlikeInput("content", "content", InputType.text, commentValidator))
 
     globalFormRouter.routeFormValidators(commentCreationForm)
+
 
     get("/comment") {
         val parentId = call.request.queryParameters["parentId"]
@@ -33,15 +39,16 @@ fun Route.commentRouter(commentRepository: CommentRepository) {
         call.respondHtml {
             index("This won't be index") {
                 //TODO: maybe separate tasks from solutions
-                commentCreationForm.render(this, "/comments?parentId=$parentId")
+                commentCreationForm.render(this, call.url())
             }
         }
     }
 
     get {
 
-        val parentStrId: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@get
-        val parentId = parentStrId["parentId"]
+        val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@get
+        val parentId = objectIds["parentId"]
+        val parentPostClassName = call.request.queryParameters["post-type"]
 
         val comments = commentRepository.getComments(parentId!!)
 
@@ -50,36 +57,77 @@ fun Route.commentRouter(commentRepository: CommentRepository) {
                 for (comment in comments) {
                     commentTemplate(comment)
                 }
+                form {
+                    attributes["hx-post"] = "/comments/comment?parentId=${parentId}&post-type=${parentPostClassName}"
+                    attributes["hx-target"] = "#comments-${parentId}"
+                    textArea {
+                        name = "content"
+                        placeholder = "Write a comment..."
+                    }
+                    button {
+                        type = ButtonType.submit
+                        +"Comment"
+                    }
+                }
+
+                span {
+                    id = "comment-amount-${parentId}"
+                    attributes["hx-swap-oob"] = "true"
+                    commentCountTemplate(comments.size)
+                }
             }
         }
 
     }
 
-    post {
-        val parentStrId: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
-        val parentId = parentStrId["parentId"]
+    route("/comment") {
+        post {
 
-        val formSubmissionData: FormSubmissionData = commentCreationForm.validateSubmission(call) ?: return@post
-        val content = formSubmissionData.fields["content"]!!
+            val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
+            val parentId = objectIds["parentId"]
+            val postType = call.request.queryParameters["post-type"]
 
-        val newComment = Comment(parentId = parentId!!, content = content)
+            val formSubmissionData: FormSubmissionData = commentCreationForm.validateSubmission(call) ?: return@post
+            val content = formSubmissionData.fields["content"]!!
 
-        commentRepository.createComment(newComment)
+            val newComment = Comment(parentId = parentId!!, content = content)
 
-        call.respondHtml(HttpStatusCode.OK) {
-            body {
-//                solutionTemplate(newSolution, taskId.toString())
+            if (postType.equals("task", true)){
+                taskRepository.updateCommentAmount(parentId, 1)
+            } else if (postType.equals("solution", true)) {
+                solutionRepository.updateCommentAmount(parentId, 1)
+            } else {
+
+                println(call.url())
+                if (postType!=null)
+                    println(postType + postType.javaClass)
+                return@post
             }
+
+            commentRepository.createComment(newComment)
+
+            call.respondRedirect("/comments?parentId=${parentId}&post-type=${postType}")
         }
-    }
 
-    route("/{id}") {
-        delete {
-            val objectIds = validateObjectIds(call, "id") ?: return@delete
-            val commentId = objectIds["id"]!!
+        route("/{comment-id}") {
+            delete {
+                val objectIds = validateObjectIds(call, "comment-id", "parentId") ?: return@delete
+                val commentId = objectIds["comment-id"]!!
+                val parentId = objectIds["parentId"]!!
+                val postType = call.request.queryParameters["post-type"]
 
-            commentRepository.deleteComment(commentId)
-            call.response.status(HttpStatusCode.NoContent)
+                if (postType.equals("task", true)){
+                    taskRepository.updateCommentAmount(parentId, 1)
+                } else if (postType.equals("task", true)) {
+                    solutionRepository.updateCommentAmount(parentId, 1)
+                } else {
+                    return@delete
+                }
+
+                commentRepository.deleteComment(commentId)
+
+                call.response.status(HttpStatusCode.NoContent)
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.physman.task
 
+import com.physman.utils.Post
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 
@@ -25,9 +26,10 @@ val additionalNotesValidator = fun(additionalNotes: String): String? {
 
 data class Task (
     @BsonId
-    val id: ObjectId = ObjectId(),
+    override val id: ObjectId = ObjectId(),
 
-    val title: String,
-    val additionalNotes: String? = null,
-    val attachmentIds: List<ObjectId> = emptyList()
-)
+    override val title: String,
+    override val additionalNotes: String? = null,
+    override val commentAmount: Int = 0,
+    override val attachmentIds: List<ObjectId> = emptyList()
+) : Post()

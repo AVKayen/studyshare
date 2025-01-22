@@ -61,14 +61,6 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                   
                     for (solutionView in solutionViews) {
                         solutionTemplate(solutionView)
-                        div {
-                            attributes["hx-get"] = "/comments?parentId=${solutionView.solution.id}"
-                            attributes["hx-trigger"] = "load"
-
-                            article(classes = "htmx-indicator") {
-                                attributes["aria-busy"] = "true"
-                            }
-                        }
                     }
                 }
             }
@@ -100,6 +92,16 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
 
     route("/{id}") {
 
+        delete {
+            val objectIds = validateObjectIds(call, "id") ?: return@delete
+            val solutionId = objectIds["id"]!!
+
+            solutionRepository.deleteSolution(solutionId)
+            call.response.status(HttpStatusCode.NoContent)
+        }
+
+
+        //votes
         get ("/upvote") {
             val objectIds = validateObjectIds(call, "id") ?: return@get
             val solutionId = objectIds["id"]!!
@@ -107,29 +109,115 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val userSession = call.sessions.get<UserSession>()!!
             val userId = ObjectId(userSession.id)
 
-            val newUpvoteCount = solutionRepository.upvoteSolution(solutionId, userId)
+            val newVoteCount = solutionRepository.upvote(solutionId, userId)
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-                    +newUpvoteCount.toString()
+                    +newVoteCount.toString()
 
                     button {
-                        attributes["id"] = "upvote-btn-$solutionId"
+                        classes = setOf("voting-button")
+                        attributes["id"] = "upvote-btn-${solutionId}"
                         attributes["hx-swap-oob"] = "true"
-                        attributes["disabled"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/remove-upvote"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
 
-                        +"upvote button"
+                        span {
+                            classes = setOf("material-symbols-rounded", "voting-icon")
+                            +"add"
+                        }
                     }
                 }
             }
         }
 
-        delete {
-            val objectIds = validateObjectIds(call, "id") ?: return@delete
+        get ("/downvote") {
+            val objectIds = validateObjectIds(call, "id") ?: return@get
             val solutionId = objectIds["id"]!!
 
-            solutionRepository.deleteSolution(solutionId)
-            call.response.status(HttpStatusCode.NoContent)
+            val userSession = call.sessions.get<UserSession>()!!
+            val userId = ObjectId(userSession.id)
+
+            val newVoteCount = solutionRepository.downvote(solutionId, userId)
+
+            call.respondHtml(HttpStatusCode.OK) {
+                body {
+                    +newVoteCount.toString()
+
+                    button {
+                        classes = setOf("voting-button")
+                        attributes["id"] = "downvote-btn-${solutionId}"
+                        attributes["hx-swap-oob"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/remove-downvote"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
+
+                        span {
+                            classes = setOf("material-symbols-rounded", "voting-icon")
+                            +"remove"
+                        }
+                    }
+                }
+            }
+        }
+
+
+        get ("/remove-upvote") {
+            val objectIds = validateObjectIds(call, "id") ?: return@get
+            val solutionId = objectIds["id"]!!
+
+            val userSession = call.sessions.get<UserSession>()!!
+            val userId = ObjectId(userSession.id)
+
+            val newVoteCount = solutionRepository.removeUpvote(solutionId, userId)
+
+            call.respondHtml(HttpStatusCode.OK) {
+                body {
+                    +newVoteCount.toString()
+
+                    button {
+                        classes = setOf("voting-button")
+                        attributes["id"] = "upvote-btn-${solutionId}"
+                        attributes["hx-swap-oob"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/upvote"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
+
+
+                        span {
+                            classes = setOf("material-symbols-rounded", "voting-icon")
+                            +"add"
+                        }
+                    }
+                }
+            }
+        }
+
+        get ("/remove-downvote") {
+            val objectIds = validateObjectIds(call, "id") ?: return@get
+            val solutionId = objectIds["id"]!!
+
+            val userSession = call.sessions.get<UserSession>()!!
+            val userId = ObjectId(userSession.id)
+
+            val newVoteCount = solutionRepository.removeDownvote(solutionId, userId)
+
+            call.respondHtml(HttpStatusCode.OK) {
+                body {
+                    +newVoteCount.toString()
+
+                    button {
+                        classes = setOf("voting-button")
+                        attributes["id"] = "downvote-btn-$solutionId"
+                        attributes["hx-swap-oob"] = "true"
+                        attributes["hx-get"] = "/solutions/${solutionId}/downvote"
+                        attributes["hx-target"] = "#vote-count-${solutionId}"
+
+                        span {
+                            classes = setOf("material-symbols-rounded", "voting-icon")
+                            +"remove"
+                        }
+                    }
+                }
+            }
         }
     }
 }

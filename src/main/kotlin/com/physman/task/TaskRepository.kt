@@ -11,4 +11,6 @@ interface TaskRepository {
 //    suspend fun getTaskBySolution(solutionId: ObjectId): TaskView?
     suspend fun deleteTask(id: ObjectId)
 //    suspend fun updateTask(id: ObjectId, taskUpdate: TaskUpdate): Task?
+
+    suspend fun updateCommentAmount(taskId: ObjectId, amount: Int): Int
 }

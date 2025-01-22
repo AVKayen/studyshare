@@ -6,63 +6,86 @@ import kotlinx.html.FlowContent
 import kotlinx.html.*
 
 fun FlowContent.solutionTemplate(solutionView: SolutionView) {
-
-    val upvoteCountSpanId = "upvote-count-${solutionView.solution.id}"
+    val voteCountSpanId = "vote-count-${solutionView.solution.id}"
     val upvoteButtonId = "upvote-btn-${solutionView.solution.id}"
+    val downvoteButtonId = "downvote-btn-${solutionView.solution.id}"
 
-    article(classes = "flex-col-solution") {
-        header {
-            h2 {
-                span {
-                    attributes["id"] = upvoteCountSpanId
-                    +solutionView.solution.upvoteCount().toString()
-                }
-                +" "
-                +solutionView.solution.title
-            }
-        }
+    val images = solutionView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage }
+    val nonImageAttachments =
+        solutionView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage }
 
+    article(classes = "solution") {
         div {
-            button {
-                attributes["id"] = upvoteButtonId
-                attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
-                attributes["hx-target"] = "#$upvoteCountSpanId"
+            classes = setOf("solution-voting")
+            span {
+                button {
+                    classes = setOf("voting-button")
+                    attributes["id"] = upvoteButtonId
+                    attributes["hx-target"] = "#$voteCountSpanId"
 
-                if (solutionView.isUpvoted) {
-                    attributes["disabled"] = "true"
-                }
+                    if (!solutionView.isUpvoted) {
+                        attributes["hx-get"] = "/solutions/${solutionView.solution.id}/upvote"
 
-                +"upvote button"
-            }
-        }
+                    } else {
+                        attributes["hx-get"] = "/solutions/${solutionView.solution.id}/remove-upvote"
+                    }
 
-        div {
-            if (solutionView.solution.additionalNotes != null) {
-                +"Notes: ${solutionView.solution.additionalNotes}"
-            }
-        }
-
-        div {
-            solutionView.attachments.forEach { attachmentView: AttachmentView ->
-                if (attachmentView.attachment.isImage) {
-                    img(src = attachmentView.thumbnailUrl, alt = attachmentView.attachment.originalFilename)
+                    span {
+                        classes = setOf("material-symbols-rounded", "voting-icon")
+                        +"add"
+                    }
                 }
             }
-        }
+            span {
+                attributes["id"] = voteCountSpanId
+                +solutionView.solution.voteCount().toString()
+            }
 
-        div {
-            solutionView.attachments.forEach { attachmentView: AttachmentView ->
-                if (!attachmentView.attachment.isImage) {
-                    a(href=attachmentView.url) {
-                        +attachmentView.attachment.originalFilename
+            span {
+                button {
+                    classes = setOf("voting-button")
+                    attributes["id"] = downvoteButtonId
+                    attributes["hx-target"] = "#$voteCountSpanId"
+
+                    if (!solutionView.isDownvoted) {
+                        attributes["hx-get"] = "/solutions/${solutionView.solution.id}/downvote"
+
+                    } else {
+                        attributes["hx-get"] = "/solutions/${solutionView.solution.id}/remove-downvote"
+
+                    }
+
+                    span {
+                        classes = setOf("material-symbols-rounded", "voting-icon")
+                        +"remove"
                     }
                 }
             }
         }
 
         div {
-            a(href = "/comments/comment?parentId=${solutionView.solution.id}") {
-                +"Comment"}
+            classes = setOf("solution-content")
+            header {
+                div {
+                    classes = setOf("upvotes")
+
+                }
+                h2 {
+                    +solutionView.solution.title
+                }
+            }
+
+            if (!solutionView.solution.additionalNotes.isNullOrBlank()) {
+                p {
+                    +"${solutionView.solution.additionalNotes}"
+                }
+            }
+
+            imageAttachmentTemplate(images)
+            nonImageAttachmentTemplate(nonImageAttachments)
+            // TODO: Hiding comments, button to comment, comment count
+            showCommentsAccordion(solutionView.solution)
+
         }
     }
 }

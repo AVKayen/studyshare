@@ -6,7 +6,10 @@ import kotlinx.html.FlowContent
 import kotlinx.html.*
 
 fun FlowContent.taskTemplate(taskView: TaskView) {
-    article(classes = "flex-col task") {
+    val images = taskView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage }
+    val nonImageAttachments =
+        taskView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage }
+    article(classes = "task") {
         header {
             h2 {
                 +taskView.task.title
@@ -15,33 +18,16 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
                 +"Create solution"}
 
         }
-        div {
-            if (taskView.task.additionalNotes != null) {
-                +"Notes: ${taskView.task.additionalNotes}"
+        if (taskView.task.additionalNotes != null) {
+            p {
+                    +"${taskView.task.additionalNotes}"
             }
         }
 
-        div {
-            taskView.attachments.forEach { attachmentView: AttachmentView ->
-                if (attachmentView.attachment.isImage) {
-                    img(src = attachmentView.thumbnailUrl, alt = attachmentView.attachment.originalFilename)
-                }
-            }
-        }
 
-        div {
-            taskView.attachments.forEach { attachmentView: AttachmentView ->
-                if (!attachmentView.attachment.isImage) {
-                    a(href=attachmentView.url) {
-                        +attachmentView.attachment.originalFilename
-                    }
-                }
-            }
-        }
-
-        div {
-            a(href = "/comments/comment?parentId=${taskView.task.id}") {
-                +"Comment"}
-        }
+        imageAttachmentTemplate(images)
+        nonImageAttachmentTemplate(nonImageAttachments)
+        // TODO: Hiding comments, button to comment
+        showCommentsAccordion(taskView.task)
     }
 }

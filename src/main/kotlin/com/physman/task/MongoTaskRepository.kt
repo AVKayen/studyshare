@@ -1,10 +1,12 @@
 package com.physman.task
 
 import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.physman.forms.UploadFileData
 import com.physman.attachment.AttachmentRepository
 import com.physman.comment.CommentRepository
+import com.physman.solution.Solution
 import com.physman.solution.SolutionRepository
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
@@ -55,4 +57,13 @@ class MongoTaskRepository(
         solutionRepository.deleteSolutions(taskId = task.id)
         attachmentRepository.deleteAttachments(task.attachmentIds)
     }
-}
+
+     override suspend fun updateCommentAmount(taskId: ObjectId, amount: Int): Int {
+         val filter = Filters.eq("_id", taskId)
+         val updates = Updates.inc(Solution::commentAmount.name, amount)
+
+         val solution = taskCollection.findOneAndUpdate(filter, updates) ?: return 0
+
+         return solution.commentAmount + amount
+     }
+ }

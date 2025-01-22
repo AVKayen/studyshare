@@ -1,19 +1,30 @@
 body {
-    // padding: 1rem;
+    padding: 1rem;
 }
 
 .flex {
     display: flex;
 }
 
-.flex-col {
+article {
     display: flex;
     flex-direction: column;
 }
 
+article > header > h2 {
+    margin-bottom: 0;
+}
+
+article > header {
+    margin-bottom: 0.5rem;
+}
+
+p {
+    margin-bottom: 0.5rem;
+}
+
 .task {
-    margin-bottom: 3rem;
-    border-radius: 0.25rem;
+    margin-bottom: 0;
 }
 
 .form-error {
@@ -25,7 +36,139 @@ body {
     min-width: 50%;
 }
 
+@media (max-width: 768px) {
+    .modal-content {
+        min-width: 90%;
+    }
+
+}
+
 .modal-btn-container {
     display: flex;
     justify-content: center;
+}
+
+summary {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+
+.dropdown-icon {
+    display: block;
+}
+
+nav {
+    display: flex;
+    align-content: flex-end;
+}
+
+@media (max-width: 768px) {
+    .breadcrumb {
+        display: none;
+    }
+
+}
+
+.nav-title {
+    font-size: 2rem;
+    font-weight: bold;
+    margin: 0 0 0.5rem 0;
+}
+
+.container {
+    padding: 0;
+}
+
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .gallery {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+}
+
+.quasi-button, .btn {
+    background-color: var(--pico-background-color) !important;
+    color: var(--pico-color);
+    box-shadow: var(--pico-box-shadow);
+    border: none;
+    padding: 0.5rem 1rem;
+    margin: 0.5rem;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+.solution {
+    display: flex;
+    padding: 0.5rem;
+}
+
+.solution-voting {
+    display: flex;
+    align-items: center;
+}
+
+.solution-content {
+    margin-left: 1rem;
+}
+
+.voting-button {
+    margin: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+}
+
+@media (max-width: 768px) {
+    .solution {
+        flex-direction: column;
+    }
+    .solution-voting {
+        flex-direction: row;
+    }
+}
+
+@media (min-width: 768px) {
+    .solution {
+        flex-direction: row;
+    }
+    .solution-voting {
+        flex-direction: column;
+    }
+}
+
+.comment-button {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    color: var(--pico-color);
+}
+
+.comment-icon {
+    height: fit-content;
+}
+
+.comments {
+    margin-left: 1rem;
+}
+
+.solution-content {
+    width: 100%;
+}
+
+summary {
+    width: calc(100% - 1rem) !important;
 }

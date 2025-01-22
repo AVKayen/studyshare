@@ -89,22 +89,10 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                 ) {
 
                     taskTemplate(taskView)
-                    div {
-                        attributes["hx-get"] = "/comments?parentId=${taskView.task.id}"
-                        attributes["hx-trigger"] = "load"
-
-                        span(classes = "htmx-indicator") {
-                            +"Loading..."
-                        }
-                    }
-
-                    section(classes = "modal-btn-container") {
-                        formModalOpenButton(
-                            buttonText = "Create a solution",
-                            modalUrl = "/solutions/creation-modal?taskId=$taskId"
-                        )
-                    }
-
+                    formModalOpenButton(
+                        buttonText = "Create a solution",
+                        modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}"
+                    )
                     div {
                         attributes["hx-get"] = "/solutions?taskId=${taskView.task.id}"
                         attributes["hx-trigger"] = "load"
