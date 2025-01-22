@@ -49,6 +49,8 @@ dependencies {
     implementation("com.google.cloud:google-cloud-storage:2.46.0")
     implementation("com.google.cloud:google-cloud-datastore")
 
+    implementation("net.coobird:thumbnailator:[0.4,0.5)")
+
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }
