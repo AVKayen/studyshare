@@ -19,7 +19,7 @@ fun FlowContent.commentTemplate(comment: Comment) {
 fun FlowContent.showCommentsButton(parentPost: Post) {
     button {
         classes = setOf("btn comment-button outline")
-        attributes["hx-get"] = "/comments?parentId=${parentPost.id}/${parentPost.javaClass}"
+        attributes["hx-get"] = "/comments?parentId=${parentPost.id}&post-type=${strip(parentPost.javaClass.toString())}"
         attributes["hx-trigger"] = "click"
         attributes["hx-target"] = "#comments-${parentPost.id}"
         span {
@@ -27,5 +27,15 @@ fun FlowContent.showCommentsButton(parentPost: Post) {
             +"comment"
         }
         +"Show ${parentPost.commentAmount} comments"
+    }
+}
+
+//TODO: move this somewhere
+fun strip(str: String): String {
+    val lastDotIndex = str.lastIndexOf('.')
+    return if (lastDotIndex != -1) {
+        str.substring(lastDotIndex + 1)
+    } else {
+        str
     }
 }

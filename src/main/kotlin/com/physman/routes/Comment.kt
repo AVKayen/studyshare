@@ -13,6 +13,7 @@ import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.util.*
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
@@ -28,7 +29,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     //TODO: redo these
     get("/comment") {
         val parentId = call.request.queryParameters["parentId"]
-        val postType = call.request.queryParameters["parentId"]
+        val postType = call.request.queryParameters["post-type"]
         if (parentId == null) {
                 call.respondText("No id specified.", status = HttpStatusCode.BadRequest)
                 return@get
@@ -37,7 +38,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
         call.respondHtml {
             index("This won't be index") {
                 //TODO: maybe separate tasks from solutions
-                commentCreationForm.render(this, "/comments?parentId=$parentId?post-type=$postType")
+                commentCreationForm.render(this, call.url())
             }
         }
     }
@@ -66,20 +67,24 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
             val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
             val parentId = objectIds["parentId"]
             val postType = call.request.queryParameters["post-type"]
-
+            println("EOOOOOOOOO2")
             val formSubmissionData: FormSubmissionData = commentCreationForm.validateSubmission(call) ?: return@post
             val content = formSubmissionData.fields["content"]!!
-
+            println("EOOOOOOOOO3")
             val newComment = Comment(parentId = parentId!!, content = content)
 
             if (postType.equals("task", true)){
                 taskRepository.updateCommentAmount(parentId, 1)
-            } else if (postType.equals("task", true)) {
+            } else if (postType.equals("solution", true)) {
                 solutionRepository.updateCommentAmount(parentId, 1)
             } else {
+                println("EOOOOOOOOO3.5")
+                println(call.url())
+                if (postType!=null)
+                    println(postType + postType.javaClass)
                 return@post
             }
-
+            println("EOOOOOOOOO4")
             commentRepository.createComment(newComment)
 
             call.respondHtml(HttpStatusCode.OK) {
