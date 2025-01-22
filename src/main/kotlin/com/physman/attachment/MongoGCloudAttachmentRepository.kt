@@ -44,17 +44,20 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
         val attachments = mutableListOf<Attachment>()
 
         files.forEach { file: UploadFileData ->
-            val attachment = Attachment(
-                originalFilename = file.originalName,
-                mime = file.mimeType
-            )
-            uploadFile(attachment.blobName, attachment.mime, Files.readAllBytes(file.filePath))
 
-            if (attachment.hasImageMimeType()) {
+            val attachment = Attachment(
+                originalFilename = file.originalName
+            )
+
+            uploadFile(attachment.blobName, file.mimeType, Files.readAllBytes(file.filePath))
+
+            if (file.mimeType?.startsWith("image/") == true) {
                 try {
                     val thumbnailPath = createThumbnail(file.filePath)
+
                     uploadFile(attachment.thumbnailBlobName, "image/jpg", Files.readAllBytes(thumbnailPath))
                     attachments.add(attachment.copy(isImage = true)) // File is an image and the thumbnail was created
+
                     thumbnailPath.deleteIfExists()
                 } catch (e: net.coobird.thumbnailator.tasks.UnsupportedFormatException) {
                     attachments.add(attachment)

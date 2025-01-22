@@ -8,7 +8,6 @@ data class Attachment(
     @BsonId
     val id: ObjectId = ObjectId(),
     val originalFilename: String,
-    val mime: String?,
     val cachedUrl: String? = null,
     val cachedThumbnailUrl: String? = null,
     val isImage: Boolean = false
@@ -20,6 +19,4 @@ data class Attachment(
         get() {
             return "thumb.$blobName"
         }
-
-    fun hasImageMimeType(): Boolean = mime?.startsWith("image/") ?: false
 }
