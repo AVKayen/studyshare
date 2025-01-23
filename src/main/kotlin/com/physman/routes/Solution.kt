@@ -2,12 +2,10 @@ package com.physman.routes
 
 import com.physman.authentication.user.UserSession
 import com.physman.forms.*
-import com.physman.solution.Solution
-import com.physman.solution.SolutionRepository
-import com.physman.solution.additionalNotesValidator
-import com.physman.solution.titleValidator
+import com.physman.solution.*
 import com.physman.templates.formModalDialog
 import com.physman.templates.solutionTemplate
+import com.physman.templates.votingTemplate
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -101,122 +99,33 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             call.response.status(HttpStatusCode.NoContent)
         }
 
-
-        //votes
-        get ("/upvote") {
-            val objectIds = validateObjectIds(call, "id") ?: return@get
+        post ("/{voteAction}") {
+            val action = call.parameters["voteAction"]
+            val objectIds = validateObjectIds(call, "id") ?: return@post
             val solutionId = objectIds["id"]!!
 
             val userSession = call.sessions.get<UserSession>()!!
             val userId = ObjectId(userSession.id)
 
-            val newVoteCount = solutionRepository.upvote(solutionId, userId)
+            if (action == null) {
+                call.respondText("Action not specified.", status = HttpStatusCode.BadRequest)
+                return@post
+            }
 
-            call.respondHtml(HttpStatusCode.OK) {
-                body {
-                    +newVoteCount.toString()
-
-                    button {
-                        classes = setOf("voting-button")
-                        attributes["id"] = "upvote-btn-${solutionId}"
-                        attributes["hx-swap-oob"] = "true"
-                        attributes["hx-get"] = "/solutions/${solutionId}/remove-upvote"
-                        attributes["hx-target"] = "#vote-count-${solutionId}"
-
-                        span {
-                            classes = setOf("material-symbols-rounded", "voting-icon")
-                            +"add"
-                        }
-                    }
+            val voteType: VoteType = when (action) {
+                "upvote" -> VoteType.UPVOTE
+                "downvote" -> VoteType.DOWNVOTE
+                else -> {
+                    call.respondText("Invalid action.", status = HttpStatusCode.BadRequest)
+                    return@post
                 }
             }
-        }
 
-        get ("/downvote") {
-            val objectIds = validateObjectIds(call, "id") ?: return@get
-            val solutionId = objectIds["id"]!!
-
-            val userSession = call.sessions.get<UserSession>()!!
-            val userId = ObjectId(userSession.id)
-
-            val newVoteCount = solutionRepository.downvote(solutionId, userId)
+            val voteUpdate = solutionRepository.vote(solutionId, userId, voteType) ?: return@post
 
             call.respondHtml(HttpStatusCode.OK) {
                 body {
-                    +newVoteCount.toString()
-
-                    button {
-                        classes = setOf("voting-button")
-                        attributes["id"] = "downvote-btn-${solutionId}"
-                        attributes["hx-swap-oob"] = "true"
-                        attributes["hx-get"] = "/solutions/${solutionId}/remove-downvote"
-                        attributes["hx-target"] = "#vote-count-${solutionId}"
-
-                        span {
-                            classes = setOf("material-symbols-rounded", "voting-icon")
-                            +"remove"
-                        }
-                    }
-                }
-            }
-        }
-
-
-        get ("/remove-upvote") {
-            val objectIds = validateObjectIds(call, "id") ?: return@get
-            val solutionId = objectIds["id"]!!
-
-            val userSession = call.sessions.get<UserSession>()!!
-            val userId = ObjectId(userSession.id)
-
-            val newVoteCount = solutionRepository.removeUpvote(solutionId, userId)
-
-            call.respondHtml(HttpStatusCode.OK) {
-                body {
-                    +newVoteCount.toString()
-
-                    button {
-                        classes = setOf("voting-button")
-                        attributes["id"] = "upvote-btn-${solutionId}"
-                        attributes["hx-swap-oob"] = "true"
-                        attributes["hx-get"] = "/solutions/${solutionId}/upvote"
-                        attributes["hx-target"] = "#vote-count-${solutionId}"
-
-
-                        span {
-                            classes = setOf("material-symbols-rounded", "voting-icon")
-                            +"add"
-                        }
-                    }
-                }
-            }
-        }
-
-        get ("/remove-downvote") {
-            val objectIds = validateObjectIds(call, "id") ?: return@get
-            val solutionId = objectIds["id"]!!
-
-            val userSession = call.sessions.get<UserSession>()!!
-            val userId = ObjectId(userSession.id)
-
-            val newVoteCount = solutionRepository.removeDownvote(solutionId, userId)
-
-            call.respondHtml(HttpStatusCode.OK) {
-                body {
-                    +newVoteCount.toString()
-
-                    button {
-                        classes = setOf("voting-button")
-                        attributes["id"] = "downvote-btn-$solutionId"
-                        attributes["hx-swap-oob"] = "true"
-                        attributes["hx-get"] = "/solutions/${solutionId}/downvote"
-                        attributes["hx-target"] = "#vote-count-${solutionId}"
-
-                        span {
-                            classes = setOf("material-symbols-rounded", "voting-icon")
-                            +"remove"
-                        }
-                    }
+                    votingTemplate(voteUpdate = voteUpdate, callbackId = solutionId)
                 }
             }
         }

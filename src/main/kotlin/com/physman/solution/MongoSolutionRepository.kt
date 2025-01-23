@@ -8,6 +8,7 @@ import com.physman.comment.CommentRepository
 import com.physman.forms.UploadFileData
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
+import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 
 // TODO: error handling
@@ -79,54 +80,53 @@ class MongoSolutionRepository(
         return solution.commentAmount + 1
     }
 
-
-    //votes
-    //TODO: if upvoted remove downvote and vice versa
-    override suspend fun upvote(id: ObjectId, userId: ObjectId): Int {
+    override suspend fun vote(id: ObjectId, userId: ObjectId, voteType: VoteType): VoteUpdate? {
         val filter = Filters.eq("_id", id)
-        val updates = Updates.addToSet(Solution::upvotes.name, userId)
+        val solution = solutionCollection.find(filter).firstOrNull() ?: return null
 
-        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
-        if (solution.upvotes.contains(userId)) {
-            return solution.voteCount()
+        val removeDownvote = Updates.pull(Solution::downvotes.name, userId)
+        val removeUpvote = Updates.pull(Solution::upvotes.name, userId)
+        val addDownvote = Updates.addToSet(Solution::downvotes.name, userId)
+        val addUpvote = Updates.addToSet(Solution::upvotes.name, userId)
+
+        val wasUpvoted = solution.upvotes.contains(userId)
+        val wasDownvoted = solution.downvotes.contains(userId)
+
+        var isDownvoted = false
+        var isUpvoted = false
+        var voteCount = solution.voteCount()
+
+        val updates: MutableList<Bson> = mutableListOf()
+
+        if (wasDownvoted) {
+            updates.add(removeDownvote)
+            voteCount += 1
+        }
+        if (wasUpvoted) {
+            updates.add(removeUpvote)
+            voteCount -= 1
+        }
+        when (voteType) {
+            VoteType.UPVOTE ->
+                if (!wasUpvoted) {
+                    updates.add(addUpvote)
+                    isUpvoted = true
+                    voteCount += 1
+                }
+            VoteType.DOWNVOTE ->
+                if (!wasDownvoted) {
+                    updates.add(addDownvote)
+                    isDownvoted = true
+                    voteCount -= 1
+                }
         }
 
-        return solution.voteCount() + 1
-    }
+        solutionCollection.updateOne(filter, Updates.combine(updates))
 
-    override suspend fun downvote(id: ObjectId, userId: ObjectId): Int {
-        val filter = Filters.eq("_id", id)
-        val updates = Updates.addToSet(Solution::downvotes.name, userId)
-
-        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
-        if (solution.downvotes.contains(userId)) {
-            return solution.voteCount()
-        }
-
-        return solution.voteCount() - 1
-    }
-
-    override suspend fun removeUpvote(id: ObjectId, userId: ObjectId): Int {
-        val filter = Filters.eq("_id", id)
-        val updates = Updates.pull(Solution::upvotes.name, userId)
-
-        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
-        if (!solution.upvotes.contains(userId)) {
-            return solution.voteCount()
-        }
-
-        return solution.voteCount() - 1
-    }
-
-    override suspend fun removeDownvote(id: ObjectId, userId: ObjectId): Int {
-        val filter = Filters.eq("_id", id)
-        val updates = Updates.pull(Solution::downvotes.name, userId)
-
-        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
-        if (!solution.downvotes.contains(userId)) {
-            return solution.voteCount()
-        }
-
-        return solution.voteCount() + 1
+        return VoteUpdate(
+            isDownvoted,
+            isUpvoted,
+            voteCount
+        )
     }
 }
