@@ -38,11 +38,10 @@ fun FlowContent.votingButton(
 ) {
     button {
         classes = setOf("btn", "outline", "solution-voting")
-        if (isActive) {
-            classes += "primary"
-        } else {
-            classes += "secondary"
-        }
+        classes +=
+            if (isActive) "primary"
+            else "secondary"
+
         attributes["hx-post"] = voteUrl
         attributes["hx-target"] = "#voting-${callbackId.toHexString()}"
         attributes["hx-swap"] = "outerHTML"

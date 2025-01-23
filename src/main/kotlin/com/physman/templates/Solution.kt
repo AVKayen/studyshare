@@ -8,10 +8,6 @@ import kotlinx.html.FlowContent
 import kotlinx.html.*
 
 fun FlowContent.solutionTemplate(solutionView: SolutionView) {
-    val voteCountSpanId = "vote-count-${solutionView.solution.id}"
-    val upvoteButtonId = "upvote-btn-${solutionView.solution.id}"
-    val downvoteButtonId = "downvote-btn-${solutionView.solution.id}"
-
     val images = solutionView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage }
     val nonImageAttachments =
         solutionView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage }
