@@ -12,10 +12,10 @@ fun HEAD.headTags() {
     // material icons
     link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded")
     // custom CSS TODO: for prod, change this to a GCP file
-    // link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
-    link(rel = "stylesheet", href = "/static/styles.css")
+     link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
+//    link(rel = "stylesheet", href = "/static/styles.css")
 
-    // config for htmx
+    // config for htmx (code 422 for error form reponses)
     meta(
         name = "htmx-config", content = """
         {
@@ -49,11 +49,11 @@ fun BODY.layoutHeader(
                         a {
                             href = "/"
                             classes = setOf("nav-title")
-                            +"SchoolShare"
+                            +"StudyShare"
                         }
                         ul {
                             classes = setOf("breadcrumb")
-                            li {}
+                            li {} // Needed to create a leading '>' sign
                             if (!breadcrumbs.isNullOrEmpty()) {
                                 breadcrumbs.forEach { (description, href) ->
                                     li { a(href = href) { +description } }
