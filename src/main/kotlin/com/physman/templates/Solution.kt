@@ -73,6 +73,9 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
                 h2 {
                     +solutionView.solution.title
                 }
+                cite {
+                    +solutionView.solution.authorName
+                }
             }
 
             if (!solutionView.solution.additionalNotes.isNullOrBlank()) {

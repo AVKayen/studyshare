@@ -6,17 +6,18 @@ fun HEAD.headTags() {
     // htmx
     script { src = "https://unpkg.com/htmx.org@2.0.4" }
     // _hyperscript
-    script { src = "https://unpkg.com/hyperscript.org@0.9.13"}
+    script { src = "https://unpkg.com/hyperscript.org@0.9.13" }
     // picoCSS defaults
     link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css")
     // material icons
     link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded")
     // custom CSS TODO: for prod, change this to a GCP file
-    link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
-    // link(rel = "stylesheet", href = "/static/styles.css")
-    
+    // link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
+    link(rel = "stylesheet", href = "/static/styles.css")
+
     // config for htmx
-    meta(name = "htmx-config", content = """
+    meta(
+        name = "htmx-config", content = """
         {
             "responseHandling":[
                 {"code":"204", "swap": false},
@@ -28,6 +29,10 @@ fun HEAD.headTags() {
         }
     """.trimIndent()
     )
+    meta {
+        name = "viewport"
+        content = "width=device-width, initial-scale=1"
+    }
 }
 
 fun BODY.layoutHeader(
@@ -36,41 +41,41 @@ fun BODY.layoutHeader(
     lastBreadcrumb: String? = null
 ) {
     header(classes = "container") {
-        if (username != null) {
-            nav {
-                ul {
-
-                    li {
-                        if (breadcrumbs != null && lastBreadcrumb != null) {
-                            nav {
-                                attributes["aria-label"] = "breadcrumb"
-
-                                a {
-                                    href = "/"
-                                    classes = setOf("nav-title")
-                                    +"SchoolShare"
+        nav {
+            ul {
+                li {
+                    nav {
+                        attributes["aria-label"] = "breadcrumb"
+                        a {
+                            href = "/"
+                            classes = setOf("nav-title")
+                            +"SchoolShare"
+                        }
+                        ul {
+                            classes = setOf("breadcrumb")
+                            li {}
+                            if (!breadcrumbs.isNullOrEmpty()) {
+                                breadcrumbs.forEach { (description, href) ->
+                                    li { a(href = href) { +description } }
                                 }
-                                ul {
-                                    classes = setOf("breadcrumb")
-                                    li {}
-                                    breadcrumbs.forEach { (description, href) ->
-                                        li { a(href = href) { +description } }
-                                    }
-                                    li { +lastBreadcrumb }
-                                }
+                            }
+                            if (lastBreadcrumb != null) {
+                                li { +lastBreadcrumb }
                             }
                         }
                     }
                 }
-                ul {
-                    li {
-                        details(classes = "dropdown") {
-                            summary {
-                                span {
-                                    classes = setOf("material-symbols-rounded", "dropdown-icon")
-                                    +"account_circle"
-                                }
+            }
+            ul {
+                li {
+                    details(classes = "dropdown") {
+                        summary {
+                            span {
+                                classes = setOf("material-symbols-rounded", "dropdown-icon")
+                                +"account_circle"
                             }
+                        }
+                        if (username != null) {
                             ul {
                                 attributes["dir"] = "rtl"
                                 li {
@@ -84,12 +89,25 @@ fun BODY.layoutHeader(
                                     }
                                 }
                             }
+                        } else {
+                            ul {
+                                attributes["dir"] = "rtl"
+                                li {
+                                    a(href = "/auth/login") {
+                                        +"Login"
+                                    }
+                                }
+                                li {
+                                    a(href = "/auth/register") {
+                                        +"Register"
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-
     }
 }
 
@@ -99,7 +117,7 @@ fun HTML.index(
     username: String? = null,
     breadcrumbs: Map<String, String>? = null,
     lastBreadcrumb: String? = null,
-    block : MAIN.() -> Unit
+    block: MAIN.() -> Unit
 ) {
     head {
         headTags()

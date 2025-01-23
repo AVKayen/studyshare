@@ -14,6 +14,9 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
             h2 {
                 +taskView.task.title
             }
+            cite {
+                +taskView.task.authorName
+            }
         }
         if (taskView.task.additionalNotes != null) {
             p {

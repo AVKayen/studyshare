@@ -7,14 +7,15 @@ import kotlinx.html.FlowContent
 import kotlinx.html.*
 
 fun FlowContent.commentTemplate(comment: Comment) {
-    //TODO: beautify it ;)
-    //also, there is a bit of htmx in task, solution and comment routes, you might want to change it
-    //there are comment examples in testTask task
-            h6 {
-                +"> ".plus(comment.content)
-            }
-
-
+    div {
+        classes = setOf("comment")
+        h6 {
+            +comment.authorName
+        }
+        h5 {
+            +comment.content
+        }
+    }
 }
 
 fun FlowContent.showCommentsAccordion(parentPost: Post) {

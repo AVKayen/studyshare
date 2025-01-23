@@ -15,6 +15,7 @@ import com.physman.utils.validateObjectIds
 import io.ktor.server.response.*
 import io.ktor.server.sessions.*
 import kotlinx.html.*
+import org.bson.types.ObjectId
 
 // TODO: Error handling
 fun Route.taskRouter(taskRepository: TaskRepository) {
@@ -59,7 +60,14 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
         val files = formSubmissionData.files
 
-        val task = Task(title = title, additionalNotes = additionalNotes)
+        val userSession = call.sessions.get<UserSession>()!!
+
+        val task = Task(
+            title = title,
+            additionalNotes = additionalNotes,
+            authorName = userSession.name,
+            authorId = ObjectId(userSession.id),
+        )
 
         taskRepository.createTask(task, files)
         formSubmissionData.cleanup()

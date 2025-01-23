@@ -73,12 +73,13 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
 
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
+        val userName = userSession.name
 
         val formSubmissionData: FormSubmissionData = solutionCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
 
-        val solution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId)
+        val solution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId, authorId = userId, authorName = userName)
 
         val solutionView = solutionRepository.createSolution(solution, formSubmissionData.files, userId)
         formSubmissionData.cleanup()

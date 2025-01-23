@@ -11,11 +11,11 @@ article {
     flex-direction: column;
 }
 
-article > header > h2 {
+header > h2 {
     margin-bottom: 0;
 }
 
-article > header {
+header {
     margin-bottom: 0.5rem;
 }
 
@@ -63,6 +63,7 @@ nav {
     display: flex;
     align-content: flex-end;
 }
+
 
 @media (max-width: 768px) {
     .breadcrumb {
@@ -169,6 +170,25 @@ nav {
     width: 100%;
 }
 
-summary {
+.task > details > summary {
     width: calc(100% - 1rem) !important;
+}
+
+.solution-content > details {
+    width: calc(100% - 2rem) !important;
+}
+
+.comments > .comment:last-of-type {
+    margin-bottom: 1rem;
+}
+
+.comment {
+    padding: 0.5rem;
+}
+
+.comment > h6 {
+    margin-bottom: 0rem;
+}
+.comment > h5 {
+    margin-bottom: 0rem;
 }
