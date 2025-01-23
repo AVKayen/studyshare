@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
 
- // TODO: error handling
 class MongoTaskRepository(
      mongoDatabase: MongoDatabase,
      private val attachmentRepository: AttachmentRepository,
@@ -54,8 +53,18 @@ class MongoTaskRepository(
          val task = taskCollection.findOneAndDelete(filter) ?: return
 
          commentRepository.deleteComments(id)
-        solutionRepository.deleteSolutions(taskId = task.id)
-        attachmentRepository.deleteAttachments(task.attachmentIds)
+         solutionRepository.deleteSolutions(taskId = task.id)
+         attachmentRepository.deleteAttachments(task.attachmentIds)
+    }
+
+    override suspend fun deleteTasks(groupId: ObjectId) {
+        val filter = Filters.eq(Task::groupId.name, groupId)
+        taskCollection.find(filter).collect { task: Task ->
+            solutionRepository.deleteSolutions(taskId = task.id)
+            attachmentRepository.deleteAttachments(task.attachmentIds)
+            commentRepository.deleteComments(task.id)
+        }
+        taskCollection.deleteMany(filter)
     }
 
      override suspend fun updateCommentAmount(taskId: ObjectId, amount: Int): Int {

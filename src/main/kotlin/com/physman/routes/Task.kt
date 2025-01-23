@@ -67,6 +67,8 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             additionalNotes = additionalNotes,
             authorName = userSession.name,
             authorId = ObjectId(userSession.id),
+            groupName = "FakeGroupName", // TODO: Replace with real group data
+            groupId = ObjectId()
         )
 
         taskRepository.createTask(task, files)
