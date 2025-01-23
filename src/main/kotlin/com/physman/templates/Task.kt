@@ -2,6 +2,7 @@ package com.physman.templates
 
 import com.physman.attachment.AttachmentView
 import com.physman.task.TaskView
+import com.physman.utils.objectIdToSimpleDateString
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
@@ -15,7 +16,7 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
                 +taskView.task.title
             }
             cite {
-                +taskView.task.authorName
+                +"${taskView.task.authorName} @ ${objectIdToSimpleDateString(taskView.task.id)}"
             }
         }
         if (taskView.task.additionalNotes != null) {

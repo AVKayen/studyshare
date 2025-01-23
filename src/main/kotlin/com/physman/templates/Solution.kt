@@ -2,6 +2,7 @@ package com.physman.templates
 
 import com.physman.attachment.AttachmentView
 import com.physman.solution.SolutionView
+import com.physman.utils.objectIdToSimpleDateString
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
@@ -74,7 +75,7 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
                     +solutionView.solution.title
                 }
                 cite {
-                    +solutionView.solution.authorName
+                    +"${solutionView.solution.authorName} @ ${objectIdToSimpleDateString(solutionView.solution.id)}"
                 }
             }
 

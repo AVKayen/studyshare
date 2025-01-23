@@ -186,7 +186,7 @@ nav {
     padding: 0.5rem;
 }
 
-.comment > h6 {
+.comment > cite {
     margin-bottom: 0rem;
 }
 .comment > h5 {
