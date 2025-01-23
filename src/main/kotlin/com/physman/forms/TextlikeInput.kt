@@ -12,7 +12,8 @@ class TextlikeInput(
     override val inputName: String,
     private val type : InputType,
     val validate : ((String) -> String?)?,
-    private val validationDelay: Int = 400
+    private val validationDelay: Int = 400,
+    private val inputDescription: String? = null
 ) : ControlledInput {
 
     private val errorTagId = "$inputName-error"
@@ -56,6 +57,12 @@ class TextlikeInput(
             }
             small {
                 attributes["id"] = errorTagId
+            }
+            if (inputDescription != null) {
+                small {
+                    classes = setOf("input-info")
+                    +inputDescription
+                }
             }
         }
     }
