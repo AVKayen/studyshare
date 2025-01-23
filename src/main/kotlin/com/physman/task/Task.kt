@@ -29,6 +29,10 @@ data class Task (
     override val id: ObjectId = ObjectId(),
 
     override val title: String,
+    override val authorName: String,
+    override val authorId: ObjectId,
+    val groupName: String /*TODO: Denullify this*/ ? = null,
+    val groupId: ObjectId /*TODO: Denullify this*/ ? = null,
     override val additionalNotes: String? = null,
     override val commentAmount: Int = 0,
     override val attachmentIds: List<ObjectId> = emptyList()

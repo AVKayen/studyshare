@@ -3,18 +3,21 @@ package com.physman.templates
 import com.physman.comment.Comment
 import com.physman.utils.Post
 import com.physman.utils.className
+import com.physman.utils.objectIdToSimpleDateString
+import io.ktor.server.util.*
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
 fun FlowContent.commentTemplate(comment: Comment) {
-    //TODO: beautify it ;)
-    //also, there is a bit of htmx in task, solution and comment routes, you might want to change it
-    //there are comment examples in testTask task
-            h6 {
-                +"> ".plus(comment.content)
-            }
-
-
+    div {
+        classes = setOf("comment")
+        cite {
+            +"${comment.authorName} @ ${objectIdToSimpleDateString(comment.id)}"
+        }
+        h5 {
+            +comment.content
+        }
+    }
 }
 
 fun FlowContent.showCommentsAccordion(parentPost: Post) {

@@ -1,5 +1,6 @@
 package com.physman.routes
 
+import com.physman.authentication.user.UserSession
 import com.physman.comment.Comment
 import com.physman.comment.CommentRepository
 import com.physman.comment.commentValidator
@@ -15,6 +16,7 @@ import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
 import io.ktor.server.util.*
 import kotlinx.html.*
 import org.bson.types.ObjectId
@@ -86,11 +88,12 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
             val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
             val parentId = objectIds["parentId"]
             val postType = call.request.queryParameters["post-type"]
+            val userSession = call.sessions.get<UserSession>()!!
 
             val formSubmissionData: FormSubmissionData = commentCreationForm.validateSubmission(call) ?: return@post
             val content = formSubmissionData.fields["content"]!!
 
-            val newComment = Comment(parentId = parentId!!, content = content)
+            val newComment = Comment(parentId = parentId!!, content = content, authorName = userSession.name, authorId = ObjectId(userSession.id))
 
             if (postType.equals("task", true)){
                 taskRepository.updateCommentAmount(parentId, 1)

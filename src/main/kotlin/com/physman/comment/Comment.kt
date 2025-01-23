@@ -19,6 +19,8 @@ data class Comment(
     val id: ObjectId = ObjectId(),
 
     val parentId: ObjectId,
+    val authorName: String,
+    val authorId: ObjectId,
     val content: String,
 
 )

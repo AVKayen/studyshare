@@ -8,6 +8,8 @@ abstract class Post{
     abstract val id: ObjectId
 
     abstract val title: String
+    abstract val authorName: String
+    abstract val authorId: ObjectId
     abstract val additionalNotes: String?
     abstract val commentAmount: Int
     abstract val attachmentIds: List<ObjectId>
