@@ -5,16 +5,17 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.physman.forms.UploadFileData
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
-import kotlin.io.path.createTempFile
 import net.coobird.thumbnailator.Thumbnails
 import org.bson.types.ObjectId
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
-import java.util.concurrent.TimeUnit
 import java.time.ZonedDateTime.parse
 import java.time.format.DateTimeFormatter.ofPattern
+import java.util.concurrent.TimeUnit
+import kotlin.io.path.createTempFile
 import kotlin.io.path.deleteIfExists
 
 
@@ -40,34 +41,40 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
         return thumbnailPath
     }
 
-    override suspend fun createAttachments(files: List<UploadFileData>): List<Attachment> {
-        val attachments = mutableListOf<Attachment>()
+    private fun processFileUpload(file: UploadFileData): Attachment {
+        val attachment = Attachment(
+            originalFilename = file.originalName
+        )
 
-        files.forEach { file: UploadFileData ->
+        uploadFile(attachment.blobName, file.mimeType, Files.readAllBytes(file.filePath))
 
-            val attachment = Attachment(
-                originalFilename = file.originalName
-            )
+        if (file.mimeType?.startsWith("image/") == true) {
+            try {
+                val thumbnailPath = createThumbnail(file.filePath)
 
-            uploadFile(attachment.blobName, file.mimeType, Files.readAllBytes(file.filePath))
+                uploadFile(attachment.thumbnailBlobName, "image/jpg", Files.readAllBytes(thumbnailPath))
 
-            if (file.mimeType?.startsWith("image/") == true) {
-                try {
-                    val thumbnailPath = createThumbnail(file.filePath)
+                thumbnailPath.deleteIfExists()
+                return attachment.copy(isImage = true) // File is an image and the thumbnail was created
 
-                    uploadFile(attachment.thumbnailBlobName, "image/jpg", Files.readAllBytes(thumbnailPath))
-                    attachments.add(attachment.copy(isImage = true)) // File is an image and the thumbnail was created
-
-                    thumbnailPath.deleteIfExists()
-                } catch (e: net.coobird.thumbnailator.tasks.UnsupportedFormatException) {
-                    attachments.add(attachment)
-                }
-            } else {
-                attachments.add(attachment)
+            } catch (e: net.coobird.thumbnailator.tasks.UnsupportedFormatException) {
+                return attachment
             }
         }
+        return attachment
+    }
 
-        if (attachments.size > 0) {
+    override suspend fun createAttachment(file: UploadFileData): Attachment {
+        val attachment = processFileUpload(file)
+        attachmentCollection.insertOne(attachment)
+        return attachment
+    }
+
+    override suspend fun createAttachments(files: List<UploadFileData>): List<Attachment> {
+
+        val attachments = files.map { processFileUpload(it) }
+
+        if (attachments.isNotEmpty()) {
             attachmentCollection.insertMany(attachments)
         }
 
@@ -86,6 +93,15 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
         throw Exception("Blob not found")
     }
 
+    override suspend fun deleteAttachment(attachmentId: ObjectId) {
+        val filter = Filters.eq("_id", attachmentId)
+        val attachment = attachmentCollection.findOneAndDelete(filter) ?: return
+        deleteUploadedFile(attachment.blobName)
+        if (attachment.isImage) {
+            deleteUploadedFile(attachment.thumbnailBlobName)
+        }
+    }
+
     override suspend fun deleteAttachments(attachmentIds: List<ObjectId>) {
         val filter = Filters.`in`("_id", attachmentIds)
         attachmentCollection.find(filter).collect { attachment: Attachment ->
@@ -98,6 +114,11 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
         attachmentCollection.deleteMany(filter)
     }
 
+    override suspend fun getAttachment(attachmentId: ObjectId): AttachmentView? {
+        val filter = Filters.eq("_id", attachmentId)
+        val attachment = attachmentCollection.find(filter).firstOrNull() ?: return null
+        return getAttachmentView(attachment)
+    }
 
     override suspend fun getAttachments(attachmentIds: List<ObjectId>): List<AttachmentView> {
         val filter = Filters.`in`("_id", attachmentIds)
