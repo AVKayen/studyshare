@@ -9,6 +9,17 @@ import com.physman.utils.Post
 val titleValidator = titleValidator
 val additionalNotesValidator = additionalNotesValidator
 
+enum class VoteType {
+    UPVOTE,
+    DOWNVOTE
+}
+
+data class VoteUpdate (
+    val isDownvoted: Boolean,
+    val isUpvoted: Boolean,
+    val voteCount: Int,
+)
+
 data class Solution(
     @BsonId
     override val id: ObjectId = ObjectId(),
