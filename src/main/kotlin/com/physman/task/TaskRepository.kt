@@ -8,7 +8,7 @@ interface TaskRepository {
     suspend fun createTask(task: Task, files: List<UploadFileData>)
     suspend fun getTask(id: ObjectId): TaskView?
     suspend fun deleteTask(id: ObjectId)
-//    suspend fun deleteTasks(groupId: ObjectId) TODO: Uncomment this
+    suspend fun deleteTasks(groupId: ObjectId)
 
     suspend fun updateCommentAmount(taskId: ObjectId, amount: Int): Int
 }

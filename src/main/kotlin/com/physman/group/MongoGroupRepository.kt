@@ -36,7 +36,7 @@ class MongoGroupRepository(
 
     override suspend fun deleteGroup(groupId: ObjectId) {
         val group = groupCollection.findOneAndDelete(Filters.eq("_id", groupId)) ?: return
-//        taskRepository.deleteTasks(group.id) // TODO: Uncomment this
+        taskRepository.deleteTasks(group.id)
     }
 
     override suspend fun deleteUser(groupId: ObjectId, userId: ObjectId) {

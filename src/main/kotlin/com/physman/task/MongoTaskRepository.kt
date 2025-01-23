@@ -57,6 +57,16 @@ class MongoTaskRepository(
          attachmentRepository.deleteAttachments(task.attachmentIds)
     }
 
+    override suspend fun deleteTasks(groupId: ObjectId) {
+        val filter = Filters.eq(Task::groupId.name, groupId)
+        taskCollection.find(filter).collect { task: Task ->
+            solutionRepository.deleteSolutions(taskId = task.id)
+            attachmentRepository.deleteAttachments(task.attachmentIds)
+            commentRepository.deleteComments(task.id)
+        }
+        taskCollection.deleteMany(filter)
+    }
+
      override suspend fun updateCommentAmount(taskId: ObjectId, amount: Int): Int {
          val filter = Filters.eq("_id", taskId)
          val updates = Updates.inc(Solution::commentAmount.name, amount)
