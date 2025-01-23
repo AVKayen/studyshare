@@ -47,7 +47,8 @@ fun Route.authRouter(userRepository: UserRepository) {
         "password",
         InputType.password,
         passwordValidatorOnRegister,
-        500
+        500,
+        "Password must be at least 8 characters including a lowercase and uppercase letter, a number and a special character (!@#\$%^&*()_+)."
     ))
 
     globalFormRouter.routeFormValidators(loginForm)
@@ -91,7 +92,7 @@ fun Route.authRouter(userRepository: UserRepository) {
         get {
             val redirectUrl = call.queryParameters["redirectUrl"] ?: "/"
             call.respondHtml {
-                index("Register", lastBreadcrumb = "Login") {
+                index("Register", lastBreadcrumb = "Register") {
                     section {
                         registerForm.render(this, "/auth/register?redirectUrl=$redirectUrl")
                     }
