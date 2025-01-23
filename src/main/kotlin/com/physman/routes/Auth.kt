@@ -57,7 +57,7 @@ fun Route.authRouter(userRepository: UserRepository) {
         get {
             val redirectUrl = call.queryParameters["redirectUrl"] ?: "/"
             call.respondHtml {
-                index("Login") {
+                index("Login", lastBreadcrumb = "Login") {
                     section {
                         loginForm.render(this, "/auth/login?redirectUrl=$redirectUrl")
                     }
@@ -91,7 +91,7 @@ fun Route.authRouter(userRepository: UserRepository) {
         get {
             val redirectUrl = call.queryParameters["redirectUrl"] ?: "/"
             call.respondHtml {
-                index("Register") {
+                index("Register", lastBreadcrumb = "Login") {
                     section {
                         registerForm.render(this, "/auth/register?redirectUrl=$redirectUrl")
                     }
