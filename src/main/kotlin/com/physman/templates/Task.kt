@@ -14,6 +14,7 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
         header {
             h2 {
                 +taskView.task.title
+                postDeletionButton(taskView.task)
             }
             cite {
                 +"${taskView.task.authorName} @ ${objectIdToSimpleDateString(taskView.task.id)}"

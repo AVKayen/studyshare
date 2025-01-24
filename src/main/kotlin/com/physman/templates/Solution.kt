@@ -24,6 +24,7 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
             header {
                 h2 {
                     +solutionView.solution.title
+                    postDeletionButton(solutionView.solution)
                 }
                 cite {
                     +"${solutionView.solution.authorName} @ ${objectIdToSimpleDateString(solutionView.solution.id)}"

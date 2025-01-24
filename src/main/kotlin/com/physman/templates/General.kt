@@ -2,6 +2,8 @@ package com.physman.templates
 
 import com.physman.attachment.AttachmentView
 import com.physman.solution.VoteUpdate
+import com.physman.utils.Post
+import com.physman.utils.className
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
@@ -77,5 +79,19 @@ fun FlowContent.votingTemplate(voteUpdate: VoteUpdate, callbackId: ObjectId) {
             voteUrl = "/solutions/${callbackId.toHexString()}/downvote",
             icon = "arrow_downward"
         )
+    }
+}
+
+fun FlowContent.postDeletionButton(post: Post) {
+    button {
+        //TODO: change the class
+        classes = setOf("post-button")
+        attributes["id"] = "delete-btn-${post.id}"
+        attributes["hx-delete"] = "/${className(post)}s/${post.id}"
+
+        span {
+            classes = setOf("material-symbols-rounded", "voting-icon")
+            +"delete"
+        }
     }
 }
