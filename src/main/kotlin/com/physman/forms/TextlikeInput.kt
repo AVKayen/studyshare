@@ -15,6 +15,7 @@ class TextlikeInput(
     private val validationDelay: Int = 400,
     private val inputDescription: String? = null,
     private val validateOnInput: Boolean = true,
+    private val clearAfterSubmit: Boolean = false,
 ) : ControlledInput {
 
     private val errorTagId = "$inputName-error"
@@ -29,7 +30,12 @@ class TextlikeInput(
         flowContent: FlowContent,
         validationUrl: String
     ) {
-        val validatingInputScript = """
+        val inputScript = """
+            on input
+                me.removeAttribute("aria-invalid")
+                set #$errorTagId's innerHTML to ""
+            end
+                
             on htmx:afterRequest
                 if event.srcElement is me
                     if event.detail.successful
@@ -39,10 +45,11 @@ class TextlikeInput(
                         me.setAttribute("aria-invalid", true)
                     end
                 end
-        """.trimIndent()
-
-        val unvalidatingInputScript = """
+            end
             
+            on clearInput
+                set { value: "" } on me
+            end
         """.trimIndent()
 
         flowContent.div {
@@ -53,24 +60,27 @@ class TextlikeInput(
 
             input(type = type, name = inputName) {
                 attributes["id"] = inputName
+                attributes["_"] = inputScript
+
+                if (clearAfterSubmit) {
+                    classes = setOf("clear-after-submit")
+                }
 
                 if (validateOnInput) {
                     attributes["hx-post"] = "${validationUrl}/${inputName}"
-                    attributes["_"] = validatingInputScript
-                } else {
-                    attributes["_"] = unvalidatingInputScript
-                }
-                attributes["hx-trigger"] = "keyup changed delay:${validationDelay}ms"
-                attributes["hx-sync"] = "closest form:abort"
 
-            }
-            small {
-                attributes["id"] = errorTagId
-            }
-            if (inputDescription != null) {
+                    attributes["hx-trigger"] = "keyup changed delay:${validationDelay}ms"
+                    attributes["hx-sync"] = "closest form:abort"
+
+                }
                 small {
-                    classes = setOf("input-info")
-                    +inputDescription
+                    attributes["id"] = errorTagId
+                }
+                if (inputDescription != null) {
+                    small {
+                        classes = setOf("input-info")
+                        +inputDescription
+                    }
                 }
             }
         }

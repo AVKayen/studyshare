@@ -115,6 +115,7 @@ class Form(
     ) {
         flowContent.form {
             attributes["hx-post"] = callbackUrl
+            attributes["_"] = "on submit send clearInput to .clear-after-submit"
 
             if (formHyperscript != null) {
                 attributes["_"] = formHyperscript
