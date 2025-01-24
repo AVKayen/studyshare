@@ -48,7 +48,8 @@ fun Route.authRouter(userRepository: UserRepository) {
         InputType.password,
         passwordValidatorOnRegister,
         500,
-        "Password must be at least 8 characters including a lowercase and uppercase letter, a number and a special character (!@#\$%^&*()_+)."
+        "Password must be at least 8 characters including a lowercase and uppercase letter, a number and a special character.",
+        false
     ))
 
     globalFormRouter.routeFormValidators(loginForm)
