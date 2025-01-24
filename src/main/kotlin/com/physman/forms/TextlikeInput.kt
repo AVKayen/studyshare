@@ -29,7 +29,7 @@ class TextlikeInput(
         flowContent: FlowContent,
         validationUrl: String
     ) {
-        val inputScript = """
+        val validatingInputScript = """
             on htmx:afterRequest
                 if event.srcElement is me
                     if event.detail.successful
@@ -41,6 +41,10 @@ class TextlikeInput(
                 end
         """.trimIndent()
 
+        val unvalidatingInputScript = """
+            
+        """.trimIndent()
+
         flowContent.div {
             label {
                 attributes["for"] = inputName
@@ -49,10 +53,12 @@ class TextlikeInput(
 
             input(type = type, name = inputName) {
                 attributes["id"] = inputName
-                attributes["_"] = inputScript
 
                 if (validateOnInput) {
                     attributes["hx-post"] = "${validationUrl}/${inputName}"
+                    attributes["_"] = validatingInputScript
+                } else {
+                    attributes["_"] = unvalidatingInputScript
                 }
                 attributes["hx-trigger"] = "keyup changed delay:${validationDelay}ms"
                 attributes["hx-sync"] = "closest form:abort"
@@ -76,6 +82,10 @@ class TextlikeInput(
                 small {
                     attributes["id"] = errorTagId
                     attributes["hx-swap-oob"] = "true"
+                    attributes["_"] = """
+                        on load
+                            me.previousElementSibling.setAttribute("aria-invalid", true)
+                    """.trimIndent()
 
                     +error
                 }
