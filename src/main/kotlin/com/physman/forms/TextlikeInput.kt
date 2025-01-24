@@ -13,7 +13,8 @@ class TextlikeInput(
     private val type : InputType,
     val validate : ((String) -> String?)?,
     private val validationDelay: Int = 400,
-    private val inputDescription: String? = null
+    private val inputDescription: String? = null,
+    private val validateOnInput: Boolean = true,
 ) : ControlledInput {
 
     private val errorTagId = "$inputName-error"
@@ -50,7 +51,9 @@ class TextlikeInput(
                 attributes["id"] = inputName
                 attributes["_"] = inputScript
 
-                attributes["hx-post"] = "${validationUrl}/${inputName}"
+                if (validateOnInput) {
+                    attributes["hx-post"] = "${validationUrl}/${inputName}"
+                }
                 attributes["hx-trigger"] = "keyup changed delay:${validationDelay}ms"
                 attributes["hx-sync"] = "closest form:abort"
 
