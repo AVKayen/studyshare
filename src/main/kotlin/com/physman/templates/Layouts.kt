@@ -11,6 +11,11 @@ fun HEAD.headTags() {
     link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/pico-2.0.6.min.css")
     // material icons
     link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded")
+
+    // fancybox
+    script { src = "https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js" }
+    link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css")
+
     // custom CSS TODO: for prod, change this to a GCP file
     link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
 //    link(rel = "stylesheet", href = "/static/styles.css")

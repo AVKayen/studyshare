@@ -18,13 +18,38 @@ fun FlowContent.nonImageAttachmentTemplate(nonImageAttachments: List<AttachmentV
     }
 }
 
-fun FlowContent.imageAttachmentTemplate(images: List<AttachmentView>) {
+fun FlowContent.galleryTemplate(galleryId: String, images: List<AttachmentView>) {
     if (images.isNotEmpty()) {
         section {
             classes = setOf("gallery")
             images.forEach { attachmentView: AttachmentView ->
-                img(src = attachmentView.thumbnailUrl, alt = attachmentView.attachment.originalFilename)
+                a(href = attachmentView.url) {
+                    attributes["data-fancybox"] = galleryId
+                    img(src = attachmentView.thumbnailUrl, alt = attachmentView.attachment.originalFilename)
+                }
             }
+        }
+    }
+}
+
+fun FlowContent.fancyboxSetupScript() {
+    script {
+        unsafe {
+            +"""
+                Fancybox.bind("[data-fancybox]", {
+                    Toolbar: {
+                        display: {
+                            left: ["infobar"],
+                            middle: [
+                                "zoomIn",
+                                "zoomOut",
+                                "rotateCCW",
+                            ],
+                            right: ["close"],
+                        },
+                    },
+                });
+            """.trimIndent()
         }
     }
 }
