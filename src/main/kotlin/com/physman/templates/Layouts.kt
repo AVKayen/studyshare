@@ -5,12 +5,20 @@ import kotlinx.html.*
 fun HEAD.headTags() {
     // htmx
     script { src = "https://unpkg.com/htmx.org@2.0.4" }
+
     // _hyperscript
     script { src = "https://unpkg.com/hyperscript.org@0.9.13" }
+
     // picoCSS defaults
     link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css")
+
     // material icons
     link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded")
+
+    // fancybox
+    script { src = "https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js" }
+    link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css")
+
     // custom CSS TODO: for prod, change this to a GCP file
     link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
 //    link(rel = "stylesheet", href = "/static/styles.css")
@@ -128,5 +136,6 @@ fun HTML.index(
         main(classes = "container") {
             block()
         }
+        fancyboxSetupScript()
     }
 }
