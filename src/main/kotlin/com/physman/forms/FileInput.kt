@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets
 
 class FileInput(
     private val inputLabel: String,
-    override val inputName: String,
+    private val inputName: String,
     private val maxFileCount: Int = 1,
     private val inputAttributes: Map<String, String>? = null
 ) : ControlledInput {

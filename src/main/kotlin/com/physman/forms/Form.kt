@@ -113,9 +113,23 @@ class Form(
         formHyperscript: String? = null,
         formContent: FORM.() -> Unit
     ) {
+
+        val formScript = """
+            on htmx:beforeRequest
+                if event.srcElement is me
+                    repeat for input in .confirmation-input
+                        if input.getAttribute("aria-invalid") == "true"
+                            halt the event
+                            exit
+                        end
+                    end
+                    send clearInput to .clear-after-submit
+                end
+            end
+        """.trimIndent()
         flowContent.form {
             attributes["hx-post"] = callbackUrl
-            attributes["_"] = "on submit send clearInput to .clear-after-submit"
+            attributes["_"] = formScript
 
             if (formHyperscript != null) {
                 attributes["_"] = formHyperscript

@@ -9,20 +9,79 @@ import java.nio.charset.StandardCharsets
 
 class TextlikeInput(
     private val inputLabel: String,
-    override val inputName: String,
-    private val type : InputType,
+    val inputName: String,
+    private val inputType : InputType = InputType.text,
     val validate : ((String) -> String?)?,
     private val validationDelay: Int = 400,
     private val inputDescription: String? = null,
     private val validateOnInput: Boolean = true,
     private val clearAfterSubmit: Boolean = false,
+    private val confirmationInputLabel: String? = null,
+    private val confirmationMissmatchError: String? = null,
 ) : ControlledInput {
-
-    private val errorTagId = "$inputName-error"
 
     init {
         if (inputName != URLEncoder.encode(inputName, StandardCharsets.UTF_8.toString())) {
             throw IllegalArgumentException("Invalid inputName. $inputName is not url-safe.")
+        }
+
+        if ((confirmationInputLabel != null && confirmationMissmatchError == null) || (confirmationInputLabel == null && confirmationMissmatchError != null)) {
+            throw IllegalArgumentException("Arguments confirmationInputLabel and confirmationMissmatchError must both have values or be null.")
+        }
+    }
+
+    private val inputId = inputName
+    private val errorTagId = "$inputName-error"
+    private val confirmationInputId = "confirmation-$inputName"
+    private val confirmationErrorTagId = "confirmation-$inputName-error"
+
+    private fun renderConfirmationInput(flowContent: FlowContent) {
+        flowContent.div {
+            val confirmationInputScript = """
+                def confirm()
+                    if #$inputId's value == my value
+                        if my value == ""
+                            me.removeAttribute("aria-invalid")
+                            set #$confirmationErrorTagId's innerHTML to ""
+                        else
+                            me.setAttribute("aria-invalid", false)
+                            set #$confirmationErrorTagId's innerHTML to ""
+                        end
+                    else
+                        me.setAttribute("aria-invalid", true)
+                        set #$confirmationErrorTagId's innerHTML to "$confirmationMissmatchError"
+                    end
+                end
+                on confirmInput
+                    call confirm()
+                end
+                on change
+                    call confirm()
+                end
+                on clearInput
+                    set { value: "" } on me
+                    me.removeAttribute("aria-invalid")
+                end
+            """.trimIndent()
+
+            flowContent.div {
+                label {
+                    attributes["for"] = confirmationInputId
+                    +confirmationInputLabel!!
+                }
+                input(type = inputType) {
+                    attributes["id"] = confirmationInputId
+                    attributes["_"] = confirmationInputScript
+                    classes = setOf("confirmation-input")
+
+                    if (clearAfterSubmit) {
+                        classes = classes + "clear-after-submit"
+                    }
+                }
+                small {
+                    attributes["id"] = confirmationErrorTagId
+                }
+            }
         }
     }
 
@@ -52,15 +111,17 @@ class TextlikeInput(
             end
         """.trimIndent()
 
+        val confirmationInputScript = "on change send confirmInput to #$confirmationInputId"
+
         flowContent.div {
             label {
-                attributes["for"] = inputName
+                attributes["for"] = inputId
                 +inputLabel
             }
 
-            input(type = type, name = inputName) {
-                attributes["id"] = inputName
-                attributes["_"] = inputScript
+            input(type = inputType, name = inputName) {
+                attributes["id"] = inputId
+                attributes["_"] = if (confirmationInputLabel != null) "$inputScript $confirmationInputScript" else inputScript
 
                 if (clearAfterSubmit) {
                     classes = setOf("clear-after-submit")
@@ -83,6 +144,10 @@ class TextlikeInput(
                     }
                 }
             }
+        }
+
+        if (confirmationInputLabel != null) {
+            renderConfirmationInput(flowContent)
         }
     }
 

@@ -51,6 +51,8 @@ fun Route.authRouter(userRepository: UserRepository) {
         "Password must be at least 8 characters including a lowercase and uppercase letter, a number and a special character.",
         validateOnInput = false,
         clearAfterSubmit = true,
+        confirmationInputLabel = "Confirm your password",
+        confirmationMissmatchError = "Passwords must be identical"
     ))
 
     globalFormRouter.routeFormValidators(loginForm)
