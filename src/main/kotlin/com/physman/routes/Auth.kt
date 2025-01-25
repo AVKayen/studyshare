@@ -116,6 +116,12 @@ fun Route.authRouter(userRepository: UserRepository) {
             val formSubmissionData = registerForm.validateSubmission(call) ?: return@post
             val username = formSubmissionData.fields["name"]!!
             val password = formSubmissionData.fields["password"]!!
+
+            if (password.contains(username)) {
+                registerForm.respondFormError(call, "Your password must not contain your username.")
+                return@post
+            }
+
             val session: UserSession
             try {
                 session = userRepository.register(username, password)
