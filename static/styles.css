@@ -198,4 +198,11 @@ nav {
     width: 100%;
     margin-top: calc(var(--pico-spacing)* -.75);
     margin-bottom: var(--pico-spacing);
+    line-height: 1;
+}
+
+.input-info > span {
+    font-size: 1.1em;
+    margin-right: 0.3em;
+    vertical-align: -0.15em;
 }

@@ -137,17 +137,20 @@ class TextlikeInput(
                 small {
                     attributes["id"] = errorTagId
                 }
+
+                if (confirmationInputLabel != null) {
+                    renderConfirmationInput(flowContent)
+                }
+
                 if (inputDescription != null) {
-                    small {
-                        classes = setOf("input-info")
+                    small(classes = "input-info") {
+                        span(classes = "material-symbols-rounded") {
+                            +"info"
+                        }
                         +inputDescription
                     }
                 }
             }
-        }
-
-        if (confirmationInputLabel != null) {
-            renderConfirmationInput(flowContent)
         }
     }
 
