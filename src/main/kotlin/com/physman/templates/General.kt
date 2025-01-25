@@ -39,15 +39,15 @@ fun FlowContent.fancyboxSetupScript() {
                 Fancybox.bind("[data-fancybox]", {
                     Toolbar: {
                         display: {
-                        left: ["infobar"],
-                        middle: [
-                        "zoomIn",
-                        "zoomOut",
-                        "rotateCCW",
-                      ],
-                      right: ["close"],
+                            left: ["infobar"],
+                            middle: [
+                                "zoomIn",
+                                "zoomOut",
+                                "rotateCCW",
+                            ],
+                            right: ["close"],
+                        },
                     },
-                  },
                 });
             """.trimIndent()
         }
