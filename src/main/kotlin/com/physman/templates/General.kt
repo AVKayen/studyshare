@@ -1,6 +1,7 @@
 package com.physman.templates
 
 import com.physman.attachment.AttachmentView
+import com.physman.solution.Solution
 import com.physman.solution.VoteUpdate
 import com.physman.utils.Post
 import com.physman.utils.className
@@ -85,13 +86,25 @@ fun FlowContent.votingTemplate(voteUpdate: VoteUpdate, callbackId: ObjectId) {
 fun FlowContent.postDeletionButton(post: Post) {
     button {
         //TODO: change the class
-        classes = setOf("post-button")
-        attributes["id"] = "delete-btn-${post.id}"
-        attributes["hx-delete"] = "/${className(post)}s/${post.id}"
-
-        span {
-            classes = setOf("material-symbols-rounded", "voting-icon")
-            +"delete"
+//        classes = setOf("post-button")
+//        attributes["id"] = "delete-btn-${post.id}"
+//        //attributes["hx-delete"] = "/${className(post)}s/${post.id}"
+//
+//        span {
+//            classes = setOf("material-symbols-rounded")
+//            +"delete"
+//        }
+        when (post) {
+            is Solution ->
+                formModalOpenButton(
+                    buttonText = "Delete",
+                    modalUrl = "/solutions/creation-modal?taskId=${post.taskId}&"
+                )
         }
+        formModalOpenButton(
+            buttonText = "Delete",
+            modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}"
+        )
+        formModalOpenButton("Delete", "/solutions/deletion-modal")
     }
 }

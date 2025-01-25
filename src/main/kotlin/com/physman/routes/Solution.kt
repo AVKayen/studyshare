@@ -25,7 +25,14 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
     solutionCreationForm.addInput(TextlikeInput("Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
     solutionCreationForm.addInput(FileInput("Upload files", "files", inputAttributes = mapOf("multiple" to "true")))
 
+
+    val solutionDeletionForm = Form("Are you sure you want to delete this solution?", "solutionForm", formAttributes = mapOf(
+        "hx-target" to "#solution-list",
+        "hx-swap" to "beforeend"
+    ))
+
     globalFormRouter.routeFormValidators(solutionCreationForm)
+    globalFormRouter.routeFormValidators(solutionDeletionForm)
 
     get("/creation-modal") {
         val taskId = call.request.queryParameters["taskId"]
@@ -37,6 +44,27 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             body {
                 formModalDialog(
                     form = solutionCreationForm,
+                    callbackUrl = "/solutions?taskId=$taskId"
+                )
+            }
+        }
+    }
+
+    get("/deletion-modal") {
+        val taskId = call.request.queryParameters["taskId"]
+        val solutionId = call.request.queryParameters["solutionId"]
+        if (taskId == null) {
+            call.respondText("Task Id not specified.", status = HttpStatusCode.BadRequest)
+            return@get
+        }
+        if (solutionId == null) {
+            call.respondText("Solution Id not specified.", status = HttpStatusCode.BadRequest)
+            return@get
+        }
+        call.respondHtml {
+            body {
+                formModalDialog(
+                    form = solutionDeletionForm,
                     callbackUrl = "/solutions?taskId=$taskId"
                 )
             }
