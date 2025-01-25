@@ -13,8 +13,8 @@ fun HEAD.headTags() {
     link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded")
 
     // fancybox
-    script { src = "https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.umd.js" }
-    link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/@fancyapps/ui@5.0/dist/fancybox/fancybox.css")
+    script { src = "https://storage.googleapis.com/studyshare-static/fancybox-5.0.umd.js" }
+    link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/fancybox-5.0.css")
 
     // custom CSS TODO: for prod, change this to a GCP file
     link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
