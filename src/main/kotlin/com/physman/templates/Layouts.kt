@@ -133,5 +133,6 @@ fun HTML.index(
         main(classes = "container") {
             block()
         }
+        fancyboxSetupScript()
     }
 }
