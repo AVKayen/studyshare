@@ -2,6 +2,7 @@ package com.physman.authentication.user
 
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.mongodb.client.model.Filters.*
+import com.mongodb.client.model.Updates.addToSet
 import kotlinx.coroutines.flow.firstOrNull
 import org.bson.types.ObjectId
 import org.mindrot.jbcrypt.BCrypt
@@ -24,6 +25,11 @@ class MongoUserRepository(database: MongoDatabase) : UserRepository {
 
     override suspend fun deleteUser(id: String) {
         users.findOneAndDelete(eq("_id", ObjectId(id)))
+    }
+
+    override suspend fun addGroupToUser(userId: ObjectId, groupId: ObjectId) {
+        println("Adding group $groupId to user $userId")
+        users.updateOne(eq("_id", userId), addToSet(User::groupIds.name, groupId))
     }
 
     override suspend fun login(name: String, password: String): UserSession? {

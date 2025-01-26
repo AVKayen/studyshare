@@ -7,6 +7,7 @@ import io.ktor.server.application.*
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.physman.comment.MongoCommentRepository
+import com.physman.group.MongoGroupRepository
 import com.physman.solution.MongoSolutionRepository
 import com.physman.task.MongoTaskRepository
 import com.physman.templates.index
@@ -23,13 +24,14 @@ fun main(args: Array<String>) {
 fun Application.module() {
     val environment = Environment(true)
     val mongodbClient = MongoClient.create(environment.MONGODB_CONNECTION_STRING)
-    val database = mongodbClient.getDatabase("lowkeystudyshare")
+    val database = mongodbClient.getDatabase("groupedstudyshare")
 
     val imageRepository = MongoGCloudAttachmentRepository(bucketName = "studyshare-files", database = database)
     val commentRepository = MongoCommentRepository(database)
     val solutionRepository = MongoSolutionRepository(database, commentRepository, imageRepository)
     val taskRepository = MongoTaskRepository(database, imageRepository, commentRepository, solutionRepository)
     val userRepository = MongoUserRepository(database)
+    val groupRepository = MongoGroupRepository(database, taskRepository, imageRepository, userRepository)
 
     install(StatusPages) {
         exception<Throwable> { call, cause ->
@@ -45,7 +47,7 @@ fun Application.module() {
             }
         }
         status(HttpStatusCode.NotFound) { call, _ -> // cause is redundant to know (it's always page not found)
-            call.respondHtml {
+            call.respondHtml(HttpStatusCode.NotFound) {
                 index("Not Found") {
                     h1 {
                         +"Page not found"
@@ -61,5 +63,6 @@ fun Application.module() {
         taskRepository = taskRepository,
         userRepository = userRepository,
         commentRepository = commentRepository,
+        groupRepository = groupRepository
     )
 }

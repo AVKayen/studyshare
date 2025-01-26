@@ -6,6 +6,7 @@ import com.physman.routes.*
 import com.physman.forms.*
 import com.physman.task.TaskRepository
 import com.physman.solution.SolutionRepository
+import com.physman.group.GroupRepository
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
@@ -17,7 +18,8 @@ fun Application.configureRouting(
     solutionRepository: SolutionRepository,
     taskRepository: TaskRepository,
     commentRepository: CommentRepository,
-    userRepository: UserRepository
+    userRepository: UserRepository,
+    groupRepository: GroupRepository
 ) {
     routing {
         staticFiles("/static", File("static"))
@@ -38,7 +40,14 @@ fun Application.configureRouting(
             formExampleRouter()
         }
 
+        route("/") {
+            homeRouter(groupRepository, userRepository)
+        }
+
         authenticate("USER") {
+            route("/groups") {
+                groupRouter(groupRepository, userRepository)
+            }
 
             route("/solutions") {
                 solutionRouter(solutionRepository)
@@ -52,9 +61,6 @@ fun Application.configureRouting(
                 commentRouter(commentRepository, solutionRepository, taskRepository)
             }
 
-            route("/") {
-                homeRouter()
-            }
         }
     }
 }

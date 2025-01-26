@@ -10,5 +10,5 @@ data class Group(
     val description: String? = null,
     val leaderId: ObjectId,
     val memberIds: List<ObjectId>,
-    val thumbnailId: ObjectId, // ObjectId pointing to an Attachment
+    val thumbnailId: ObjectId?, // ObjectId pointing to an Attachment
 )

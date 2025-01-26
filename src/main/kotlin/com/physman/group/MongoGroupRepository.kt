@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.physman.attachment.AttachmentRepository
+import com.physman.authentication.user.UserRepository
 import com.physman.forms.UploadFileData
 import com.physman.task.TaskRepository
 import kotlinx.coroutines.flow.firstOrNull
@@ -12,25 +13,34 @@ import org.bson.types.ObjectId
 class MongoGroupRepository(
     database: MongoDatabase,
     private val taskRepository: TaskRepository,
-    private val attachmentRepository: AttachmentRepository
+    private val attachmentRepository: AttachmentRepository,
+    private val userRepository: UserRepository
 ) : GroupRepository {
 
     private val groupCollection = database.getCollection<Group>("groups")
 
-    override suspend fun createGroup(group: Group, groupThumbnailFile: UploadFileData): GroupView {
+    override suspend fun createGroup(group: Group, groupThumbnailFile: UploadFileData?): GroupView {
+        userRepository.addGroupToUser(group.leaderId, group.id)
+        if (groupThumbnailFile == null) {
+            groupCollection.insertOne(group)
+            return GroupView(
+                group = group,
+                thumbnail = null
+            )
+        }
         val groupThumbnailAttachment = attachmentRepository.createAttachment(groupThumbnailFile)
         val groupWithThumbnail = group.copy( thumbnailId = groupThumbnailAttachment.id )
         groupCollection.insertOne(groupWithThumbnail)
-
         return GroupView(
             group = groupWithThumbnail,
-            thumbnail = attachmentRepository.getAttachment(groupWithThumbnail.thumbnailId)
+            thumbnail = groupWithThumbnail.thumbnailId?.let { attachmentRepository.getAttachment(it) }
         )
     }
 
     override suspend fun addUser(groupId: ObjectId, userId: ObjectId) {
         val filter = Filters.eq("_id", groupId)
         val updates = Updates.addToSet(Group::memberIds.name, userId)
+        userRepository.addGroupToUser(userId, groupId)
         groupCollection.updateOne(filter, updates)
     }
 
@@ -55,7 +65,7 @@ class MongoGroupRepository(
         val group = groupCollection.find(Filters.eq("_id", groupId)).firstOrNull() ?: return null
         return GroupView(
             group = group,
-            thumbnail = attachmentRepository.getAttachment(group.thumbnailId)
+            thumbnail = group.thumbnailId?.let { attachmentRepository.getAttachment(it) }
         )
     }
 }
