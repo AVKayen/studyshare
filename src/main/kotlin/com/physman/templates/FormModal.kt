@@ -48,10 +48,17 @@ fun FlowContent.formModalDialog(form: Form, callbackUrl: String) {
     """.trimIndent()
 
     val formScript = """
+        on htmx:beforeRequest
+            if event.srcElement is me
+                add @disabled to <button/> in me
+            end
+        end
         on htmx:afterRequest
             if event.srcElement is me
                 if event.detail.successful
                     trigger closeModal
+                else
+                    remove @disabled from <button/> in me
                 end
             end
     """.trimIndent()
