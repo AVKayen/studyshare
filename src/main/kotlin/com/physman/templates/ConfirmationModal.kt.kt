@@ -64,6 +64,7 @@ fun FlowContent.confirmationModalTemplate(title: String, details: String, submit
                     }
 
                     button {
+                        attributes["_"] = "on click trigger closeModal"
                         attributes.putAll(submitAttributes)
                         +submitText
                     }
