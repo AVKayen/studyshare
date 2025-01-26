@@ -47,7 +47,12 @@ fun Route.authRouter(userRepository: UserRepository) {
         "password",
         InputType.password,
         passwordValidatorOnRegister,
-        500
+        500,
+        "Password must be at least 8 characters including a lowercase and uppercase letter, a number and a special character.",
+        validateOnInput = false,
+        clearAfterSubmit = true,
+        confirmationInputLabel = "Confirm your password",
+        confirmationMissmatchError = "Passwords must be identical"
     ))
 
     globalFormRouter.routeFormValidators(loginForm)
@@ -91,7 +96,7 @@ fun Route.authRouter(userRepository: UserRepository) {
         get {
             val redirectUrl = call.queryParameters["redirectUrl"] ?: "/"
             call.respondHtml {
-                index("Register", lastBreadcrumb = "Login") {
+                index("Register", lastBreadcrumb = "Register") {
                     section {
                         registerForm.render(this, "/auth/register?redirectUrl=$redirectUrl")
                     }
@@ -111,6 +116,12 @@ fun Route.authRouter(userRepository: UserRepository) {
             val formSubmissionData = registerForm.validateSubmission(call) ?: return@post
             val username = formSubmissionData.fields["name"]!!
             val password = formSubmissionData.fields["password"]!!
+
+            if (password.contains(username)) {
+                registerForm.respondFormError(call, "Your password must not contain your username.")
+                return@post
+            }
+
             val session: UserSession
             try {
                 session = userRepository.register(username, password)

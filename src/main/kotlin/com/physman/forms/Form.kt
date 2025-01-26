@@ -15,7 +15,7 @@ import kotlin.io.path.*
 import java.nio.file.StandardOpenOption.*
 
 
-// TODO: This values should be read from some config, also the upload sizes must be changed in some Ktor config
+// This values should be read from some config, also the upload sizes must be changed in some Ktor config
 // (default max upload file size in Ktor is 50MB)
 const val MAX_UPLOAD_SIZE: Long = 250 // MB
 const val MAX_UPLOAD_SIZE_BYTES: Long = MAX_UPLOAD_SIZE * 1024 * 1024
@@ -113,8 +113,23 @@ class Form(
         formHyperscript: String? = null,
         formContent: FORM.() -> Unit
     ) {
+
+        val formScript = """
+            on htmx:beforeRequest
+                if event.srcElement is me
+                    repeat for input in .confirmation-input
+                        if input.getAttribute("aria-invalid") == "true"
+                            halt the event
+                            exit
+                        end
+                    end
+                    send clearInput to .clear-after-submit
+                end
+            end
+        """.trimIndent()
         flowContent.form {
             attributes["hx-post"] = callbackUrl
+            attributes["_"] = formScript
 
             if (formHyperscript != null) {
                 attributes["_"] = formHyperscript

@@ -4,15 +4,20 @@ import kotlinx.html.*
 
 fun HEAD.headTags() {
     // htmx
-    script { src = "https://unpkg.com/htmx.org@2.0.4" }
+    script { src = "https://storage.googleapis.com/studyshare-static/htmx-2.0.4.min.js" }
     // _hyperscript
-    script { src = "https://unpkg.com/hyperscript.org@0.9.13" }
+    script { src = "https://storage.googleapis.com/studyshare-static/hyperscript-0.9.3.min.js" }
     // picoCSS defaults
-    link(rel = "stylesheet", href = "https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css")
+    link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/pico-2.0.6.min.css")
     // material icons
     link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded")
+
+    // fancybox
+    script { src = "https://storage.googleapis.com/studyshare-static/fancybox-5.0.umd.js" }
+    link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/fancybox-5.0.css")
+
     // custom CSS TODO: for prod, change this to a GCP file
-     link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
+    link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
 //    link(rel = "stylesheet", href = "/static/styles.css")
 
     // config for htmx (code 422 for error form reponses)
@@ -128,5 +133,6 @@ fun HTML.index(
         main(classes = "container") {
             block()
         }
+        fancyboxSetupScript()
     }
 }

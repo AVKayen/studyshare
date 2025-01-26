@@ -37,9 +37,8 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
                 }
             }
 
-            imageAttachmentTemplate(images)
+            galleryTemplate("gallery-${solutionView.solution.id}", images)
             nonImageAttachmentTemplate(nonImageAttachments)
-            // TODO: Hiding comments, button to comment, comment count
             showCommentsAccordion(solutionView.solution)
 
         }

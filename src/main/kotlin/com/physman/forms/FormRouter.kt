@@ -27,7 +27,7 @@ fun Route.configureForms(forms: FormRouter) {
             val inputName = call.parameters["input"]!!
 
             val inputElement: ControlledInput? = form!!.inputs.find {
-                it.inputName == inputName
+                it is TextlikeInput && it.inputName == inputName
             }
             if (inputName.isBlank() || inputElement !is TextlikeInput) {
                 call.response.status(HttpStatusCode.BadRequest)
