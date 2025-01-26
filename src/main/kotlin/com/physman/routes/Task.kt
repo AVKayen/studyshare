@@ -48,7 +48,8 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             body {
                 formModalDialog(
                     form = taskCreationForm,
-                    callbackUrl = "/tasks"
+                    callbackUrl = "/tasks",
+                    requestType = POST
                 )
             }
         }

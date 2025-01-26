@@ -12,6 +12,7 @@ import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
+import io.ktor.server.util.*
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
@@ -44,7 +45,8 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             body {
                 formModalDialog(
                     form = solutionCreationForm,
-                    callbackUrl = "/solutions?taskId=$taskId"
+                    callbackUrl = "/solutions?taskId=$taskId",
+                    requestType = POST
                 )
             }
         }
@@ -52,7 +54,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
 
     get("/deletion-modal") {
         val taskId = call.request.queryParameters["taskId"]
-        val solutionId = call.request.queryParameters["solutionId"]
+        val solutionId = call.request.queryParameters["id"]
         if (taskId == null) {
             call.respondText("Task Id not specified.", status = HttpStatusCode.BadRequest)
             return@get
@@ -65,7 +67,8 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             body {
                 formModalDialog(
                     form = solutionDeletionForm,
-                    callbackUrl = "/solutions?taskId=$taskId"
+                    callbackUrl = call.url(),
+                    requestType = DELETE
                 )
             }
         }

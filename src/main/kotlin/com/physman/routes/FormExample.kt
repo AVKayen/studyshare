@@ -51,7 +51,7 @@ fun Route.formExampleRouter() {
     get {
         call.respondHtml(HttpStatusCode.OK) {
             index(title = "Example form page") {
-                form.render(this, "form-example")
+                form.render(this, "form-example", POST)
             }
         }
     }

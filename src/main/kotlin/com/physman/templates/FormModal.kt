@@ -15,7 +15,7 @@ fun FlowContent.formModalOpenButton(buttonText: String, modalUrl: String) {
 }
 
 
-fun FlowContent.formModalDialog(form: Form, callbackUrl: String) {
+fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: String) {
 
     val animationDuration = "300ms"
     val openClass = ".modal-is-open"
@@ -60,7 +60,7 @@ fun FlowContent.formModalDialog(form: Form, callbackUrl: String) {
         attributes["_"] = dialogScript
 
         div(classes = "modal-content") {
-            form.renderFormElement(flowContent = this, callbackUrl = callbackUrl, formHyperscript = formScript) {
+            form.renderFormElement(flowContent = this, callbackUrl = callbackUrl, requestType = requestType, formHyperscript = formScript) {
                 article {
                     header {
                         button {
