@@ -87,7 +87,7 @@ fun routeTaskForms(): Form {
     val taskCreationForm = Form("Create a new task", "taskForm", formAttributes = mapOf(
 //        "hx-target" to "#task-list",
 //        "hx-swap" to "beforeend"
-        "hx-swap" to "none" // because the form is on an empty page now
+          "hx-swap" to "none" // because the form is on an empty page now
     ))
 
     taskCreationForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))

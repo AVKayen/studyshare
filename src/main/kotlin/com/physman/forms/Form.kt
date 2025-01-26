@@ -107,6 +107,9 @@ class Form(
 
     fun renderFormSubmit(flowContent: FlowContent) {
         flowContent.button {
+            span(classes = "htmx-indicator") {
+                attributes["aria-busy"] = "true"
+            }
             +submitBtnText
         }
     }
@@ -129,16 +132,19 @@ class Form(
                         end
                     end
                     send clearInput to .clear-after-submit
+                    add @disabled to <button/> in me
+                end
+            end
+            on htmx:afterRequest
+                if event.srcElement is me and event.detail.successful is not true
+                    remove @disabled from <button/> in me
                 end
             end
         """.trimIndent()
         flowContent.form {
-            attributes[requestType] = callbackUrl
-            attributes["_"] = formScript
 
-            if (formHyperscript != null) {
-                attributes["_"] = formHyperscript
-            }
+            attributes["_"] = if (formHyperscript != null) "$formScript $formHyperscript" else formScript
+            attributes[requestType] = callbackUrl
 
             if (isMultipart) {
                 attributes["hx-encoding"] = "multipart/form-data"
