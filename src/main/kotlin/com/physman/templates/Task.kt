@@ -6,7 +6,7 @@ import com.physman.utils.objectIdToSimpleDateString
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.taskTemplate(taskView: TaskView) {
+fun FlowContent.taskTemplate(taskView: TaskView, isAuthor: Boolean) {
     val images = taskView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage }
     val nonImageAttachments =
         taskView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage }
@@ -15,7 +15,11 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
         header {
             h2 {
                 +taskView.task.title
-                postDeletionButton(taskView.task)
+            }
+            span {
+                if (isAuthor) {
+                    postDeletionButton(taskView.task)
+                }
             }
             cite {
                 +"${taskView.task.authorName} @ ${objectIdToSimpleDateString(taskView.task.id)}"

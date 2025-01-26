@@ -110,6 +110,7 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             }
 
             val userSession = call.sessions.get<UserSession>()!!
+            val userId = ObjectId(userSession.id)
 
             call.respondHtml(HttpStatusCode.OK) {
                 index(
@@ -118,8 +119,8 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                     breadcrumbs = mapOf("tasks" to "/"),
                     lastBreadcrumb = taskView.task.title
                 ) {
-
-                    taskTemplate(taskView)
+                    val isAuthor = userId == taskView.task.authorId
+                    taskTemplate(taskView, isAuthor)
                     formModalOpenButton(
                         buttonText = "Create a solution",
                         modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}"

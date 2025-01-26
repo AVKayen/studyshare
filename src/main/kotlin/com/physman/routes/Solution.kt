@@ -82,7 +82,8 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                     attributes["id"] = "solution-list"
                   
                     for (solutionView in solutionViews) {
-                        solutionTemplate(solutionView)
+                        val isAuthor = userId == solutionView.solution.authorId
+                        solutionTemplate(solutionView, isAuthor)
                     }
                 }
             }
@@ -108,7 +109,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(solutionView)
+                solutionTemplate(solutionView, true)
             }
         }
     }
