@@ -14,30 +14,6 @@ fun FlowContent.formModalOpenButton(buttonText: String, modalUrl: String) {
     }
 }
 
-//     val dialogScript = """
-//         def getScrollbarWidth()
-//             return window.innerWidth - document.documentElement.clientWidth
-//         end
-         
-//         on load 1
-//             set scrollbarWidth to getScrollbarWidth()
-//             if scrollbarWidth
-//                 call document.documentElement.style.setProperty('$scrollbarWidthCssVar', scrollbarWidth + 'px')
-//             end
-//             add $openClass $openingClass to document.documentElement
-//             add @open='true'
-//             wait $animationDuration
-//             remove $openingClass from document.documentElement
-//         end
-        
-//         on closeModal
-//             add $closingClass to document.documentElement
-//             wait $animationDuration
-//             remove $closingClass $openClass from document.documentElement
-//             call document.documentElement.style.removeProperty('$scrollbarWidthCssVar')
-//             remove me
-//     """.trimIndent()
-
 fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: String) {
 
     val formScript = """

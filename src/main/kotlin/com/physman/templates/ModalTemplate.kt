@@ -60,18 +60,19 @@ fun FlowContent.modalTemplate(
             if scrollbarWidth
                 call document.documentElement.style.setProperty('$scrollbarWidthCssVar', scrollbarWidth + 'px')
             end
-            add $openClass $openingClass to body
+            add $openClass $openingClass to document.documentElement
             add @open='true'
             wait $animationDuration
-            remove $openingClass from body
+            remove $openingClass from document.documentElement
         end
         
         on closeModal
-            add $closingClass to body
+            add $closingClass to document.documentElement
             wait $animationDuration
-            remove $closingClass $openClass from body
+            remove $closingClass $openClass from document.documentElement
             call document.documentElement.style.removeProperty('$scrollbarWidthCssVar')
             remove me
+        end
     """.trimIndent()
 
     dialog {
