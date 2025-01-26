@@ -104,3 +104,17 @@ fun FlowContent.votingTemplate(voteUpdate: VoteUpdate, callbackId: ObjectId) {
         )
     }
 }
+
+fun FlowContent.contentLoadTemplate(url: String) {
+    div {
+        attributes["hx-get"] = url
+        attributes["hx-trigger"] = "load"
+        attributes["hx-swap"] = "outerHTML"
+
+        article {
+            span(classes = "htmx-indicator") {
+                attributes["aria-busy"] = "true"
+            }
+        }
+    }
+}

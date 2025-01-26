@@ -103,6 +103,9 @@ class Form(
             if (submitBtnHyperscript != null) {
                 attributes["_"] = submitBtnHyperscript
             }
+            span(classes = "htmx-indicator") {
+                attributes["aria-busy"] = "true"
+            }
             +submitBtnText
         }
     }

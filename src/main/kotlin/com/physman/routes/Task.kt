@@ -103,15 +103,7 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                         buttonText = "Create a solution",
                         modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}"
                     )
-                    div {
-                        attributes["hx-get"] = "/solutions?taskId=${taskView.task.id}"
-                        attributes["hx-trigger"] = "load"
-                        attributes["hx-swap"] = "outerHTML"
-
-                        article(classes = "htmx-indicator") {
-                            attributes["aria-busy"] = "true"
-                        }
-                    }
+                    contentLoadTemplate(url = "/solutions?taskId=${taskView.task.id}")
                 }
             }
         }

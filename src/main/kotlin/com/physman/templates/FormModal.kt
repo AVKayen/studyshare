@@ -17,7 +17,7 @@ fun FlowContent.formModalOpenButton(buttonText: String, modalUrl: String) {
 
 fun FlowContent.formModalDialog(form: Form, callbackUrl: String) {
 
-    val animationDuration = "300ms"
+    val animationDuration = "400ms"
     val openClass = ".modal-is-open"
     val openingClass = ".modal-is-opening"
     val closingClass = ".modal-is-closing"
@@ -33,16 +33,16 @@ fun FlowContent.formModalDialog(form: Form, callbackUrl: String) {
             if scrollbarWidth
                 call document.documentElement.style.setProperty('$scrollbarWidthCssVar', scrollbarWidth + 'px')
             end
-            add $openClass $openingClass to body
+            add $openClass $openingClass to document.documentElement
             add @open='true'
             wait $animationDuration
-            remove $openingClass from body
+            remove $openingClass from document.documentElement
         end
         
         on closeModal
-            add $closingClass to body
+            add $closingClass to document.documentElement
             wait $animationDuration
-            remove $closingClass $openClass from body
+            remove $closingClass $openClass from document.documentElement
             call document.documentElement.style.removeProperty('$scrollbarWidthCssVar')
             remove me
     """.trimIndent()

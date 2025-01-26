@@ -206,3 +206,31 @@ nav {
     margin-right: 0.3em;
     vertical-align: -0.15em;
 }
+
+.htmx-indicator {
+    display: none;
+}
+.htmx-request .htmx-indicator {
+    display: inline;
+    margin-right: 1em;
+}
+.htmx-request.htmx-indicator {
+    display: inline;
+    margin-right: 1em;
+}
+
+
+/* override dialog>article to dialog article */
+:where(.modal-is-opening,.modal-is-closing) dialog,:where(.modal-is-opening,.modal-is-closing) dialog article{
+    animation-duration:.2s;
+    animation-timing-function:ease-in-out;
+    animation-fill-mode:both
+}
+:where(.modal-is-opening,.modal-is-closing) dialog article{
+    animation-delay:.2s;
+    animation-name:modal
+}
+.modal-is-closing dialog,.modal-is-closing dialog article{
+    animation-delay:0s;
+    animation-direction:reverse
+}
