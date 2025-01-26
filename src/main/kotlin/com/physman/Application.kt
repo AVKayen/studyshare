@@ -24,7 +24,7 @@ fun Application.module() {
     val environment = Environment(true)
     val mongodbClient = MongoClient.create(environment.MONGODB_CONNECTION_STRING)
     //TODO: change this
-    val database = mongodbClient.getDatabase("buttonstudyshare")
+    val database = mongodbClient.getDatabase("lowkeystudyshare")
 
     val imageRepository = MongoGCloudAttachmentRepository(bucketName = "studyshare-files", database = database)
     val commentRepository = MongoCommentRepository(database)
