@@ -10,7 +10,6 @@ import com.physman.task.TaskRepository
 import com.physman.templates.commentCountTemplate
 import com.physman.templates.commentTemplate
 import com.physman.templates.index
-import com.physman.utils.className
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -41,7 +40,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
         call.respondHtml {
             index("This won't be index") {
                 //TODO: maybe separate tasks from solutions
-                commentCreationForm.render(this, call.url())
+                commentCreationForm.render(this, call.url(), POST)
             }
         }
     }

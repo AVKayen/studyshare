@@ -3,9 +3,7 @@ package com.physman.routes
 import com.physman.authentication.user.UserSession
 import com.physman.forms.*
 import com.physman.solution.*
-import com.physman.templates.formModalDialog
-import com.physman.templates.solutionTemplate
-import com.physman.templates.votingTemplate
+import com.physman.templates.*
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -27,6 +25,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
 
     globalFormRouter.routeFormValidators(solutionCreationForm)
 
+
     get("/creation-modal") {
         val taskId = call.request.queryParameters["taskId"]
         if (taskId == null) {
@@ -37,7 +36,32 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             body {
                 formModalDialog(
                     form = solutionCreationForm,
-                    callbackUrl = "/solutions?taskId=$taskId"
+                    callbackUrl = "/solutions?taskId=$taskId",
+                    requestType = POST
+                )
+            }
+        }
+    }
+
+    get("/deletion-modal") {
+        val solutionId = call.request.queryParameters["solutionId"]
+
+        if (solutionId == null) {
+            call.respondText("Solution Id not specified.", status = HttpStatusCode.BadRequest)
+            return@get
+        }
+
+        call.respondHtml {
+            body {
+                confirmationModalTemplate(
+                    title = "Delete solution?",
+                    details = "Are you sure you want to delete this solution?",
+                    submitText = "Delete",
+                    submitAttributes = mapOf(
+                        "hx-delete" to "/solutions/$solutionId",
+                        "hx-target" to "#article-$solutionId",
+                        "hx-swap" to "outerHTML"
+                    )
                 )
             }
         }
@@ -58,7 +82,8 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                     attributes["id"] = "solution-list"
                   
                     for (solutionView in solutionViews) {
-                        solutionTemplate(solutionView)
+                        val isAuthor = userId == solutionView.solution.authorId
+                        solutionTemplate(solutionView, isAuthor)
                     }
                 }
             }
@@ -84,7 +109,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(solutionView)
+                solutionTemplate(solutionView, true)
             }
         }
     }
@@ -95,8 +120,17 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val objectIds = validateObjectIds(call, "id") ?: return@delete
             val solutionId = objectIds["id"]!!
 
-            solutionRepository.deleteSolution(solutionId)
-            call.response.status(HttpStatusCode.NoContent)
+            val authorId = solutionRepository.getSolution(solutionId)?.authorId ?: return@delete
+            val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
+
+            if (authorId == userId) {
+                solutionRepository.deleteSolution(solutionId)
+                call.respondHtml { body() }
+            }
+            else {
+                call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+                return@delete
+            }
         }
 
         post ("/{voteAction}") {

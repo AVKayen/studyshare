@@ -48,7 +48,28 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             body {
                 formModalDialog(
                     form = taskCreationForm,
-                    callbackUrl = "/tasks"
+                    callbackUrl = "/tasks",
+                    requestType = POST
+                )
+            }
+        }
+    }
+
+    get("/deletion-modal") {
+        val objectIds = validateObjectIds(call, "taskId") ?: return@get
+        val taskId = objectIds["taskId"]!!
+
+        call.respondHtml {
+            body {
+                confirmationModalTemplate(
+                    title = "Delete task?",
+                    details = "Are you sure you want to delete this task?",
+                    submitText = "Delete",
+                    submitAttributes = mapOf(
+                        "hx-delete" to "/tasks/$taskId",
+                        "hx-target" to "#article-$taskId", // TODO instead of deleting task, navigate to a parent group page
+                        "hx-swap" to "outerHTML"
+                    )
                 )
             }
         }
@@ -89,6 +110,7 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             }
 
             val userSession = call.sessions.get<UserSession>()!!
+            val userId = ObjectId(userSession.id)
 
             call.respondHtml(HttpStatusCode.OK) {
                 index(
@@ -97,8 +119,8 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                     breadcrumbs = mapOf("tasks" to "/"),
                     lastBreadcrumb = taskView.task.title
                 ) {
-
-                    taskTemplate(taskView)
+                    val isAuthor = userId == taskView.task.authorId
+                    taskTemplate(taskView, isAuthor)
                     formModalOpenButton(
                         buttonText = "Create a solution",
                         modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}"
@@ -116,13 +138,23 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             }
         }
 
-        delete {
+        delete { //todo: redirect to group
             val objectIds = validateObjectIds(call, "id") ?: return@delete
             val taskId = objectIds["id"]!!
 
-            taskRepository.deleteTask(taskId)
+            val authorId = taskRepository.getTask(taskId)?.task?.authorId ?: return@delete
+            val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
-            call.response.status(HttpStatusCode.NoContent)
+            if (authorId == userId) {
+                taskRepository.deleteTask(taskId)
+                call.respondHtml { body() }
+            } else {
+                call.respondText(
+                    "Resource Modification Restricted - Ownership Required",
+                    status = HttpStatusCode.Forbidden
+                )
+                return@delete
+            }
         }
     }
 }
