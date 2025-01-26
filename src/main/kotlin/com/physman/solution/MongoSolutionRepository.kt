@@ -66,7 +66,7 @@ class MongoSolutionRepository(
     }
 
     override suspend fun getSolution(solutionId: ObjectId): Solution? {
-        val filter = Filters.eq(Solution::id.name, solutionId)
+        val filter = Filters.eq("_id", solutionId)
         return solutionCollection.find(filter).firstOrNull()
     }
 

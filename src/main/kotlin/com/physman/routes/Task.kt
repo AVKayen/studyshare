@@ -137,13 +137,23 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             }
         }
 
-        delete {
+        delete { //todo: redirect to group
             val objectIds = validateObjectIds(call, "id") ?: return@delete
             val taskId = objectIds["id"]!!
 
-            taskRepository.deleteTask(taskId)
+            val authorId = taskRepository.getTask(taskId)?.task?.authorId ?: return@delete
+            val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
-            call.respondHtml { body() }
+            if (authorId == userId) {
+                taskRepository.deleteTask(taskId)
+                call.respondHtml { body() }
+            } else {
+                call.respondText(
+                    "Resource Modification Restricted - Ownership Required",
+                    status = HttpStatusCode.Forbidden
+                )
+                return@delete
+            }
         }
     }
 }

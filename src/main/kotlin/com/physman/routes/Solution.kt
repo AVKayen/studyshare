@@ -119,8 +119,17 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val objectIds = validateObjectIds(call, "id") ?: return@delete
             val solutionId = objectIds["id"]!!
 
-            solutionRepository.deleteSolution(solutionId)
-            call.respondHtml { body() }
+            val authorId = solutionRepository.getSolution(solutionId)?.authorId ?: return@delete
+            val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
+
+            if (authorId == userId) {
+                solutionRepository.deleteSolution(solutionId)
+                call.respondHtml { body() }
+            }
+            else {
+                call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+                return@delete
+            }
         }
 
         post ("/{voteAction}") {
