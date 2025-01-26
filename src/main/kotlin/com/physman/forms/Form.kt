@@ -54,9 +54,9 @@ class FormSubmissionData(
 }
 
 class Form(
-    private val formTitle: String,
+    val formTitle: String,
     val formName: String,
-    private val submitBtnText: String = "Submit",
+    val submitBtnText: String = "Submit",
     private val formAttributes: Map<String, String>? = null
 ) {
     var validatorsRoute: String? = null

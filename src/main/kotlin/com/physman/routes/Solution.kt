@@ -3,10 +3,7 @@ package com.physman.routes
 import com.physman.authentication.user.UserSession
 import com.physman.forms.*
 import com.physman.solution.*
-import com.physman.templates.confirmationModalTemplate
-import com.physman.templates.formModalDialog
-import com.physman.templates.solutionTemplate
-import com.physman.templates.votingTemplate
+import com.physman.templates.*
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
