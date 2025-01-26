@@ -31,7 +31,7 @@ fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepos
             deleteTask(taskRepository)
         }
         route("/tasks") {
-            getTaskList(taskRepository)
+            getTaskList(taskRepository, groupRepository)
         }
         route("/creation-modal") {
             getTaskCreationModal(taskCreationForm)
@@ -99,9 +99,13 @@ fun routeTaskForms(): Form {
     return taskCreationForm
 }
 
-fun Route.getTaskList(taskRepository: TaskRepository) {
+fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepository) {
     get {
-        val taskViews = taskRepository.getTasks()
+        val objectIds = validateObjectIds(call, "groupId") ?: return@get
+        val groupId = objectIds["groupId"]!!
+        val group = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
+        val taskViews = taskRepository.getTasks(groupId)
+
         call.respondHtml {
             body {
                 for (task in taskViews) {
@@ -129,10 +133,9 @@ fun Route.getTaskCreationModal(taskCreationForm: Form) {
 
 fun Route.getTaskDeletionModal() {
     get {
-        val objectIds = validateObjectIds(call, "taskId") ?: return@get
+        val objectIds = validateObjectIds(call, "taskId", "groupId") ?: return@get
         val taskId = objectIds["taskId"]!!
         val groupId = objectIds["groupId"]!!
-
         call.respondHtml {
             body {
                 confirmationModalTemplate(
@@ -181,13 +184,15 @@ fun Route.deleteTask(taskRepository: TaskRepository) {
     delete { //todo: redirect to group
         val objectIds = validateObjectIds(call, "taskId") ?: return@delete
         val taskId = objectIds["taskId"]!!
-
-        val authorId = taskRepository.getTask(taskId)?.task?.authorId ?: return@delete
+        val task = taskRepository.getTask(taskId)?.task ?: return@delete
+        val authorId = task.authorId
+        val groupId = task.groupId
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
         if (authorId == userId) {
             taskRepository.deleteTask(taskId)
-            call.respondHtml { body() }
+            call.response.headers.append("HX-Redirect", "/$groupId")
+            call.respondText { "Task Deleted, redirecting??" }
         } else {
             call.respondText(
                 "Resource Modification Restricted - Ownership Required",

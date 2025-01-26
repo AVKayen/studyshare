@@ -1,14 +1,12 @@
-package com.physman.routes.userspace
+package com.physman.routes
 
 import com.physman.authentication.user.UserRepository
 import com.physman.authentication.user.UserSession
 import com.physman.group.GroupRepository
 import com.physman.templates.formModalOpenButton
 import com.physman.templates.index
-import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.html.*

@@ -28,7 +28,6 @@ class MongoUserRepository(database: MongoDatabase) : UserRepository {
     }
 
     override suspend fun addGroupToUser(userId: ObjectId, groupId: ObjectId) {
-        println("Adding group $groupId to user $userId")
         users.updateOne(eq("_id", userId), addToSet(User::groupIds.name, groupId))
     }
 

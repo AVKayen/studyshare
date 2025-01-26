@@ -2,10 +2,7 @@ package com.physman.routes
 
 import com.physman.authentication.user.UserRepository
 import com.physman.authentication.user.UserSession
-import com.physman.forms.FileInput
-import com.physman.forms.Form
-import com.physman.forms.TextlikeInput
-import com.physman.forms.globalFormRouter
+import com.physman.forms.*
 import com.physman.group.Group
 import com.physman.group.GroupRepository
 import com.physman.group.GroupView
@@ -25,17 +22,48 @@ import kotlinx.html.*
 import org.bson.types.ObjectId
 
 fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepository) {
+    val groupCreationForm = routeGroupCreationForm()
+    route("/groups") {
+        getGroupList(groupRepository, userRepository)
+        postCreateGroup(groupRepository, groupCreationForm)
+        route("creation-modal") {
+            getGroupCreationModal(groupCreationForm)
+        }
+    }
+    route("/{groupId}") {
+        getGroupView(groupRepository, userRepository)
+    }
+}
+
+fun routeGroupCreationForm(): Form {
     val groupCreationForm = Form("Create a new group", "groupForm", formAttributes = mapOf(
         "hx-swap" to "none"
     ))
 
-
     groupCreationForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))
     groupCreationForm.addInput(TextlikeInput("Description", "description", InputType.text, additionalNotesValidator))
-    groupCreationForm.addInput(FileInput("Thumbnail", "image", inputAttributes = mapOf("multiple" to "true")))
+    groupCreationForm.addInput(FileInput("Thumbnail", "image", inputAttributes = mapOf("multiple" to "false")))
 
     globalFormRouter.routeFormValidators(groupCreationForm)
 
+    return groupCreationForm
+}
+
+fun Route.getGroupCreationModal(groupCreationForm: Form) {
+    get {
+        call.respondHtml {
+            body {
+                formModalDialog(
+                    form = groupCreationForm,
+                    callbackUrl = "/groups",
+                    requestType = POST
+                )
+            }
+        }
+    }
+}
+
+fun Route.getGroupList(groupRepository: GroupRepository, userRepository: UserRepository) {
     get {
         val userSession = call.sessions.get<UserSession>()!!
         val groups = userRepository.getUserById(userSession.id)?.groupIds ?: emptySet()
@@ -53,7 +81,42 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
             }
         }
     }
+}
 
+fun Route.getGroupView(groupRepository: GroupRepository, userRepository: UserRepository) {
+    get {
+        val objectIds = validateObjectIds(call, "groupId") ?: return@get
+        val groupId = objectIds["groupId"]!!
+
+        val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
+        val userSession = call.sessions.get<UserSession>()!!
+        call.respondHtml(HttpStatusCode.OK) {
+            index(
+                title = "StudyShare",
+                username = userSession.name,
+                lastBreadcrumb = groupView.group.title
+            ) {
+                section(classes = "modal-btn-container") {
+                    formModalOpenButton(
+                        buttonText = "Create a task",
+                        modalUrl = "/${groupId}/creation-modal"
+                    )
+                }
+                div {
+                    attributes["hx-get"] = "/${groupId}/tasks"
+                    attributes["hx-trigger"] = "load"
+                    attributes["hx-swap"] = "outerHTML"
+
+                    article(classes = "htmx-indicator") {
+                        attributes["aria-busy"] = "true"
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun Route.postCreateGroup(groupRepository: GroupRepository, groupCreationForm: Form) {
     post {
         val formSubmissionData = groupCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
@@ -76,18 +139,4 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
 
         call.respondRedirect("/")
     }
-
-    get("/creation-modal") {
-        call.respondHtml {
-            body {
-                formModalDialog(
-                    form = groupCreationForm,
-                    callbackUrl = "/group",
-                    requestType = "POST"
-                )
-            }
-        }
-    }
-
-
 }

@@ -7,7 +7,6 @@ import com.physman.forms.*
 import com.physman.task.TaskRepository
 import com.physman.solution.SolutionRepository
 import com.physman.group.GroupRepository
-import com.physman.routes.userspace.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
@@ -25,46 +24,31 @@ fun Application.configureRouting(
     routing {
         staticFiles("/static", File("static"))
 
-        get("/status") {
-            call.respondText("Running!")
-        }
-
-        route("/forms") {
-            configureForms(globalFormRouter)
-        }
-
-        route("/auth") {
-            authRouter(userRepository)
-        }
-
-        route("/form-example") {
-            formExampleRouter()
-        }
-
+        // neo routers
         route("/") {
-            getIndexView(groupRepository, userRepository)
+            indexViewRouter(groupRepository, userRepository)
 
             authenticate("USER") {
-                groupViewRouter(groupRepository, userRepository)
+                groupRouter(groupRepository, userRepository)
                 taskRouter(taskRepository, groupRepository)
             }
         }
 
+        // legacy routers
+        route("/forms") {
+            configureForms(globalFormRouter)
+        }
+        route("/auth") {
+            authRouter(userRepository)
+        }
         authenticate("USER") {
-
-            route("/groups") {
-                groupRouter(groupRepository, userRepository)
-            }
-
             route("/solutions") {
                 solutionRouter(solutionRepository)
             }
 
-
             route("/comments") {
                 commentRouter(commentRepository, solutionRepository, taskRepository)
             }
-
         }
     }
 }
