@@ -5,7 +5,7 @@ import kotlinx.html.*
 
 fun FlowContent.groupTemplate(group: GroupView) {
     a {
-        href = "/groups/${group.group.id}"
+        href = "/${group.group.id}"
         div {
             classes = setOf("group")
             id = "group-${group.group.id}"
@@ -16,7 +16,7 @@ fun FlowContent.groupTemplate(group: GroupView) {
                 +(group.group.description ?: "No description")
             }
             img {
-                src = group.thumbnail?.thumbnailUrl?.toString() ?: "/images/group-thumbnail.png" // TODO: Add default group thumbnail?
+                src = group.thumbnail?.thumbnailUrl ?: "/images/group-thumbnail.png" // TODO: Add default group thumbnail?
                 alt = "Group thumbnail"
             }
         }

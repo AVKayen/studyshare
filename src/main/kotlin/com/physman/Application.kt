@@ -57,7 +57,7 @@ fun Application.module() {
         }
     }
 
-    configureSecurity()
+    configureSecurity(userRepository)
     configureRouting(
         solutionRepository = solutionRepository,
         taskRepository = taskRepository,

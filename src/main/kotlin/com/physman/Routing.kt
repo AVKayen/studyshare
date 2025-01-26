@@ -7,6 +7,7 @@ import com.physman.forms.*
 import com.physman.task.TaskRepository
 import com.physman.solution.SolutionRepository
 import com.physman.group.GroupRepository
+import com.physman.routes.userspace.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
@@ -41,10 +42,16 @@ fun Application.configureRouting(
         }
 
         route("/") {
-            homeRouter(groupRepository, userRepository)
+            getIndexView(groupRepository, userRepository)
+
+            authenticate("USER") {
+                groupViewRouter(groupRepository, userRepository)
+                taskViewRouter(taskRepository, groupRepository)
+            }
         }
 
         authenticate("USER") {
+
             route("/groups") {
                 groupRouter(groupRepository, userRepository)
             }
@@ -53,7 +60,7 @@ fun Application.configureRouting(
                 solutionRouter(solutionRepository)
             }
 
-            route("/tasks") {
+            this.route("/tasks") {
                 taskRouter(taskRepository)
             }
 

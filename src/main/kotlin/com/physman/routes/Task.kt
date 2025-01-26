@@ -78,43 +78,7 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
     }
 
     route("/{id}") {
-        get {
-            val objectIds = validateObjectIds(call, "id") ?: return@get
-            val taskId = objectIds["id"]!!
 
-            val taskView = taskRepository.getTask(taskId)
-            if(taskView == null) {
-                call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
-                return@get
-            }
-
-            val userSession = call.sessions.get<UserSession>()!!
-
-            call.respondHtml(HttpStatusCode.OK) {
-                index(
-                    title = "StudyShare",
-                    username = userSession.name,
-                    breadcrumbs = mapOf("tasks" to "/"),
-                    lastBreadcrumb = taskView.task.title
-                ) {
-
-                    taskTemplate(taskView)
-                    formModalOpenButton(
-                        buttonText = "Create a solution",
-                        modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}"
-                    )
-                    div {
-                        attributes["hx-get"] = "/solutions?taskId=${taskView.task.id}"
-                        attributes["hx-trigger"] = "load"
-                        attributes["hx-swap"] = "outerHTML"
-
-                        article(classes = "htmx-indicator") {
-                            attributes["aria-busy"] = "true"
-                        }
-                    }
-                }
-            }
-        }
 
         delete {
             val objectIds = validateObjectIds(call, "id") ?: return@delete

@@ -88,35 +88,5 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
         }
     }
 
-    get("/{id}") {
-        val objectIds = validateObjectIds(call, "id") ?: return@get
-        val groupId = objectIds["id"]!!
 
-        val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
-        val userSession = call.sessions.get<UserSession>()!!
-        call.respondHtml(HttpStatusCode.OK) {
-            index(
-                title = "StudyShare",
-                username = userSession.name,
-                lastBreadcrumb = groupView.group.title
-            ) {
-                section(classes = "modal-btn-container") {
-                    formModalOpenButton(
-                        buttonText = "Create a task",
-                        modalUrl = "/tasks/creation-modal"
-                    )
-                }
-                div {
-                    attributes["hx-get"] = "/tasks"
-                    attributes["hx-trigger"] = "load"
-                    attributes["hx-swap"] = "outerHTML"
-
-                    article(classes = "htmx-indicator") {
-                        attributes["aria-busy"] = "true"
-                    }
-                }
-            }
-        }
-
-    }
 }
