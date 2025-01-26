@@ -24,15 +24,7 @@ fun Route.homeRouter() {
                             modalUrl = "/tasks/creation-modal"
                         )
                     }
-                    div {
-                        attributes["hx-get"] = "/tasks"
-                        attributes["hx-trigger"] = "load"
-                        attributes["hx-swap"] = "outerHTML"
-
-                        article(classes = "htmx-indicator") {
-                            attributes["aria-busy"] = "true"
-                        }
-                    }
+                    contentLoadTemplate(url = "/tasks")
                 }
             }
         }
