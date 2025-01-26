@@ -82,7 +82,8 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
             body {
                 formModalDialog(
                     form = groupCreationForm,
-                    callbackUrl = "/group"
+                    callbackUrl = "/group",
+                    requestType = "POST"
                 )
             }
         }

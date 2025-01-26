@@ -42,7 +42,7 @@ fun Route.getGroupView(groupRepository: GroupRepository, userRepository: UserRep
                     )
                 }
                 div {
-                    attributes["hx-get"] = "/tasks"
+                    attributes["hx-get"] = "/${groupId}/tasks"
                     attributes["hx-trigger"] = "load"
                     attributes["hx-swap"] = "outerHTML"
 

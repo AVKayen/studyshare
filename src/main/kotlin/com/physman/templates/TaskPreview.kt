@@ -6,7 +6,7 @@ import kotlinx.html.*
 
 fun FlowContent.taskPreviewTemplate(taskView: TaskView) {
     article(classes = "flex-col task") {
-        a(href = "/tasks/${taskView.task.id}") {
+        a(href = "/${taskView.task.groupId}/${taskView.task.id}") {
             h2 {
                 +taskView.task.title
             }
