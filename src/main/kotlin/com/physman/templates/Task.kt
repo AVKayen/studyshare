@@ -11,6 +11,7 @@ fun FlowContent.taskTemplate(taskView: TaskView) {
     val nonImageAttachments =
         taskView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage }
     article(classes = "task") {
+        id = "article-${taskView.task.id.toHexString()}"
         header {
             h2 {
                 +taskView.task.title

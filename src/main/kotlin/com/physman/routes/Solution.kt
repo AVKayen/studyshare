@@ -26,14 +26,8 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
     solutionCreationForm.addInput(TextlikeInput("Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
     solutionCreationForm.addInput(FileInput("Upload files", "files", inputAttributes = mapOf("multiple" to "true")))
 
-
-    val solutionDeletionForm = Form("Are you sure you want to delete this solution?", "solutionForm", formAttributes = mapOf(
-        "hx-target" to "#solution-list",
-        "hx-swap" to "beforeend"
-    ))
-
     globalFormRouter.routeFormValidators(solutionCreationForm)
-    globalFormRouter.routeFormValidators(solutionDeletionForm)
+
 
     get("/creation-modal") {
         val taskId = call.request.queryParameters["taskId"]
@@ -63,6 +57,14 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             call.respondText("Solution Id not specified.", status = HttpStatusCode.BadRequest)
             return@get
         }
+
+
+        val solutionDeletionForm = Form("Are you sure you want to delete this solution?", "solutionDeletionForm", formAttributes = mapOf(
+            "hx-target" to "#article-$solutionId",
+            "hx-swap" to "delete"
+        ))
+
+
         call.respondHtml {
             body {
                 formModalDialog(

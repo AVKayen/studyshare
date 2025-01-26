@@ -13,6 +13,7 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView) {
         solutionView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage }
 
     article(classes = "solution") {
+        id = "article-${solutionView.solution.id.toHexString()}"
         votingTemplate(
             VoteUpdate(solutionView.isDownvoted, solutionView.isUpvoted, solutionView.solution.voteCount()),
             solutionView.solution.id
