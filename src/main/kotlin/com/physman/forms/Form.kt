@@ -24,6 +24,13 @@ const val MAX_FILE_SIZE: Long = 48 // MB
 const val MAX_FILE_SIZE_BYTES: Long = MAX_FILE_SIZE * 1024 * 1024
 
 
+const val GET: String = "hx-get"
+const val POST: String = "hx-post"
+const val PUT: String = "hx-put"
+const val PATCH: String = "hx-patch"
+const val DELETE: String = "hx-delete"
+
+
 class UploadFileData(
     val filePath: java.nio.file.Path,
     val originalName: String,
@@ -47,9 +54,9 @@ class FormSubmissionData(
 }
 
 class Form(
-    private val formTitle: String,
+    val formTitle: String,
     val formName: String,
-    private val submitBtnText: String = "Submit",
+    val submitBtnText: String = "Submit",
     private val formAttributes: Map<String, String>? = null
 ) {
     var validatorsRoute: String? = null
@@ -98,11 +105,8 @@ class Form(
         }
     }
 
-    fun renderFormSubmit(flowContent: FlowContent, submitBtnHyperscript: String? = null) {
+    fun renderFormSubmit(flowContent: FlowContent) {
         flowContent.button {
-            if (submitBtnHyperscript != null) {
-                attributes["_"] = submitBtnHyperscript
-            }
             span(classes = "htmx-indicator") {
                 attributes["aria-busy"] = "true"
             }
@@ -113,6 +117,7 @@ class Form(
     fun renderFormElement(
         flowContent: FlowContent,
         callbackUrl: String,
+        requestType: String,
         formHyperscript: String? = null,
         formContent: FORM.() -> Unit
     ) {
@@ -137,8 +142,9 @@ class Form(
             end
         """.trimIndent()
         flowContent.form {
-            attributes["hx-post"] = callbackUrl
+
             attributes["_"] = if (formHyperscript != null) "$formScript $formHyperscript" else formScript
+            attributes[requestType] = callbackUrl
 
             if (isMultipart) {
                 attributes["hx-encoding"] = "multipart/form-data"
@@ -152,11 +158,11 @@ class Form(
         }
     }
 
-    fun render(flowContent: FlowContent, callbackUrl: String, submitBtnHyperscript: String? = null) {
-        renderFormElement(flowContent = flowContent, callbackUrl = callbackUrl) {
+    fun render(flowContent: FlowContent, callbackUrl: String, requestType: String) {
+        renderFormElement(flowContent = flowContent, callbackUrl = callbackUrl, requestType = requestType) {
             renderFormTitle(flowContent)
             renderInputFields(flowContent)
-            renderFormSubmit(flowContent, submitBtnHyperscript = submitBtnHyperscript)
+            renderFormSubmit(flowContent)
         }
     }
 

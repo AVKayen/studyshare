@@ -1,7 +1,10 @@
 package com.physman.templates
 
 import com.physman.attachment.AttachmentView
+import com.physman.solution.Solution
 import com.physman.solution.VoteUpdate
+import com.physman.task.Task
+import com.physman.utils.Post
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
@@ -115,6 +118,24 @@ fun FlowContent.contentLoadTemplate(url: String) {
             span(classes = "htmx-indicator") {
                 attributes["aria-busy"] = "true"
             }
+        }
+    }
+}
+
+fun FlowContent.postDeletionButton(post: Post) {
+    val url = when (post) {
+        is Solution -> "/solutions/deletion-modal?solutionId=${post.id}"
+        is Task -> "/tasks/deletion-modal?taskId=${post.id}"
+        else -> throw IllegalArgumentException("Invalid post")
+    }
+
+    button {
+        attributes["hx-get"] = url
+        attributes["hx-target"] = "body"
+        attributes["hx-swap"] = "beforeend"
+
+        span(classes = "material-symbols-rounded") {
+            +"delete"
         }
     }
 }
