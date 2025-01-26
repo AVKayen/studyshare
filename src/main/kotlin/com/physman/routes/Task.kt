@@ -60,7 +60,7 @@ fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepo
             index(
                 title = "StudyShare",
                 username = userSession.name,
-                breadcrumbs = mapOf(groupId.toHexString() to "/${groupId}"),
+                breadcrumbs = mapOf(taskView.task.groupName to "/${groupId}"),
                 lastBreadcrumb = taskView.task.title
             ) {
 
@@ -69,15 +69,7 @@ fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepo
                     buttonText = "Create a solution",
                     modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}"
                 )
-                div {
-                    attributes["hx-get"] = "/solutions?taskId=${taskView.task.id}"
-                    attributes["hx-trigger"] = "load"
-                    attributes["hx-swap"] = "outerHTML"
-
-                    article(classes = "htmx-indicator") {
-                        attributes["aria-busy"] = "true"
-                    }
-                }
+                contentLoadTemplate(url = "/solutions?taskId=${taskView.task.id}")
             }
         }
     }

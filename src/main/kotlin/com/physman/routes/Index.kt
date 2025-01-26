@@ -3,6 +3,7 @@ package com.physman.routes
 import com.physman.authentication.user.UserRepository
 import com.physman.authentication.user.UserSession
 import com.physman.group.GroupRepository
+import com.physman.templates.contentLoadTemplate
 import com.physman.templates.formModalOpenButton
 import com.physman.templates.index
 import io.ktor.http.*
@@ -41,15 +42,7 @@ fun HTML.loggedInIndexView(userSession: UserSession) {
             buttonText = "Create a group",
             modalUrl = "/groups/creation-modal"
         )
-        div {
-            attributes["hx-get"] = "/groups"
-            attributes["hx-trigger"] = "load"
-            attributes["hx-swap"] = "outerHTML"
-
-            article(classes = "htmx-indicator") {
-                attributes["aria-busy"] = "true"
-            }
-        }
+        contentLoadTemplate("/groups")
     }
 }
 

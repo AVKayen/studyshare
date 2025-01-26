@@ -8,10 +8,7 @@ import com.physman.group.GroupRepository
 import com.physman.group.GroupView
 import com.physman.solution.additionalNotesValidator
 import com.physman.solution.titleValidator
-import com.physman.templates.formModalDialog
-import com.physman.templates.formModalOpenButton
-import com.physman.templates.groupTemplate
-import com.physman.templates.index
+import com.physman.templates.*
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -102,15 +99,7 @@ fun Route.getGroupView(groupRepository: GroupRepository, userRepository: UserRep
                         modalUrl = "/${groupId}/creation-modal"
                     )
                 }
-                div {
-                    attributes["hx-get"] = "/${groupId}/tasks"
-                    attributes["hx-trigger"] = "load"
-                    attributes["hx-swap"] = "outerHTML"
-
-                    article(classes = "htmx-indicator") {
-                        attributes["aria-busy"] = "true"
-                    }
-                }
+                contentLoadTemplate("/${groupId}/tasks")
             }
         }
     }
