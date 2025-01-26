@@ -76,7 +76,7 @@ fun FlowContent.modalTemplate(
 
     dialog {
         attributes["_"] = dialogScript
-        // lol
+
         div(classes = "modal-content") {
             if (modalWrapper != null) {
                 modalWrapper {
