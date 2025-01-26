@@ -15,7 +15,7 @@ fun FlowContent.formModalOpenButton(buttonText: String, modalUrl: String) {
 }
 
 
-fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: String, submitBtnHyperscript: String = "") {
+fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: String) {
 
     val animationDuration = "300ms"
     val openClass = ".modal-is-open"
@@ -84,8 +84,7 @@ fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: St
                         }
 
                         form.renderFormSubmit(
-                            flowContent = this,
-                            submitBtnHyperscript = submitBtnHyperscript
+                            flowContent = this
                         )
                     }
                 }

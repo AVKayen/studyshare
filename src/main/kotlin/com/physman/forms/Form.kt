@@ -105,11 +105,8 @@ class Form(
         }
     }
 
-    fun renderFormSubmit(flowContent: FlowContent, submitBtnHyperscript: String? = null) {
+    fun renderFormSubmit(flowContent: FlowContent) {
         flowContent.button {
-            if (submitBtnHyperscript != null) {
-                attributes["_"] = submitBtnHyperscript
-            }
             +submitBtnText
         }
     }
@@ -155,11 +152,11 @@ class Form(
         }
     }
 
-    fun render(flowContent: FlowContent, callbackUrl: String, requestType: String, submitBtnHyperscript: String? = null) {
+    fun render(flowContent: FlowContent, callbackUrl: String, requestType: String) {
         renderFormElement(flowContent = flowContent, callbackUrl = callbackUrl, requestType = requestType) {
             renderFormTitle(flowContent)
             renderInputFields(flowContent)
-            renderFormSubmit(flowContent, submitBtnHyperscript = submitBtnHyperscript)
+            renderFormSubmit(flowContent)
         }
     }
 

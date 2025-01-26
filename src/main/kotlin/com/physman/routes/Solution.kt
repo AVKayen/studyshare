@@ -3,6 +3,7 @@ package com.physman.routes
 import com.physman.authentication.user.UserSession
 import com.physman.forms.*
 import com.physman.solution.*
+import com.physman.templates.confirmationModalTemplate
 import com.physman.templates.formModalDialog
 import com.physman.templates.solutionTemplate
 import com.physman.templates.votingTemplate
@@ -12,7 +13,6 @@ import io.ktor.server.html.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import io.ktor.server.util.*
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
@@ -47,30 +47,24 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
     }
 
     get("/deletion-modal") {
-        val taskId = call.request.queryParameters["taskId"]
-        val solutionId = call.request.queryParameters["id"]
-        if (taskId == null) {
-            call.respondText("Task Id not specified.", status = HttpStatusCode.BadRequest)
-            return@get
-        }
+        val solutionId = call.request.queryParameters["solutionId"]
+
         if (solutionId == null) {
             call.respondText("Solution Id not specified.", status = HttpStatusCode.BadRequest)
             return@get
         }
 
-
-        val solutionDeletionForm = Form("Are you sure you want to delete this solution?", "solutionDeletionForm", formAttributes = mapOf(
-            "hx-target" to "#article-$solutionId",
-            "hx-swap" to "delete"
-        ))
-
-
         call.respondHtml {
             body {
-                formModalDialog(
-                    form = solutionDeletionForm,
-                    callbackUrl = call.url(),
-                    requestType = DELETE
+                confirmationModalTemplate(
+                    title = "Delete solution?",
+                    details = "Are you sure you want to delete this solution?",
+                    submitText = "Delete",
+                    submitAttributes = mapOf(
+                        "hx-delete" to "/solutions/$solutionId",
+                        "hx-target" to "#article-$solutionId",
+                        "hx-swap" to "outerHTML"
+                    )
                 )
             }
         }
@@ -129,7 +123,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
             val solutionId = objectIds["id"]!!
 
             solutionRepository.deleteSolution(solutionId)
-            call.response.status(HttpStatusCode.NoContent)
+            call.respondHtml { body() }
         }
 
         post ("/{voteAction}") {

@@ -16,6 +16,7 @@ fun FlowContent.confirmationModalTemplate(title: String, details: String, submit
         end
          
         on load 1
+            log "opening"
             set scrollbarWidth to getScrollbarWidth()
             if scrollbarWidth
                 call document.documentElement.style.setProperty('$scrollbarWidthCssVar', scrollbarWidth + 'px')
@@ -27,6 +28,7 @@ fun FlowContent.confirmationModalTemplate(title: String, details: String, submit
         end
         
         on closeModal
+            log "closing modal"
             add $closingClass to body
             wait $animationDuration
             remove $closingClass $openClass from body

@@ -55,6 +55,26 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
         }
     }
 
+    get("/deletion-modal") {
+        val objectIds = validateObjectIds(call, "taskId") ?: return@get
+        val taskId = objectIds["taskId"]!!
+
+        call.respondHtml {
+            body {
+                confirmationModalTemplate(
+                    title = "Delete task?",
+                    details = "Are you sure you want to delete this task?",
+                    submitText = "Delete",
+                    submitAttributes = mapOf(
+                        "hx-delete" to "/tasks/$taskId",
+                        "hx-target" to "#article-$taskId", // TODO instead of deleting task, navigate to a parent group page
+                        "hx-swap" to "outerHTML"
+                    )
+                )
+            }
+        }
+    }
+
     post {
         val formSubmissionData: FormSubmissionData = taskCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
@@ -123,7 +143,7 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
 
             taskRepository.deleteTask(taskId)
 
-            call.response.status(HttpStatusCode.NoContent)
+            call.respondHtml { body() }
         }
     }
 }

@@ -109,17 +109,19 @@ fun FlowContent.votingTemplate(voteUpdate: VoteUpdate, callbackId: ObjectId) {
 }
 
 fun FlowContent.postDeletionButton(post: Post) {
-    when (post) {
-        is Solution ->
-            formModalOpenButton(
-                buttonText = "Delete",
-                modalUrl = "/solutions/deletion-modal?taskId=${post.taskId}&id=${post.id}"
-            )
-        is Task ->
-            //todo: this in tasks
-            formModalOpenButton(
-                buttonText = "Delete",
-                modalUrl = "/solutions/deletion-modal?taskId=${post.id}"
-            )
+    val url = when (post) {
+        is Solution -> "/solutions/deletion-modal?solutionId=${post.id}"
+        is Task -> "/tasks/deletion-modal?taskId=${post.id}"
+        else -> throw IllegalArgumentException("Invalid post")
+    }
+
+    button {
+        attributes["hx-get"] = url
+        attributes["hx-target"] = "body"
+        attributes["hx-swap"] = "beforeend"
+
+        span(classes = "material-symbols-rounded") {
+            +"delete"
+        }
     }
 }
