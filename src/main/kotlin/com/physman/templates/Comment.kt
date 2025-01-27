@@ -1,6 +1,8 @@
 package com.physman.templates
 
 import com.physman.comment.Comment
+import com.physman.solution.Solution
+import com.physman.task.Task
 import com.physman.utils.Post
 import com.physman.utils.className
 import com.physman.utils.objectIdToSimpleDateString
@@ -8,7 +10,7 @@ import io.ktor.server.util.*
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.commentTemplate(comment: Comment) {
+fun FlowContent.commentTemplate(comment: Comment, isAuthor: Boolean) {
     div {
         classes = setOf("comment")
         cite {
@@ -16,6 +18,9 @@ fun FlowContent.commentTemplate(comment: Comment) {
         }
         h5 {
             +comment.content
+        }
+        if(isAuthor) {
+            commentDeletionButton(comment)
         }
     }
 }
@@ -52,5 +57,19 @@ fun FlowContent.commentCountTemplate(commentAmount: Int) {
         +"Show 1 comment"
     } else {
         +"Show $commentAmount comments"
+    }
+}
+
+fun FlowContent.commentDeletionButton(comment: Comment) {
+    val url = "/comments?comment-id=${comment.id}"
+
+    button(classes = "btn secondary outline") {
+        attributes["hx-delete"] = url
+        attributes["hx-target"] = "body"
+        attributes["hx-swap"] = "beforeend"
+
+        span(classes = "material-symbols-rounded") {
+            +"delete"
+        }
     }
 }

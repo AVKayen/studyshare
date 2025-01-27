@@ -10,7 +10,7 @@ import com.physman.task.TaskRepository
 import com.physman.templates.commentCountTemplate
 import com.physman.templates.commentTemplate
 import com.physman.templates.index
-import com.physman.utils.Post
+import com.physman.templates.votingTemplate
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -22,27 +22,32 @@ import kotlinx.html.*
 import org.bson.types.ObjectId
 
 
+
+
 fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
-    val commentCreationForm = Form("Create a new comment", "commentForm", formAttributes = mapOf(
+    val commentCreationForm = Form(
+        "Create a new comment", "commentForm", formAttributes = mapOf(
             "hx-swap" to "none" // because currently this form is on an empty page
-        ))
+        )
+    )
     commentCreationForm.addInput(TextlikeInput("content", "content", InputType.text, commentValidator))
 
     globalFormRouter.routeFormValidators(commentCreationForm)
 
 
     get {
-
         val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@get
         val parentId = objectIds["parentId"]
         val parentPostClassName = call.request.queryParameters["post-type"]
+        val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
         val comments = commentRepository.getComments(parentId!!)
 
         call.respondHtml {
             body {
                 for (comment in comments) {
-                    commentTemplate(comment)
+                    val isAuthor = userId == comment.authorId
+                    commentTemplate(comment, isAuthor)
                 }
                 form {
                     attributes["hx-post"] = "/comments/comment?parentId=${parentId}&post-type=${parentPostClassName}"
@@ -94,14 +99,14 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
             val newComment = Comment(parentId = parentId!!, content = content, authorName = userSession.name, authorId = ObjectId(userSession.id))
 
-            if (postType.equals("task", true)){
+            if (postType.equals("task", true)) {
                 taskRepository.updateCommentAmount(parentId, 1)
             } else if (postType.equals("solution", true)) {
                 solutionRepository.updateCommentAmount(parentId, 1)
             } else {
 
                 println(call.url())
-                if (postType!=null)
+                if (postType != null)
                     println(postType + postType.javaClass)
                 return@post
             }
@@ -112,50 +117,103 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
         }
     }
 
-    delete ("/{comment-id}") {
+    delete("/{comment-id}") {
         val objectIds = validateObjectIds(call, "comment-id", "parentId") ?: return@delete
         val commentId = objectIds["comment-id"]!!
+        val authorId = commentRepository.getComment(commentId)?.authorId
+
         val parentId = objectIds["parentId"]!!
         val postType = call.request.queryParameters["post-type"]
 
-        val authorId = commentRepository.getComment(commentId)?.authorId ?: return@delete
-        val parentAuthor: ObjectId
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
-        //TODO: untangle this abomination
-        if (postType.equals("task", true)){
-            parentAuthor = taskRepository.getTask(parentId)?.task?.authorId ?: return@delete
-            if (authorId == userId || parentAuthor == userId) {
-                commentRepository.deleteComment(commentId)
-                taskRepository.updateCommentAmount(parentId, -1)
-                call.respondHtml { body() }
+
+        when (postType) {
+            "task" -> {
+                if (authorId == userId) {
+                    taskRepository.updateCommentAmount(parentId, -1)
+                } else {
+                    call.respondText(
+                        "Resource Modification Restricted - Ownership Required",
+                        status = HttpStatusCode.Forbidden
+                    )
+                    return@delete
+                }
             }
-            else {
-                call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+            "solution" -> {
+                if (authorId == userId) {
+                    solutionRepository.updateCommentAmount(parentId, -1)
+                } else {
+                    call.respondText(
+                        "Resource Modification Restricted - Ownership Required",
+                        status = HttpStatusCode.Forbidden
+                    )
+                    return@delete
+                }
+            }
+            else -> {
                 return@delete
             }
-
-        } else if (postType.equals("solution", true)) {
-            parentAuthor = solutionRepository.getSolution(parentId)?.authorId ?: return@delete
-            if (authorId == userId || parentAuthor == userId) {
-                commentRepository.deleteComment(commentId)
-                solutionRepository.updateCommentAmount(parentId, -1)
-                call.respondHtml { body() }
-            }
-
-            else {
-                call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
-                return@delete
-            }
-        } else {
-            return@delete
         }
-
-
-
-
-
-
-
+        commentRepository.deleteComment(commentId)
+        call.respondHtml { body() }
     }
-
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//when (postType) {
+//    "task" -> {
+//        if (isAuthor(commentId, parentId, userId, postType)) {
+//            commentRepository.deleteComment(commentId)
+//            taskRepository.updateCommentAmount(parentId, -1)
+//            call.respondHtml { body() }
+//        } else {
+//            call.respondText(
+//                "Resource Modification Restricted - Ownership Required",
+//                status = HttpStatusCode.Forbidden
+//            )
+//            return@delete
+//        }
+//    }
+//
+//    "solution" -> {
+//        if (isAuthor(commentId, parentId, userId, postType)) {
+//            commentRepository.deleteComment(commentId)
+//            solutionRepository.updateCommentAmount(parentId, -1)
+//            call.respondHtml { body() }
+//        } else {
+//            call.respondText(
+//                "Resource Modification Restricted - Ownership Required",
+//                status = HttpStatusCode.Forbidden
+//            )
+//            return@delete
+//        }
+//    }
+//
+//    else -> {
+//        return@delete
+//    }
+//}
