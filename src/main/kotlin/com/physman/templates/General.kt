@@ -129,7 +129,7 @@ fun FlowContent.postDeletionButton(post: Post) {
         else -> throw IllegalArgumentException("Invalid post")
     }
 
-    button {
+    button(classes = "btn secondary outline") {
         attributes["hx-get"] = url
         attributes["hx-target"] = "body"
         attributes["hx-swap"] = "beforeend"
