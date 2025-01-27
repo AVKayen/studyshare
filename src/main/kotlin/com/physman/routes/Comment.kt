@@ -10,6 +10,7 @@ import com.physman.task.TaskRepository
 import com.physman.templates.commentCountTemplate
 import com.physman.templates.commentTemplate
 import com.physman.templates.index
+import com.physman.utils.Post
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -117,17 +118,44 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
         val parentId = objectIds["parentId"]!!
         val postType = call.request.queryParameters["post-type"]
 
+        val authorId = commentRepository.getComment(commentId)?.authorId ?: return@delete
+        val parentAuthor: ObjectId
+        val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
+        //TODO: untangle this abomination
         if (postType.equals("task", true)){
-            taskRepository.updateCommentAmount(parentId, 1)
-        } else if (postType.equals("task", true)) {
-            solutionRepository.updateCommentAmount(parentId, 1)
+            parentAuthor = taskRepository.getTask(parentId)?.task?.authorId ?: return@delete
+            if (authorId == userId || parentAuthor == userId) {
+                commentRepository.deleteComment(commentId)
+                taskRepository.updateCommentAmount(parentId, -1)
+                call.respondHtml { body() }
+            }
+            else {
+                call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+                return@delete
+            }
+
+        } else if (postType.equals("solution", true)) {
+            parentAuthor = solutionRepository.getSolution(parentId)?.authorId ?: return@delete
+            if (authorId == userId || parentAuthor == userId) {
+                commentRepository.deleteComment(commentId)
+                solutionRepository.updateCommentAmount(parentId, -1)
+                call.respondHtml { body() }
+            }
+
+            else {
+                call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+                return@delete
+            }
         } else {
             return@delete
         }
 
-        commentRepository.deleteComment(commentId)
 
-        call.response.status(HttpStatusCode.NoContent)
+
+
+
+
+
     }
 
 }
