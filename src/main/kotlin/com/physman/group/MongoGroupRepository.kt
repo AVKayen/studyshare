@@ -19,7 +19,7 @@ class MongoGroupRepository(
 
     override suspend fun createGroup(group: Group, groupThumbnailFile: UploadFileData): GroupView {
         val groupThumbnailAttachment = attachmentRepository.createAttachment(groupThumbnailFile)
-        val groupWithThumbnail = group.copy( thumbnailId = groupThumbnailAttachment.id )
+        val groupWithThumbnail = group.copy( thumbnailId = groupThumbnailAttachment.attachment.id )
         groupCollection.insertOne(groupWithThumbnail)
 
         return GroupView(
