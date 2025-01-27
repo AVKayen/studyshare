@@ -1,16 +1,13 @@
 package com.physman.templates
 
 import com.physman.comment.Comment
-import com.physman.solution.Solution
-import com.physman.task.Task
 import com.physman.utils.Post
 import com.physman.utils.className
 import com.physman.utils.objectIdToSimpleDateString
-import io.ktor.server.util.*
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.commentTemplate(comment: Comment, isAuthor: Boolean) {
+fun FlowContent.commentTemplate(comment: Comment, isAuthor: Boolean, postType: String) {
     div {
         classes = setOf("comment")
         cite {
@@ -20,7 +17,7 @@ fun FlowContent.commentTemplate(comment: Comment, isAuthor: Boolean) {
             +comment.content
         }
         if(isAuthor) {
-            commentDeletionButton(comment)
+            commentDeletionButton(comment, postType)
         }
     }
 }
@@ -30,7 +27,7 @@ fun FlowContent.showCommentsAccordion(parentPost: Post) {
         summary {
             role = "button"
             classes = setOf("btn comment-button outline")
-            attributes["hx-get"] = "/comments?parentId=${parentPost.id}&post-type=${className(parentPost)}"
+            attributes["hx-get"] = "/comments?parent-id=${parentPost.id}&post-type=${className(parentPost)}"
             attributes["hx-trigger"] = "click once"
             attributes["hx-target"] = "#comments-${parentPost.id}"
             span {
@@ -60,8 +57,8 @@ fun FlowContent.commentCountTemplate(commentAmount: Int) {
     }
 }
 
-fun FlowContent.commentDeletionButton(comment: Comment) {
-    val url = "/comments?comment-id=${comment.id}"
+fun FlowContent.commentDeletionButton(comment: Comment, postType: String) {
+    val url = "/comments?comment-id=${comment.id}&post-type=${postType}&parent-id=${comment.parentId}"
 
     button(classes = "btn secondary outline") {
         attributes["hx-delete"] = url
