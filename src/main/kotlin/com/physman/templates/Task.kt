@@ -2,7 +2,6 @@ package com.physman.templates
 
 import com.physman.attachment.AttachmentView
 import com.physman.task.TaskView
-import com.physman.utils.objectIdToSimpleDateString
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
