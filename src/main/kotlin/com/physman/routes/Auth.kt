@@ -23,14 +23,14 @@ fun Route.authRouter(userRepository: UserRepository) {
         "name",
         InputType.text,
         usernameValidatorOnLogin,
-        500
+        validateOnInput = false
     ))
     loginForm.addInput(TextlikeInput(
         "Password",
         "password",
         InputType.password,
         passwordValidatorOnLogin,
-        500
+        validateOnInput = false
     ))
 
     val registerForm = Form("Register", "registerForm", formAttributes = mapOf(
