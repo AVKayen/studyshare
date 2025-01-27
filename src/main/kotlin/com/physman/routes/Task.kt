@@ -25,7 +25,7 @@ import org.bson.types.ObjectId
 fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepository) {
     val taskCreationForm = routeTaskForms()
     route("/{groupId}") {
-        postTaskCreation(taskRepository, taskCreationForm)
+        postTaskCreation(taskRepository, groupRepository, taskCreationForm)
         route("/{taskId}") {
             getTaskView(taskRepository, groupRepository)
             deleteTask(taskRepository)
@@ -145,7 +145,7 @@ fun Route.getTaskDeletionModal() {
     }
 }
 
-fun Route.postTaskCreation(taskRepository: TaskRepository, taskCreationForm: Form) {
+fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: GroupRepository, taskCreationForm: Form) {
     post {
         val formSubmissionData: FormSubmissionData = taskCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
@@ -153,6 +153,7 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, taskCreationForm: For
         val files = formSubmissionData.files
 
         val groupId = validateObjectIds(call, "groupId")?.get("groupId") ?: return@post
+        val group = groupRepository.getGroup(groupId) ?: return@post call.respond(HttpStatusCode.NotFound)
 
         val userSession = call.sessions.get<UserSession>()!!
 
@@ -161,7 +162,7 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, taskCreationForm: For
             additionalNotes = additionalNotes,
             authorName = userSession.name,
             authorId = ObjectId(userSession.id),
-            groupName = "FakeGroupName", // TODO: Replace with real group data
+            groupName = group.group.title, // TODO: Replace with real group data
             groupId = groupId
         )
 
