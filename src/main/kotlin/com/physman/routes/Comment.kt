@@ -30,21 +30,6 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     globalFormRouter.routeFormValidators(commentCreationForm)
 
 
-    get("/comment") {
-        val parentId = call.request.queryParameters["parentId"]
-        if (parentId == null) {
-                call.respondText("No id specified.", status = HttpStatusCode.BadRequest)
-                return@get
-        }
-
-        call.respondHtml {
-            index("This won't be index") {
-                //TODO: maybe separate tasks from solutions
-                commentCreationForm.render(this, call.url(), POST)
-            }
-        }
-    }
-
     get {
 
         val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@get
@@ -82,8 +67,22 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     }
 
     route("/comment") {
-        post {
+        get {
+            val parentId = call.request.queryParameters["parentId"]
+            if (parentId == null) {
+                call.respondText("No id specified.", status = HttpStatusCode.BadRequest)
+                return@get
+            }
 
+            call.respondHtml {
+                index("This won't be index") {
+                    //TODO: maybe separate tasks from solutions
+                    commentCreationForm.render(this, call.url(), POST)
+                }
+            }
+        }
+
+        post {
             val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
             val parentId = objectIds["parentId"]
             val postType = call.request.queryParameters["post-type"]
@@ -110,26 +109,25 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
             call.respondRedirect("/comments?parentId=${parentId}&post-type=${postType}")
         }
-
-        route("/{comment-id}") {
-            delete {
-                val objectIds = validateObjectIds(call, "comment-id", "parentId") ?: return@delete
-                val commentId = objectIds["comment-id"]!!
-                val parentId = objectIds["parentId"]!!
-                val postType = call.request.queryParameters["post-type"]
-
-                if (postType.equals("task", true)){
-                    taskRepository.updateCommentAmount(parentId, 1)
-                } else if (postType.equals("task", true)) {
-                    solutionRepository.updateCommentAmount(parentId, 1)
-                } else {
-                    return@delete
-                }
-
-                commentRepository.deleteComment(commentId)
-
-                call.response.status(HttpStatusCode.NoContent)
-            }
-        }
     }
+
+    delete ("/{comment-id}") {
+        val objectIds = validateObjectIds(call, "comment-id", "parentId") ?: return@delete
+        val commentId = objectIds["comment-id"]!!
+        val parentId = objectIds["parentId"]!!
+        val postType = call.request.queryParameters["post-type"]
+
+        if (postType.equals("task", true)){
+            taskRepository.updateCommentAmount(parentId, 1)
+        } else if (postType.equals("task", true)) {
+            solutionRepository.updateCommentAmount(parentId, 1)
+        } else {
+            return@delete
+        }
+
+        commentRepository.deleteComment(commentId)
+
+        call.response.status(HttpStatusCode.NoContent)
+    }
+
 }
