@@ -71,9 +71,11 @@ fun Route.getGroupList(groupRepository: GroupRepository, userRepository: UserRep
         }
         call.respondHtml {
             body {
-                classes = setOf("group-grid")
-                for (groupView in groupViews) {
-                    groupTemplate(groupView)
+                div {
+                    classes = setOf("group-grid")
+                    for (groupView in groupViews) {
+                        groupTemplate(groupView)
+                    }
                 }
             }
         }
@@ -93,10 +95,11 @@ fun Route.getGroupView(groupRepository: GroupRepository, userRepository: UserRep
                 username = userSession.name,
                 lastBreadcrumb = groupView.group.title
             ) {
-                section(classes = "modal-btn-container") {
+                section(classes = "modal-btn-container, wide-button-container") {
                     formModalOpenButton(
                         buttonText = "Create a task",
-                        modalUrl = "/${groupId}/creation-modal"
+                        modalUrl = "/${groupId}/creation-modal",
+                        additionalClasses = setOf("wide-button", "outline")
                     )
                 }
                 contentLoadTemplate("/${groupId}/tasks")

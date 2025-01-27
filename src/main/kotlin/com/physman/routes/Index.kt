@@ -38,10 +38,14 @@ fun HTML.loggedInIndexView(userSession: UserSession) {
         title = "StudyShare",
         username = userSession.name
     ) {
-        formModalOpenButton(
-            buttonText = "Create a group",
-            modalUrl = "/groups/creation-modal"
-        )
+        div {
+            classes = setOf("wide-button-container")
+            formModalOpenButton(
+                buttonText = "Create a group",
+                modalUrl = "/groups/creation-modal",
+                additionalClasses = setOf("group-create-button", "wide-button", "outline")
+            )
+        }
         contentLoadTemplate("/groups")
     }
 }

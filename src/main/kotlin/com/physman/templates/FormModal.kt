@@ -4,8 +4,9 @@ import com.physman.forms.Form
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.formModalOpenButton(buttonText: String, modalUrl: String) {
-    button(classes = "btn primary") {
+fun FlowContent.formModalOpenButton(buttonText: String, modalUrl: String, additionalClasses: Set<String> = setOf()) {
+    button {
+        classes = setOf("btn", "primary") + additionalClasses
         attributes["hx-get"] = modalUrl
         attributes["hx-target"] = "body"
         attributes["hx-swap"] = "beforeend"

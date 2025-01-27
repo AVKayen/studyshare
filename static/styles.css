@@ -24,7 +24,7 @@ p {
 }
 
 .task {
-    margin-bottom: 0;
+    margin-bottom: 1rem;
 }
 
 .form-error {
@@ -84,13 +84,13 @@ nav {
 
 .gallery {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: 1rem;
 }
 
 @media (max-width: 768px) {
     .gallery {
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     }
 }
 
@@ -174,7 +174,7 @@ nav {
     width: calc(100% - 1rem) !important;
 }
 
-.solution-content > details {
+.solution-content > * {
     width: calc(100% - 2rem) !important;
 }
 
@@ -233,4 +233,48 @@ nav {
 .modal-is-closing dialog,.modal-is-closing dialog article{
     animation-delay:0s;
     animation-direction:reverse
+}
+
+.group {
+    height: 100%;
+}
+
+.group {
+    display: flex;
+    flex-direction: column;
+    place-content: space-between;
+}
+.group > p {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.group > h1 {
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.group > img {
+    aspect-ratio: 16/9;
+    object-fit: cover;
+    width: 100%;
+    height: auto;
+    font-size: 0;
+    margin-bottom: 0.5rem;
+}
+.group-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+.wide-button-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+.wide-button {
+    width: 50%;
+    --pico-box-shadow: var(--pico-button-hover-box-shadow, 0 0 0 rgba(0, 0, 0, 0)),0 0 0 var(--pico-outline-width) var(--pico-primary-focus);
 }
