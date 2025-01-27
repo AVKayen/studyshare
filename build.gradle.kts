@@ -50,6 +50,7 @@ dependencies {
     implementation("com.google.cloud:google-cloud-datastore")
 
     implementation("net.coobird:thumbnailator:[0.4,0.5)")
+    implementation("com.twelvemonkeys.imageio:imageio-webp:3.12.0") // ImageIO plugin for handling .webp
 
     testImplementation("io.ktor:ktor-server-test-host-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
