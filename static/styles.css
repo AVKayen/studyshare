@@ -234,3 +234,29 @@ nav {
     animation-delay:0s;
     animation-direction:reverse
 }
+
+.solution-content header {
+    display: flex;
+    margin-bottom: 1.5rem;
+}
+
+.task header {
+    display: flex;
+    margin-bottom: 1.5rem;
+}
+
+.solution-content header>div {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.task header>div {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.post-more-options {
+    margin: 1rem;
+}

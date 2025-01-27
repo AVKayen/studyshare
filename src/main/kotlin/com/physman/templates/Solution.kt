@@ -23,16 +23,16 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView, isAuthor: Boolean) 
         div {
             classes = setOf("solution-content")
             header {
-                h2 {
-                    +solutionView.solution.title
-                }
-                span {
-                    if (isAuthor) {
-                        postDeletionButton(solutionView.solution)
+                div {
+                    h2 {
+                        +solutionView.solution.title
+                    }
+                    cite {
+                        +"${solutionView.solution.authorName} @ ${objectIdToSimpleDateString(solutionView.solution.id)}"
                     }
                 }
-                cite {
-                    +"${solutionView.solution.authorName} @ ${objectIdToSimpleDateString(solutionView.solution.id)}"
+                if (isAuthor) {
+                    postDeletionButton(post = solutionView.solution)
                 }
             }
 

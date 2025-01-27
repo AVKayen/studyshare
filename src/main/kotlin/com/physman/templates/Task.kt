@@ -13,16 +13,16 @@ fun FlowContent.taskTemplate(taskView: TaskView, isAuthor: Boolean) {
     article(classes = "task") {
         id = "article-${taskView.task.id.toHexString()}"
         header {
-            h2 {
-                +taskView.task.title
-            }
-            span {
-                if (isAuthor) {
-                    postDeletionButton(taskView.task)
+            div {
+                h2 {
+                    +taskView.task.title
+                }
+                cite {
+                    +"${taskView.task.authorName} @ ${objectIdToSimpleDateString(taskView.task.id)}"
                 }
             }
-            cite {
-                +"${taskView.task.authorName} @ ${objectIdToSimpleDateString(taskView.task.id)}"
+            if (isAuthor) {
+                postDeletionButton(taskView.task)
             }
         }
         if (taskView.task.additionalNotes != null) {
