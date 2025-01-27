@@ -13,6 +13,12 @@ fun className(any: Any): String {
     }
 }
 
+fun objectIdToUTCString(objectId: ObjectId): String {
+    val date = objectId.date
+    val dateTimeFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    return dateTimeFormat.format(date)
+}
+
 fun objectIdToSimpleDateString(objectId: ObjectId): String {
     val date = objectId.date
     val dateTimeFormat = SimpleDateFormat("dd-MM-yyyy HH:mm")

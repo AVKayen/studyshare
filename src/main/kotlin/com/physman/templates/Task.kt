@@ -18,7 +18,8 @@ fun FlowContent.taskTemplate(taskView: TaskView, isAuthor: Boolean) {
                     +taskView.task.title
                 }
                 cite {
-                    +"${taskView.task.authorName} @ ${objectIdToSimpleDateString(taskView.task.id)}"
+                    +"${taskView.task.authorName} @ "
+                    localDateSpan(taskView.task.id)
                 }
             }
             if (isAuthor) {

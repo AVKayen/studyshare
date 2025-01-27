@@ -5,6 +5,7 @@ import com.physman.solution.Solution
 import com.physman.solution.VoteUpdate
 import com.physman.task.Task
 import com.physman.utils.Post
+import com.physman.utils.objectIdToUTCString
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
@@ -137,5 +138,38 @@ fun FlowContent.postDeletionButton(post: Post) {
         span(classes = "material-symbols-rounded") {
             +"delete"
         }
+    }
+}
+
+fun FlowContent.localTimeConversionScript() {
+    script {
+        // https://stackoverflow.com/a/18330682
+        unsafe {
+            +"""
+                function convertUTCDateToLocalDate(dateString) {
+                    var date = new Date(dateString);
+                    var newDate = new Date(date.getTime()+date.getTimezoneOffset()*60*1000);
+                
+                    var offset = date.getTimezoneOffset() / 60;
+                    var hours = date.getHours();
+                
+                    newDate.setHours(hours - offset);
+                
+                    return newDate.toString();   
+                }
+            """.trimIndent()
+        }
+    }
+}
+
+fun FlowContent.localDateSpan(objectId: ObjectId) {
+    val script = """
+        on load 1
+            log convertUTCDateToLocalDate(me.dataset.date)
+        end
+    """.trimIndent()
+    span {
+        attributes["_"] = script
+        attributes["data-date"] = objectIdToUTCString(objectId)
     }
 }

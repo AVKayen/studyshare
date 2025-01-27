@@ -134,5 +134,6 @@ fun HTML.index(
             block()
         }
         fancyboxSetupScript()
+        localTimeConversionScript()
     }
 }
