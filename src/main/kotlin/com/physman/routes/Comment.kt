@@ -10,7 +10,7 @@ import com.physman.task.TaskRepository
 import com.physman.templates.commentCountTemplate
 import com.physman.templates.commentTemplate
 import com.physman.templates.index
-import com.physman.utils.validateObjectIds
+import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
@@ -47,7 +47,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
     get {
 
-        val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@get
+        val objectIds: Map<String, ObjectId> = validateRequiredObjectIds(call, "parentId") ?: return@get
         val parentId = objectIds["parentId"]
         val parentPostClassName = call.request.queryParameters["post-type"]
 
@@ -84,7 +84,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     route("/comment") {
         post {
 
-            val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
+            val objectIds: Map<String, ObjectId> = validateRequiredObjectIds(call, "parentId") ?: return@post
             val parentId = objectIds["parentId"]
             val postType = call.request.queryParameters["post-type"]
             val userSession = call.sessions.get<UserSession>()!!
@@ -113,7 +113,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
         route("/{comment-id}") {
             delete {
-                val objectIds = validateObjectIds(call, "comment-id", "parentId") ?: return@delete
+                val objectIds = validateRequiredObjectIds(call, "comment-id", "parentId") ?: return@delete
                 val commentId = objectIds["comment-id"]!!
                 val parentId = objectIds["parentId"]!!
                 val postType = call.request.queryParameters["post-type"]
