@@ -11,14 +11,18 @@ fun FlowContent.commentTemplate(comment: Comment, isAuthor: Boolean, postType: S
     div {
         id = "comment-${comment.id.toHexString()}"
         classes = setOf("comment")
-        cite {
+        div {
+            cite {
             +"${comment.authorName} @ ${objectIdToSimpleDateString(comment.id)}"
+            }
+            h5 {
+                +comment.content
+            }
         }
-        h5 {
-            +comment.content
-        }
-        if(isAuthor) {
-            commentDeletionButton(comment, postType)
+        span(classes = "right-options") {
+            if(isAuthor) {
+                commentDeletionButton(comment, postType)
+            }
         }
     }
 }
