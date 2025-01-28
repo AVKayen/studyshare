@@ -9,6 +9,7 @@ import kotlinx.html.*
 
 fun FlowContent.commentTemplate(comment: Comment, isAuthor: Boolean, postType: String) {
     div {
+        id = "comment-${comment.id.toHexString()}"
         classes = setOf("comment")
         cite {
             +"${comment.authorName} @ ${objectIdToSimpleDateString(comment.id)}"
@@ -62,8 +63,8 @@ fun FlowContent.commentDeletionButton(comment: Comment, postType: String) {
 
     button(classes = "btn secondary outline") {
         attributes["hx-delete"] = url
-        attributes["hx-target"] = "body"
-        attributes["hx-swap"] = "beforeend"
+        attributes["hx-target"] = "#comment-${comment.id.toHexString()}"
+        attributes["hx-swap"] = "outerHTML"
 
         span(classes = "material-symbols-rounded") {
             +"delete"
