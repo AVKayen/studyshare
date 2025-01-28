@@ -8,7 +8,6 @@ import com.physman.solution.SolutionRepository
 import com.physman.task.TaskRepository
 import com.physman.templates.commentCountTemplate
 import com.physman.templates.commentTemplate
-import com.physman.templates.index
 import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -93,7 +92,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     }
 
     delete {
-        val objectIds = validateObjectIds(call, "commentId", "parentId") ?: return@delete
+        val objectIds = validateRequiredObjectIds(call, "commentId", "parentId") ?: return@delete
         val commentId = objectIds["commentId"]!!
         val authorId = commentRepository.getComment(commentId)?.authorId
 
