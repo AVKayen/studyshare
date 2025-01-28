@@ -36,8 +36,9 @@ class MongoTaskRepository(
         )
     }
 
-    override suspend fun getTasks(): List<TaskView> {
-        return taskCollection.find().toList().map { task: Task ->
+    override suspend fun getTasks(groupId: ObjectId): List<TaskView> {
+        val filter = Filters.eq(Task::groupId.name, groupId)
+        return taskCollection.find(filter).toList().map { task: Task ->
             TaskView(
                 task =  task,
                 attachments = attachmentRepository.getAttachments(task.attachmentIds)

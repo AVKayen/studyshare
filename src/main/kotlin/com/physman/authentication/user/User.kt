@@ -49,6 +49,7 @@ data class User(
     val name: String,
     // val email: String, // hmmm
     val passwordHash: String,
+    val groupIds: Set<ObjectId> = emptySet()
 ) {
     fun toUserSession() = UserSession(id, name)
 }

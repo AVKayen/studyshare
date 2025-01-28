@@ -1,25 +1,85 @@
 package com.physman.routes
 
 import com.physman.authentication.user.UserSession
-import com.physman.forms.*
-import com.physman.task.Task
+import com.physman.forms.FileInput
+import com.physman.forms.Form
+import com.physman.forms.TextlikeInput
+import com.physman.forms.globalFormRouter
+import com.physman.group.GroupRepository
 import com.physman.task.TaskRepository
 import com.physman.task.additionalNotesValidator
 import com.physman.task.titleValidator
 import com.physman.templates.*
-import com.physman.utils.smartRedirect
+import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
-import io.ktor.server.routing.*
-import com.physman.utils.validateObjectIds
 import io.ktor.server.response.*
+import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.html.*
+import com.physman.forms.*
+import com.physman.task.Task
+import com.physman.utils.smartRedirect
 import org.bson.types.ObjectId
 
-// TODO: Error handling
-fun Route.taskRouter(taskRepository: TaskRepository) {
+fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepository) {
+    val taskCreationForm = routeTaskForms()
+    route("/{groupId}") {
+        postTaskCreation(taskRepository, groupRepository, taskCreationForm)
+        route("/{taskId}") {
+            getTaskView(taskRepository, groupRepository)
+            deleteTask(taskRepository)
+        }
+        route("/tasks") {
+            getTaskList(taskRepository, groupRepository)
+        }
+        route("/creation-modal") {
+            getTaskCreationModal(taskCreationForm)
+        }
+        route("/deletion-modal") {
+            getTaskDeletionModal()
+        }
+    }
+}
 
+fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepository) {
+    get {
+        val objectIds = validateObjectIds(call, "taskId", "groupId") ?: return@get
+        val taskId = objectIds["taskId"]!!
+        val groupId = objectIds["groupId"]!!
+
+        val taskView = taskRepository.getTask(taskId)
+        if(taskView == null) {
+            call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
+            return@get
+        }
+
+        val userSession = call.sessions.get<UserSession>()!!
+
+        call.respondHtml(HttpStatusCode.OK) {
+            index(
+                title = "StudyShare",
+                username = userSession.name,
+                breadcrumbs = mapOf(taskView.task.groupName to "/${groupId}"),
+                lastBreadcrumb = taskView.task.title
+            ) {
+
+                taskTemplate(taskView, isAuthor = userSession.id == taskView.task.authorId.toHexString())
+                div {
+                    classes = setOf("wide-button-container")
+                    formModalOpenButton(
+                        buttonText = "Create a solution",
+                        modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}",
+                        additionalClasses = setOf("wide-button", "outline")
+                    )
+                }
+                contentLoadTemplate(url = "/solutions?taskId=${taskView.task.id}")
+            }
+        }
+    }
+}
+
+fun routeTaskForms(): Form {
     val taskCreationForm = Form("Create a new task", "taskForm", formAttributes = mapOf(
 //        "hx-target" to "#task-list",
 //        "hx-swap" to "beforeend"
@@ -32,8 +92,16 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
 
     globalFormRouter.routeFormValidators(taskCreationForm)
 
+    return taskCreationForm
+}
+
+fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepository) {
     get {
-        val taskViews = taskRepository.getTasks()
+        val objectIds = validateObjectIds(call, "groupId") ?: return@get
+        val groupId = objectIds["groupId"]!!
+        val group = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
+        val taskViews = taskRepository.getTasks(groupId)
+
         call.respondHtml {
             body {
                 for (task in taskViews) {
@@ -42,23 +110,28 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             }
         }
     }
+}
 
-    get("/creation-modal") {
+fun Route.getTaskCreationModal(taskCreationForm: Form) {
+    get {
+        val groupId = validateObjectIds(call, "groupId")?.get("groupId") ?: return@get
         call.respondHtml {
             body {
                 formModalDialog(
                     form = taskCreationForm,
-                    callbackUrl = "/tasks",
+                    callbackUrl = "/${groupId}",
                     requestType = POST
                 )
             }
         }
     }
+}
 
-    get("/deletion-modal") {
-        val objectIds = validateObjectIds(call, "taskId") ?: return@get
+fun Route.getTaskDeletionModal() {
+    get {
+        val objectIds = validateObjectIds(call, "taskId", "groupId") ?: return@get
         val taskId = objectIds["taskId"]!!
-
+        val groupId = objectIds["groupId"]!!
         call.respondHtml {
             body {
                 confirmationModalTemplate(
@@ -66,7 +139,7 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
                     details = "Are you sure you want to delete this task?",
                     submitText = "Delete",
                     submitAttributes = mapOf(
-                        "hx-delete" to "/tasks/$taskId",
+                        "hx-delete" to "/$groupId/$taskId",
                         "hx-target" to "#article-$taskId", // TODO instead of deleting task, navigate to a parent group page
                         "hx-swap" to "outerHTML"
                     )
@@ -74,12 +147,17 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             }
         }
     }
+}
 
+fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: GroupRepository, taskCreationForm: Form) {
     post {
         val formSubmissionData: FormSubmissionData = taskCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
         val files = formSubmissionData.files
+
+        val groupId = validateObjectIds(call, "groupId")?.get("groupId") ?: return@post
+        val group = groupRepository.getGroup(groupId) ?: return@post call.respond(HttpStatusCode.NotFound)
 
         val userSession = call.sessions.get<UserSession>()!!
 
@@ -88,65 +166,36 @@ fun Route.taskRouter(taskRepository: TaskRepository) {
             additionalNotes = additionalNotes,
             authorName = userSession.name,
             authorId = ObjectId(userSession.id),
-            groupName = "FakeGroupName", // TODO: Replace with real group data
-            groupId = ObjectId()
+            groupName = group.group.title, // TODO: Replace with real group data
+            groupId = groupId
         )
 
         taskRepository.createTask(task, files)
         formSubmissionData.cleanup()
 
-        call.smartRedirect(redirectUrl = "/tasks/${task.id}")
+        call.smartRedirect(redirectUrl = "/${groupId}/${task.id}")
     }
+}
 
-    route("/{id}") {
-        get {
-            val objectIds = validateObjectIds(call, "id") ?: return@get
-            val taskId = objectIds["id"]!!
+fun Route.deleteTask(taskRepository: TaskRepository) {
+    delete { //todo: redirect to group
+        val objectIds = validateObjectIds(call, "taskId") ?: return@delete
+        val taskId = objectIds["taskId"]!!
+        val task = taskRepository.getTask(taskId)?.task ?: return@delete
+        val authorId = task.authorId
+        val groupId = task.groupId
+        val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
-            val taskView = taskRepository.getTask(taskId)
-            if(taskView == null) {
-                call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
-                return@get
-            }
-
-            val userSession = call.sessions.get<UserSession>()!!
-            val userId = ObjectId(userSession.id)
-
-            call.respondHtml(HttpStatusCode.OK) {
-                index(
-                    title = "StudyShare",
-                    username = userSession.name,
-                    breadcrumbs = mapOf("tasks" to "/"),
-                    lastBreadcrumb = taskView.task.title
-                ) {
-                    val isAuthor = userId == taskView.task.authorId
-                    taskTemplate(taskView, isAuthor)
-                    formModalOpenButton(
-                        buttonText = "Create a solution",
-                        modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}"
-                    )
-                    contentLoadTemplate(url = "/solutions?taskId=${taskView.task.id}")
-                }
-            }
-        }
-
-        delete { //todo: redirect to group
-            val objectIds = validateObjectIds(call, "id") ?: return@delete
-            val taskId = objectIds["id"]!!
-
-            val authorId = taskRepository.getTask(taskId)?.task?.authorId ?: return@delete
-            val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
-
-            if (authorId == userId) {
-                taskRepository.deleteTask(taskId)
-                call.respondHtml { body() }
-            } else {
-                call.respondText(
-                    "Resource Modification Restricted - Ownership Required",
-                    status = HttpStatusCode.Forbidden
-                )
-                return@delete
-            }
+        if (authorId == userId) {
+            taskRepository.deleteTask(taskId)
+            call.response.headers.append("HX-Redirect", "/$groupId")
+            call.respondText { "Task Deleted, redirecting??" }
+        } else {
+            call.respondText(
+                "Resource Modification Restricted - Ownership Required",
+                status = HttpStatusCode.Forbidden
+            )
+            return@delete
         }
     }
 }
