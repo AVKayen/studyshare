@@ -6,15 +6,23 @@ import com.physman.utils.className
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.commentTemplate(comment: Comment) {
+fun FlowContent.commentTemplate(comment: Comment, isAuthor: Boolean, postType: String) {
     div {
+        id = "comment-${comment.id.toHexString()}"
         classes = setOf("comment")
-        cite {
-            +"${comment.authorName} @ "
-            localDateSpan(comment.id)
+        div {
+            cite {
+                +"${comment.authorName} @ "
+                localDateSpan(comment.id)
+            }
+            h5 {
+                +comment.content
+            }
         }
-        h5 {
-            +comment.content
+        span {
+            if(isAuthor) {
+                commentDeletionButton(comment, postType)
+            }
         }
     }
 }
@@ -24,7 +32,7 @@ fun FlowContent.showCommentsAccordion(parentPost: Post) {
         summary {
             role = "button"
             classes = setOf("btn comment-button outline")
-            attributes["hx-get"] = "/comments?parentId=${parentPost.id}&post-type=${className(parentPost)}"
+            attributes["hx-get"] = "/comments?parentId=${parentPost.id}&postType=${className(parentPost)}"
             attributes["hx-trigger"] = "click once"
             attributes["hx-target"] = "#comments-${parentPost.id}"
             span {
@@ -45,11 +53,23 @@ fun FlowContent.showCommentsAccordion(parentPost: Post) {
 }
 
 fun FlowContent.commentCountTemplate(commentAmount: Int) {
-    if (commentAmount == 0) {
-        +"Be the first to comment"
-    } else if (commentAmount == 1) {
-        +"Show 1 comment"
-    } else {
-        +"Show $commentAmount comments"
+    when (commentAmount) {
+        0 -> +"Be the first to comment"
+        1 -> +"Show 1 comment"
+        else -> +"Show $commentAmount comments"
+    }
+}
+
+fun FlowContent.commentDeletionButton(comment: Comment, postType: String) {
+    val url = "/comments?commentId=${comment.id}&postType=${postType}&parentId=${comment.parentId}"
+
+    button(classes = "btn secondary outline") {
+        attributes["hx-delete"] = url
+        attributes["hx-target"] = "#comment-${comment.id.toHexString()}"
+        attributes["hx-swap"] = "outerHTML"
+
+        span(classes = "material-symbols-rounded") {
+            +"delete"
+        }
     }
 }
