@@ -19,7 +19,7 @@ fun FlowContent.commentTemplate(comment: Comment, isAuthor: Boolean, postType: S
                 +comment.content
             }
         }
-        span(classes = "right-options") {
+        span {
             if(isAuthor) {
                 commentDeletionButton(comment, postType)
             }
