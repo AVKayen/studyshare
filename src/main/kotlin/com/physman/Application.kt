@@ -21,7 +21,11 @@ fun main(args: Array<String>) {
     EngineMain.main(args)
 }
 
+var isDevelopment: Boolean = false
+
 fun Application.module() {
+    // check if in production or development mode
+    isDevelopment = this.developmentMode
     val environment = Environment(true)
     val mongodbClient = MongoClient.create(environment.MONGODB_CONNECTION_STRING)
     val database = mongodbClient.getDatabase("furthergroupedstudyshare")
