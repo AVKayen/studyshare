@@ -8,7 +8,6 @@ import com.physman.group.GroupRepository
 import com.physman.group.GroupView
 import com.physman.solution.additionalNotesValidator
 import com.physman.solution.titleValidator
-import com.physman.task.TITLE_MAX_LENGTH
 import com.physman.templates.*
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
@@ -30,9 +29,9 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
         }
     }
     route("/{groupId}") {
-        getGroupView(groupRepository, userRepository)
+        getGroupView(groupRepository)
         route("/add-user") {
-            getAddUserToGroupModal(groupRepository, userAdditionForm)
+            getAddUserToGroupModal(userAdditionForm)
             postAddUserToGroup(groupRepository, userRepository, userAdditionForm)
         }
     }
@@ -107,7 +106,7 @@ fun Route.getGroupList(groupRepository: GroupRepository, userRepository: UserRep
     }
 }
 
-fun Route.getGroupView(groupRepository: GroupRepository, userRepository: UserRepository) {
+fun Route.getGroupView(groupRepository: GroupRepository) {
     get {
         val objectIds = validateObjectIds(call, "groupId") ?: return@get
         val groupId = objectIds["groupId"]!!
@@ -188,7 +187,7 @@ fun Route.postAddUserToGroup(groupRepository: GroupRepository, userRepository: U
     }
 }
 
-fun Route.getAddUserToGroupModal(groupRepository: GroupRepository, userAdditionForm: Form) {
+fun Route.getAddUserToGroupModal(userAdditionForm: Form) {
     get {
         val objectIds = validateObjectIds(call, "groupId") ?: return@get
         val groupId = objectIds["groupId"]!!
