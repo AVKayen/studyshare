@@ -139,3 +139,15 @@ fun FlowContent.postDeletionButton(post: Post) {
         }
     }
 }
+
+fun FlowContent.localDateSpan(objectId: ObjectId) {
+    val script = """
+        on load 1
+            put convertUTCDateToLocalDate(me.dataset.date) into me
+        end
+    """.trimIndent()
+    span {
+        attributes["_"] = script
+        attributes["data-date"] = objectId.timestamp.toString()
+    }
+}

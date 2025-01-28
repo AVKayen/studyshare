@@ -3,8 +3,6 @@ package com.physman.templates
 import com.physman.comment.Comment
 import com.physman.utils.Post
 import com.physman.utils.className
-import com.physman.utils.objectIdToSimpleDateString
-import io.ktor.server.util.*
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
@@ -12,7 +10,8 @@ fun FlowContent.commentTemplate(comment: Comment) {
     div {
         classes = setOf("comment")
         cite {
-            +"${comment.authorName} @ ${objectIdToSimpleDateString(comment.id)}"
+            +"${comment.authorName} @ "
+            localDateSpan(comment.id)
         }
         h5 {
             +comment.content
