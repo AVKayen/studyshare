@@ -28,7 +28,7 @@ fun FlowContent.showCommentsAccordion(parentPost: Post) {
         summary {
             role = "button"
             classes = setOf("btn comment-button outline")
-            attributes["hx-get"] = "/comments?parent-id=${parentPost.id}&post-type=${className(parentPost)}"
+            attributes["hx-get"] = "/comments?parentId=${parentPost.id}&postType=${className(parentPost)}"
             attributes["hx-trigger"] = "click once"
             attributes["hx-target"] = "#comments-${parentPost.id}"
             span {
@@ -59,7 +59,7 @@ fun FlowContent.commentCountTemplate(commentAmount: Int) {
 }
 
 fun FlowContent.commentDeletionButton(comment: Comment, postType: String) {
-    val url = "/comments?comment-id=${comment.id}&post-type=${postType}&parent-id=${comment.parentId}"
+    val url = "/comments?commentId=${comment.id}&postType=${postType}&parentId=${comment.parentId}"
 
     button(classes = "btn secondary outline") {
         attributes["hx-delete"] = url

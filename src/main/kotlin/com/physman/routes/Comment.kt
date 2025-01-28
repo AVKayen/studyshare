@@ -10,7 +10,6 @@ import com.physman.task.TaskRepository
 import com.physman.templates.commentCountTemplate
 import com.physman.templates.commentTemplate
 import com.physman.templates.index
-import com.physman.templates.votingTemplate
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -36,9 +35,9 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
     //TODO: put in actual urls, or transfer values in an other way
     get {
-        val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parent-id") ?: return@get
-        val parentId = objectIds["parent-id"]
-        val parentPostClassName = call.request.queryParameters["post-type"]!!
+        val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@get
+        val parentId = objectIds["parentId"]
+        val parentPostClassName = call.request.queryParameters["postType"]!!
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
         val comments = commentRepository.getComments(parentId!!)
@@ -50,7 +49,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
                     commentTemplate(comment, isAuthor, parentPostClassName)
                 }
                 form {
-                    attributes["hx-post"] = "/comments/comment?parent-id=${parentId}&post-type=${parentPostClassName}"
+                    attributes["hx-post"] = "/comments/comment?parentId=${parentId}&postType=${parentPostClassName}"
                     attributes["hx-target"] = "#comments-${parentId}"
                     textArea {
                         name = "content"
@@ -74,7 +73,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
     route("/comment") {
         get {
-            val parentId = call.request.queryParameters["parent-id"]
+            val parentId = call.request.queryParameters["parentId"]
             if (parentId == null) {
                 call.respondText("No id specified.", status = HttpStatusCode.BadRequest)
                 return@get
@@ -89,9 +88,9 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
         }
 
         post {
-            val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parent-id") ?: return@post
-            val parentId = objectIds["parent-id"]
-            val postType = call.request.queryParameters["post-type"]
+            val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
+            val parentId = objectIds["parentId"]
+            val postType = call.request.queryParameters["postType"]
             val userSession = call.sessions.get<UserSession>()!!
 
             val formSubmissionData: FormSubmissionData = commentCreationForm.validateSubmission(call) ?: return@post
@@ -113,18 +112,18 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
             commentRepository.createComment(newComment)
 
-            call.respondRedirect("/comments?parent-id=${parentId}&post-type=${postType}")
+            call.respondRedirect("/comments?parentId=${parentId}&postType=${postType}")
         }
     }
 
     delete {
         println(1)
-        val objectIds = validateObjectIds(call, "comment-id", "parent-id") ?: return@delete
-        val commentId = objectIds["comment-id"]!!
+        val objectIds = validateObjectIds(call, "commentId", "parentId") ?: return@delete
+        val commentId = objectIds["commentId"]!!
         val authorId = commentRepository.getComment(commentId)?.authorId
 
-        val parentId = objectIds["parent-id"]!!
-        val postType = call.request.queryParameters["post-type"]
+        val parentId = objectIds["parentId"]!!
+        val postType = call.request.queryParameters["postType"]
 
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
         println(2)
