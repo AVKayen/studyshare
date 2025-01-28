@@ -3,7 +3,6 @@ package com.physman.templates
 import com.physman.comment.Comment
 import com.physman.utils.Post
 import com.physman.utils.className
-import com.physman.utils.objectIdToSimpleDateString
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
@@ -13,7 +12,8 @@ fun FlowContent.commentTemplate(comment: Comment, isAuthor: Boolean, postType: S
         classes = setOf("comment")
         div {
             cite {
-            +"${comment.authorName} @ ${objectIdToSimpleDateString(comment.id)}"
+                +"${comment.authorName} @ "
+                localDateSpan(comment.id)
             }
             h5 {
                 +comment.content

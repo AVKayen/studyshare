@@ -3,7 +3,6 @@ package com.physman.templates
 import com.physman.attachment.AttachmentView
 import com.physman.solution.SolutionView
 import com.physman.solution.VoteUpdate
-import com.physman.utils.objectIdToSimpleDateString
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
@@ -28,7 +27,8 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView, isAuthor: Boolean) 
                         +solutionView.solution.title
                     }
                     cite {
-                        +"${solutionView.solution.authorName} @ ${objectIdToSimpleDateString(solutionView.solution.id)}"
+                        +"${solutionView.solution.authorName} @ "
+                        localDateSpan(solutionView.solution.id)
                     }
                 }
                 if (isAuthor) {

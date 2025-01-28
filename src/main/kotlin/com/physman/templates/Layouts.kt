@@ -1,8 +1,9 @@
 package com.physman.templates
 
+import com.physman.isDevelopment
 import kotlinx.html.*
 
-fun HEAD.headTags() {
+fun HEAD.headTags(isDevelopment: Boolean = false) {
     // htmx
     script { src = "https://storage.googleapis.com/studyshare-static/htmx-2.0.4.min.js" }
     // _hyperscript
@@ -16,9 +17,10 @@ fun HEAD.headTags() {
     script { src = "https://storage.googleapis.com/studyshare-static/fancybox-5.0.umd.js" }
     link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/fancybox-5.0.css")
 
-    // custom CSS TODO: for prod, change this to a GCP file
-    link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
-//    link(rel = "stylesheet", href = "/static/styles.css")
+    val staticLocation: String = if (isDevelopment) "/static" else "https://storage.googleapis.com/studyshare-static"
+    // custom CSS and JS
+    link(rel = "stylesheet", href = "${staticLocation}/styles.css")
+    script { src = "${staticLocation}/helperFunctions.js" }
 
     // config for htmx (code 422 for error form reponses)
     meta(
@@ -125,7 +127,7 @@ fun HTML.index(
     block: MAIN.() -> Unit
 ) {
     head {
-        headTags()
+        headTags(isDevelopment)
         title { +title }
     }
     body {

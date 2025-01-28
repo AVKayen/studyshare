@@ -125,7 +125,7 @@ fun FlowContent.contentLoadTemplate(url: String) {
 fun FlowContent.postDeletionButton(post: Post) {
     val url = when (post) {
         is Solution -> "/solutions/deletion-modal?solutionId=${post.id}"
-        is Task -> "/tasks/deletion-modal?taskId=${post.id}"
+        is Task -> "/${post.groupId}/deletion-modal?taskId=${post.id}"
         else -> throw IllegalArgumentException("Invalid post")
     }
 
@@ -137,5 +137,17 @@ fun FlowContent.postDeletionButton(post: Post) {
         span(classes = "material-symbols-rounded") {
             +"delete"
         }
+    }
+}
+
+fun FlowContent.localDateSpan(objectId: ObjectId) {
+    val script = """
+        on load 1
+            put convertUTCDateToLocalDate(me.dataset.date) into me
+        end
+    """.trimIndent()
+    span {
+        attributes["_"] = script
+        attributes["data-date"] = objectId.timestamp.toString()
     }
 }
