@@ -49,12 +49,10 @@ fun FlowContent.showCommentsAccordion(parentPost: Post) {
 }
 
 fun FlowContent.commentCountTemplate(commentAmount: Int) {
-    if (commentAmount == 0) {
-        +"Be the first to comment"
-    } else if (commentAmount == 1) {
-        +"Show 1 comment"
-    } else {
-        +"Show $commentAmount comments"
+    when (commentAmount) {
+        0 -> +"Be the first to comment"
+        1 -> +"Show 1 comment"
+        else -> +"Show $commentAmount comments"
     }
 }
 

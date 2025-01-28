@@ -4,19 +4,17 @@ import com.physman.authentication.user.UserSession
 import com.physman.comment.Comment
 import com.physman.comment.CommentRepository
 import com.physman.comment.commentValidator
-import com.physman.forms.*
 import com.physman.solution.SolutionRepository
 import com.physman.task.TaskRepository
 import com.physman.templates.commentCountTemplate
 import com.physman.templates.commentTemplate
-import com.physman.templates.index
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
+import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
-import io.ktor.server.util.*
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
@@ -24,14 +22,6 @@ import org.bson.types.ObjectId
 
 
 fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
-    val commentCreationForm = Form(
-        "Create a new comment", "commentForm", formAttributes = mapOf(
-            "hx-swap" to "none" // because currently this form is on an empty page
-        )
-    )
-    commentCreationForm.addInput(TextlikeInput("content", "content", InputType.text, commentValidator))
-
-    globalFormRouter.routeFormValidators(commentCreationForm)
 
     //TODO: put in actual urls, or transfer values in an other way
     get {
@@ -72,29 +62,17 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     }
 
     route("/comment") {
-        get {
-            val parentId = call.request.queryParameters["parentId"]
-            if (parentId == null) {
-                call.respondText("No id specified.", status = HttpStatusCode.BadRequest)
-                return@get
-            }
-
-            call.respondHtml {
-                index("This won't be index") {
-                    //TODO: maybe separate tasks from solutions
-                    commentCreationForm.render(this, call.url(), POST)
-                }
-            }
-        }
-
         post {
             val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
             val parentId = objectIds["parentId"]
             val postType = call.request.queryParameters["postType"]
             val userSession = call.sessions.get<UserSession>()!!
 
-            val formSubmissionData: FormSubmissionData = commentCreationForm.validateSubmission(call) ?: return@post
-            val content = formSubmissionData.fields["content"]!!
+            val content = call.receiveParameters()["content"]
+            if (content == null || commentValidator(content) != null) {
+                call.response.status(HttpStatusCode.BadRequest)
+                return@post
+            }
 
             val newComment = Comment(parentId = parentId!!, content = content, authorName = userSession.name, authorId = ObjectId(userSession.id))
 
@@ -103,10 +81,6 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
             } else if (postType.equals("solution", true)) {
                 solutionRepository.updateCommentAmount(parentId, 1)
             } else {
-
-                println(call.url())
-                if (postType != null)
-                    println(postType + postType.javaClass)
                 return@post
             }
 
@@ -117,7 +91,6 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     }
 
     delete {
-        println(1)
         val objectIds = validateObjectIds(call, "commentId", "parentId") ?: return@delete
         val commentId = objectIds["commentId"]!!
         val authorId = commentRepository.getComment(commentId)?.authorId
@@ -126,11 +99,13 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
         val postType = call.request.queryParameters["postType"]
 
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
-        println(2)
+
+        val newCommentAmount: Int
+
         when (postType) {
             "task" -> {
                 if (authorId == userId) {
-                    taskRepository.updateCommentAmount(parentId, -1)
+                    newCommentAmount = taskRepository.updateCommentAmount(parentId, -1)
                 } else {
                     call.respondText(
                         "Resource Modification Restricted - Ownership Required",
@@ -141,7 +116,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
             }
             "solution" -> {
                 if (authorId == userId) {
-                    solutionRepository.updateCommentAmount(parentId, -1)
+                    newCommentAmount = solutionRepository.updateCommentAmount(parentId, -1)
                 } else {
                     call.respondText(
                         "Resource Modification Restricted - Ownership Required",
@@ -154,35 +129,18 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
                 return@delete
             }
         }
-        println(3)
         commentRepository.deleteComment(commentId)
-        call.respondHtml { body() }
+        call.respondHtml {
+            body {
+                span {
+                    id = "comment-amount-${parentId}"
+                    attributes["hx-swap-oob"] = "true"
+                    commentCountTemplate(newCommentAmount)
+                }
+            }
+        }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 //when (postType) {
