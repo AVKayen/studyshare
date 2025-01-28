@@ -3,6 +3,7 @@ package com.physman.routes
 import com.physman.authentication.user.UserSession
 import com.physman.forms.*
 import com.physman.solution.*
+import com.physman.task.TaskRepository
 import com.physman.templates.*
 import com.physman.utils.validateObjectIds
 import io.ktor.http.*
@@ -14,7 +15,7 @@ import kotlinx.html.*
 import org.bson.types.ObjectId
 
 
-fun Route.solutionRouter(solutionRepository: SolutionRepository) {
+fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
     val solutionCreationForm = Form("Create a new solution", "solutionForm", formAttributes = mapOf(
         "hx-target" to "#solution-list",
         "hx-swap" to "beforeend"
@@ -74,6 +75,9 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
+        val parentTask = taskRepository.getTask(taskId) ?: return@get
+        val parentAuthorId = parentTask.task.authorId
+
         val solutionViews = solutionRepository.getSolutions(taskId = taskId, userId = userId)
 
         call.respondHtml {
@@ -82,7 +86,9 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
                     attributes["id"] = "solution-list"
                   
                     for (solutionView in solutionViews) {
-                        val isAuthor = userId == solutionView.solution.authorId
+                        val isAuthor: Boolean = userId == solutionView.solution.authorId
+                                || userId == parentAuthorId
+
                         solutionTemplate(solutionView, isAuthor)
                     }
                 }
@@ -119,11 +125,14 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository) {
         delete {
             val objectIds = validateObjectIds(call, "id") ?: return@delete
             val solutionId = objectIds["id"]!!
+            val solution = solutionRepository.getSolution(solutionId) ?: return@delete
+            val parentTask = taskRepository.getTask(solution.taskId) ?: return@delete
 
-            val authorId = solutionRepository.getSolution(solutionId)?.authorId ?: return@delete
+            val parentAuthorId = parentTask.task.authorId
+            val authorId = solution.authorId
             val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
-            if (authorId == userId) {
+            if (authorId == userId || parentAuthorId == userId) {
                 solutionRepository.deleteSolution(solutionId)
                 call.respondHtml { body() }
             }

@@ -3,7 +3,6 @@ package com.physman.templates
 import com.physman.attachment.AttachmentView
 import com.physman.solution.SolutionView
 import com.physman.solution.VoteUpdate
-import com.physman.utils.objectIdToSimpleDateString
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
@@ -23,16 +22,17 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView, isAuthor: Boolean) 
         div {
             classes = setOf("solution-content")
             header {
-                h2 {
-                    +solutionView.solution.title
-                }
-                span {
-                    if (isAuthor) {
-                        postDeletionButton(solutionView.solution)
+                div {
+                    h2 {
+                        +solutionView.solution.title
+                    }
+                    cite {
+                        +"${solutionView.solution.authorName} @ "
+                        localDateSpan(solutionView.solution.id)
                     }
                 }
-                cite {
-                    +"${solutionView.solution.authorName} @ ${objectIdToSimpleDateString(solutionView.solution.id)}"
+                if (isAuthor) {
+                    postDeletionButton(post = solutionView.solution)
                 }
             }
 

@@ -29,6 +29,9 @@ private fun FlowContent.modalContent(title: String, submitText: String, submitAt
 
             button {
                 attributes.putAll(submitAttributes)
+                span(classes = "htmx-indicator") {
+                    attributes["aria-busy"] = "true"
+                }
                 +submitText
             }
         }

@@ -64,13 +64,13 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
         return attachment
     }
 
-    override suspend fun createAttachment(file: UploadFileData): Attachment {
+    override suspend fun createAttachment(file: UploadFileData): AttachmentView {
         val attachment = processFileUpload(file)
         attachmentCollection.insertOne(attachment)
-        return attachment
+        return getAttachmentView(attachment)
     }
 
-    override suspend fun createAttachments(files: List<UploadFileData>): List<Attachment> {
+    override suspend fun createAttachments(files: List<UploadFileData>): List<AttachmentView> {
 
         val attachments = files.map { processFileUpload(it) }
 
@@ -78,7 +78,7 @@ class MongoGCloudAttachmentRepository(private val bucketName: String, database: 
             attachmentCollection.insertMany(attachments)
         }
 
-        return attachments
+        return attachments.map { getAttachmentView(it) }
     }
 
     private fun deleteUploadedFile(blobName: String) {

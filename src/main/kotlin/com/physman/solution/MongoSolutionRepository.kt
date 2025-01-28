@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.toList
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 
-// TODO: error handling
 class MongoSolutionRepository(
     mongoDatabase: MongoDatabase,
     private val commentRepository: CommentRepository,
@@ -25,13 +24,13 @@ class MongoSolutionRepository(
         val attachments = attachmentRepository.createAttachments(files)
 
         val solutionWithAttachments = solution.copy(
-            attachmentIds = attachments.map { it.id }
+            attachmentIds = attachments.map { it.attachment.id }
         )
         solutionCollection.insertOne(solutionWithAttachments)
 
         return SolutionView(
             solution = solutionWithAttachments,
-            attachments = attachmentRepository.getAttachments(solution.attachmentIds),
+            attachments = attachments,
             isUpvoted = solution.upvotes.contains(userId),
             isDownvoted = solution.downvotes.contains(userId)
         )

@@ -16,9 +16,11 @@ fun HEAD.headTags() {
     script { src = "https://storage.googleapis.com/studyshare-static/fancybox-5.0.umd.js" }
     link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/fancybox-5.0.css")
 
-    // custom CSS TODO: for prod, change this to a GCP file
-//        link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
-link(rel = "stylesheet", href = "/static/styles.css")
+    // custom CSS and JS TODO: for prod, change this to a GCP file
+  link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/styles.css")
+  script { src = "https://storage.googleapis.com/studyshare-static/helperFunctions.js" }
+//    link(rel = "stylesheet", href = "/static/styles.css")
+//    script { src = "/static/helperFunctions.js" }
 
     // config for htmx (code 422 for error form reponses)
     meta(

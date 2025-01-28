@@ -29,7 +29,7 @@ class MongoGroupRepository(
             )
         }
         val groupThumbnailAttachment = attachmentRepository.createAttachment(groupThumbnailFile)
-        val groupWithThumbnail = group.copy( thumbnailId = groupThumbnailAttachment.id )
+        val groupWithThumbnail = group.copy( thumbnailId = groupThumbnailAttachment.attachment.id )
         groupCollection.insertOne(groupWithThumbnail)
         return GroupView(
             group = groupWithThumbnail,

@@ -43,7 +43,7 @@ fun Application.configureRouting(
         }
         authenticate("USER") {
             route("/solutions") {
-                solutionRouter(solutionRepository)
+                solutionRouter(solutionRepository, taskRepository)
             }
 
             route("/comments") {

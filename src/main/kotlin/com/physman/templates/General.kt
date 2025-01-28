@@ -129,7 +129,7 @@ fun FlowContent.postDeletionButton(post: Post) {
         else -> throw IllegalArgumentException("Invalid post")
     }
 
-    button {
+    button(classes = "btn secondary outline") {
         attributes["hx-get"] = url
         attributes["hx-target"] = "body"
         attributes["hx-swap"] = "beforeend"
@@ -137,5 +137,17 @@ fun FlowContent.postDeletionButton(post: Post) {
         span(classes = "material-symbols-rounded") {
             +"delete"
         }
+    }
+}
+
+fun FlowContent.localDateSpan(objectId: ObjectId) {
+    val script = """
+        on load 1
+            put convertUTCDateToLocalDate(me.dataset.date) into me
+        end
+    """.trimIndent()
+    span {
+        attributes["_"] = script
+        attributes["data-date"] = objectId.timestamp.toString()
     }
 }

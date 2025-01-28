@@ -20,15 +20,20 @@ class MongoTaskRepository(
 ) : TaskRepository {
     private val taskCollection = mongoDatabase.getCollection<Task>("tasks")
 
-    override suspend fun createTask(task: Task, files: List<UploadFileData>) {
+    override suspend fun createTask(task: Task, files: List<UploadFileData>): TaskView {
 
         val attachments = attachmentRepository.createAttachments(files)
 
         val taskWithAttachments = task.copy(
-            attachmentIds = attachments.map { it.id }
+            attachmentIds = attachments.map { it.attachment.id }
         )
 
         taskCollection.insertOne(taskWithAttachments)
+
+        return TaskView(
+            task = taskWithAttachments,
+            attachments = attachments
+        )
     }
 
     override suspend fun getTasks(groupId: ObjectId): List<TaskView> {

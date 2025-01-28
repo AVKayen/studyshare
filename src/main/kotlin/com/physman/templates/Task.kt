@@ -2,7 +2,6 @@ package com.physman.templates
 
 import com.physman.attachment.AttachmentView
 import com.physman.task.TaskView
-import com.physman.utils.objectIdToSimpleDateString
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
@@ -13,16 +12,17 @@ fun FlowContent.taskTemplate(taskView: TaskView, isAuthor: Boolean) {
     article(classes = "task") {
         id = "article-${taskView.task.id.toHexString()}"
         header {
-            h2 {
-                +taskView.task.title
-            }
-            span {
-                if (isAuthor) {
-                    postDeletionButton(taskView.task)
+            div {
+                h2 {
+                    +taskView.task.title
+                }
+                cite {
+                    +"${taskView.task.authorName} @ "
+                    localDateSpan(taskView.task.id)
                 }
             }
-            cite {
-                +"${taskView.task.authorName} @ ${objectIdToSimpleDateString(taskView.task.id)}"
+            if (isAuthor) {
+                postDeletionButton(taskView.task)
             }
         }
         if (taskView.task.additionalNotes != null) {
