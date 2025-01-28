@@ -8,7 +8,7 @@ import com.physman.solution.SolutionRepository
 import com.physman.task.TaskRepository
 import com.physman.templates.commentCountTemplate
 import com.physman.templates.commentTemplate
-import com.physman.utils.validateObjectIds
+import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.request.*
@@ -25,7 +25,8 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
     //TODO: put in actual urls, or transfer values in an other way
     get {
-        val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@get
+        val objectIds: Map<String, ObjectId> = validateRequiredObjectIds(call, "parentId") ?: return@get
+
         val parentId = objectIds["parentId"]
         val parentPostClassName = call.request.queryParameters["postType"]!!
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
@@ -63,7 +64,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
     route("/comment") {
         post {
-            val objectIds: Map<String, ObjectId> = validateObjectIds(call, "parentId") ?: return@post
+            val objectIds: Map<String, ObjectId> = validateRequiredObjectIds(call, "parentId") ?: return@post
             val parentId = objectIds["parentId"]
             val postType = call.request.queryParameters["postType"]
             val userSession = call.sessions.get<UserSession>()!!
@@ -91,7 +92,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     }
 
     delete {
-        val objectIds = validateObjectIds(call, "commentId", "parentId") ?: return@delete
+        val objectIds = validateRequiredObjectIds(call, "commentId", "parentId") ?: return@delete
         val commentId = objectIds["commentId"]!!
         val authorId = commentRepository.getComment(commentId)?.authorId
 

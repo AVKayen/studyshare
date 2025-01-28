@@ -1,6 +1,7 @@
 package com.physman.solution
 
 import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Sorts
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.physman.attachment.AttachmentRepository
@@ -52,9 +53,17 @@ class MongoSolutionRepository(
         solutionCollection.deleteMany(filter)
     }
 
-    override suspend fun getSolutions(taskId: ObjectId, userId: ObjectId): List<SolutionView> {
-        val filter = Filters.eq(Solution::taskId.name, taskId)
-        return solutionCollection.find(filter).toList().map { solution: Solution ->
+    override suspend fun getSolutions(taskId: ObjectId, userId: ObjectId, resultCount: Int, lastId: ObjectId?): List<SolutionView> {
+        val filter = if (lastId != null) {
+            Filters.and(
+                Filters.eq(Solution::taskId.name, taskId),
+                Filters.lt("_id", lastId)
+            )
+        } else {
+            Filters.eq(Solution::taskId.name, taskId)
+        }
+        val sort = Sorts.descending("_id")
+        return solutionCollection.find(filter).sort(sort).limit(resultCount).toList().map { solution: Solution ->
             SolutionView(
                 solution = solution,
                 attachments = attachmentRepository.getAttachments(solution.attachmentIds),

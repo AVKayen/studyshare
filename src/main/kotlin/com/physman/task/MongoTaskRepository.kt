@@ -1,6 +1,7 @@
 package com.physman.task
 
 import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Sorts
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.physman.forms.UploadFileData
@@ -36,14 +37,17 @@ class MongoTaskRepository(
         )
     }
 
-    override suspend fun getTasks(groupId: ObjectId): List<TaskView> {
-        val filter = Filters.eq(Task::groupId.name, groupId)
-        return taskCollection.find(filter).toList().map { task: Task ->
-            TaskView(
-                task =  task,
-                attachments = attachmentRepository.getAttachments(task.attachmentIds)
+    override suspend fun getTasks(groupId: ObjectId, resultCount: Int, lastId: ObjectId?): List<Task> {
+        val filter = if (lastId != null) {
+            Filters.and(
+                Filters.eq(Task::groupId.name, groupId),
+                Filters.lt("_id", lastId)
             )
+        } else {
+            Filters.eq(Task::groupId.name, groupId)
         }
+        val sort = Sorts.descending("_id")
+        return taskCollection.find(filter).sort(sort).limit(resultCount).toList()
     }
 
     override suspend fun getTask(id: ObjectId): TaskView? {
@@ -54,13 +58,14 @@ class MongoTaskRepository(
             attachments = attachmentRepository.getAttachments(task.attachmentIds)
         )
     }
-     override suspend fun deleteTask(id: ObjectId) {
-         val filter = Filters.eq("_id", id)
-         val task = taskCollection.findOneAndDelete(filter) ?: return
 
-         commentRepository.deleteComments(id)
-         solutionRepository.deleteSolutions(taskId = task.id)
-         attachmentRepository.deleteAttachments(task.attachmentIds)
+    override suspend fun deleteTask(id: ObjectId) {
+        val filter = Filters.eq("_id", id)
+        val task = taskCollection.findOneAndDelete(filter) ?: return
+
+        commentRepository.deleteComments(id)
+        solutionRepository.deleteSolutions(taskId = task.id)
+        attachmentRepository.deleteAttachments(task.attachmentIds)
     }
 
     override suspend fun deleteTasks(groupId: ObjectId) {

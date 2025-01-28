@@ -1,14 +1,14 @@
 package com.physman.templates
 
-import com.physman.task.TaskView
+import com.physman.task.Task
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.taskPreviewTemplate(taskView: TaskView) {
+fun FlowContent.taskPreviewTemplate(task: Task) {
     article(classes = "flex-col task") {
-        a(href = "/${taskView.task.groupId}/${taskView.task.id}") {
+        a(href = "/${task.groupId}/${task.id}") {
             h2 {
-                +taskView.task.title
+                +task.title
             }
         }
     }

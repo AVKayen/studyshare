@@ -2,7 +2,7 @@ package com.physman.templates
 
 import kotlinx.html.*
 
-private fun FlowContent.modalContent(title: String, submitText: String, submitAttributes: Map<String, String>, modalBody: ARTICLE.() -> Unit) {
+private fun FlowContent.modalContent(title: String, submitText: String, submitAttributes: Map<String, String>? = null, modalBody: ARTICLE.() -> Unit) {
     article {
         header {
             button {
@@ -28,7 +28,10 @@ private fun FlowContent.modalContent(title: String, submitText: String, submitAt
             }
 
             button {
-                attributes.putAll(submitAttributes)
+                if (submitAttributes != null) {
+                    attributes.putAll(submitAttributes)
+                }
+
                 span(classes = "htmx-indicator") {
                     attributes["aria-busy"] = "true"
                 }
@@ -42,7 +45,7 @@ private fun FlowContent.modalContent(title: String, submitText: String, submitAt
 fun FlowContent.modalTemplate(
     title: String,
     submitText: String,
-    submitAttributes: Map<String, String>,
+    submitAttributes: Map<String, String>?,
     modalWrapper: (FlowContent.(block: FlowContent.() -> Unit) -> Unit)? = null,
     modalBody: ARTICLE.() -> Unit
 ) {
