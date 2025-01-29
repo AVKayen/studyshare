@@ -112,7 +112,7 @@ fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepo
         val lastId = optionalObjectIds["lastId"]
 
         val taskViews = taskRepository.getTasks(
-            groupId = groupId, lastId = lastId, resultCount = pageSize
+            groupId = groupId, category = null, lastId = lastId, resultCount = pageSize // TODO: Pass a real category
         )
 
         call.respondHtml {
@@ -180,7 +180,8 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
             authorName = userSession.name,
             authorId = ObjectId(userSession.id),
             groupName = group.group.title,
-            groupId = groupId
+            groupId = groupId,
+            category = "fakeCategory" // TODO: set a user-chosen category
         )
 
         taskRepository.createTask(task, files)

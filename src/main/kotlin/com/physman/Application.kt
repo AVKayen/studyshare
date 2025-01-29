@@ -28,7 +28,7 @@ fun Application.module() {
     isDevelopment = this.developmentMode
     val environment = Environment(true)
     val mongodbClient = MongoClient.create(environment.MONGODB_CONNECTION_STRING)
-    val database = mongodbClient.getDatabase("furthergroupedstudyshare")
+    val database = mongodbClient.getDatabase("task-category-studyshare")
 
     val imageRepository = MongoGCloudAttachmentRepository(bucketName = "studyshare-files", database = database)
     val commentRepository = MongoCommentRepository(database)
