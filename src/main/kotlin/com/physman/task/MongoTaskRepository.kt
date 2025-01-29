@@ -38,26 +38,13 @@ class MongoTaskRepository(
     }
 
     override suspend fun getTasks(groupId: ObjectId, category: String?, resultCount: Int, lastId: ObjectId?): List<Task> {
-
-        val filter = if (category != null && lastId != null) {
-            Filters.and(
+        val filter = Filters.and(
+            listOfNotNull(
                 Filters.eq(Task::groupId.name, groupId),
-                Filters.eq(Task::category.name, category),
-                Filters.lt("_id", lastId)
+                category?.let { Filters.eq(Task::category.name, it) },
+                lastId?.let { Filters.lt("_id", it) }
             )
-        } else if (category != null) {
-            Filters.and(
-                Filters.eq(Task::groupId.name, groupId),
-                Filters.eq(Task::category.name, category)
-            )
-        } else if (lastId != null) {
-            Filters.and(
-                Filters.eq(Task::groupId.name, groupId),
-                Filters.lt("_id", lastId)
-            )
-        } else {
-            Filters.eq(Task::groupId.name, groupId)
-        }
+        )
 
         val sort = Sorts.descending("_id")
 
