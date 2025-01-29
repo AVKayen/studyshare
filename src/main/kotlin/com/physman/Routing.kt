@@ -31,6 +31,7 @@ fun Application.configureRouting(
             authenticate("USER") {
                 groupRouter(groupRepository, userRepository)
                 taskRouter(taskRepository, groupRepository)
+                solutionRouter(solutionRepository, taskRepository, groupRepository)
             }
         }
 
@@ -42,10 +43,6 @@ fun Application.configureRouting(
             authRouter(userRepository)
         }
         authenticate("USER") {
-            route("/solutions") {
-                solutionRouter(solutionRepository, taskRepository)
-            }
-
             route("/comments") {
                 commentRouter(commentRepository, solutionRepository, taskRepository)
             }

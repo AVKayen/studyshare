@@ -70,11 +70,11 @@ fun Route.getTaskView(taskRepository: TaskRepository) {
                     classes = setOf("wide-button-container")
                     formModalOpenButton(
                         buttonText = "Create a solution",
-                        modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}",
+                        modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}&groupId=${groupId}",
                         additionalClasses = setOf("wide-button", "outline")
                     )
                 }
-                contentLoadTemplate(url = "/solutions?taskId=${taskView.task.id}")
+                contentLoadTemplate(url = "/solutions?taskId=${taskView.task.id}&groupId=${groupId}")
             }
         }
     }
