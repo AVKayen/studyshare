@@ -169,7 +169,7 @@ fun Route.postAddUserToGroup(groupRepository: GroupRepository, userRepository: U
     post {
         val formSubmissionData = userAdditionForm.validateSubmission(call) ?: return@post
         val user = formSubmissionData.fields["user"]!!
-        val objectIds = validateObjectIds(call, "groupId") ?: return@post
+        val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@post
         val groupId = objectIds["groupId"]!!
 
         val userToAdd = userRepository.getUserByName(user)
@@ -189,7 +189,7 @@ fun Route.postAddUserToGroup(groupRepository: GroupRepository, userRepository: U
 
 fun Route.getAddUserToGroupModal(userAdditionForm: Form) {
     get {
-        val objectIds = validateObjectIds(call, "groupId") ?: return@get
+        val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
         val groupId = objectIds["groupId"]!!
 
         call.respondHtml {
