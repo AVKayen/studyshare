@@ -37,16 +37,17 @@ class MongoTaskRepository(
         )
     }
 
-    override suspend fun getTasks(groupId: ObjectId, resultCount: Int, lastId: ObjectId?): List<Task> {
-        val filter = if (lastId != null) {
-            Filters.and(
+    override suspend fun getTasks(groupId: ObjectId, category: String?, resultCount: Int, lastId: ObjectId?): List<Task> {
+        val filter = Filters.and(
+            listOfNotNull(
                 Filters.eq(Task::groupId.name, groupId),
-                Filters.lt("_id", lastId)
+                category?.let { Filters.eq(Task::category.name, it) },
+                lastId?.let { Filters.lt("_id", it) }
             )
-        } else {
-            Filters.eq(Task::groupId.name, groupId)
-        }
+        )
+
         val sort = Sorts.descending("_id")
+
         return taskCollection.find(filter).sort(sort).limit(resultCount).toList()
     }
 

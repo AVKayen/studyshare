@@ -35,5 +35,6 @@ data class Task (
     override val groupId: ObjectId,
     override val additionalNotes: String? = null,
     override val commentAmount: Int = 0,
-    override val attachmentIds: List<ObjectId> = emptyList()
+    override val attachmentIds: List<ObjectId> = emptyList(),
+    val category: String
 ) : Post()
