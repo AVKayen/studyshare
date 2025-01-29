@@ -11,4 +11,5 @@ data class Group(
     val leaderId: ObjectId,
     val memberIds: List<ObjectId>,
     val thumbnailId: ObjectId?, // ObjectId pointing to an Attachment
+    val taskCategories: List<String>? = emptyList()
 )

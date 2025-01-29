@@ -30,7 +30,7 @@ fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepos
         postTaskCreation(taskRepository, groupRepository, taskCreationForm)
         route("/{taskId}") {
             getTaskView(taskRepository, groupRepository)
-            deleteTask(taskRepository)
+            deleteTask(taskRepository, groupRepository)
         }
         route("/tasks") {
             getTaskList(taskRepository, groupRepository)
@@ -185,13 +185,14 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
         )
 
         taskRepository.createTask(task, files)
+        groupRepository.addTaskCategory(groupId = groupId, taskCategory = task.category)
         formSubmissionData.cleanup()
 
         call.smartRedirect(redirectUrl = "/${groupId}/${task.id}")
     }
 }
 
-fun Route.deleteTask(taskRepository: TaskRepository) {
+fun Route.deleteTask(taskRepository: TaskRepository, groupRepository: GroupRepository) {
     delete {
         val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@delete
         val taskId = objectIds["taskId"]!!
@@ -201,7 +202,11 @@ fun Route.deleteTask(taskRepository: TaskRepository) {
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
         if (authorId == userId) {
-            taskRepository.deleteTask(taskId)
+            val deletedTask = taskRepository.deleteTask(taskId)
+            if (deletedTask != null && !taskRepository.doesCategoryExist(groupId = groupId, category = deletedTask.category)) {
+                groupRepository.removeTaskCategory(groupId = groupId, taskCategory = deletedTask.category)
+            }
+
             call.smartRedirect(redirectUrl = "/$groupId")
         } else {
             call.respondText(
