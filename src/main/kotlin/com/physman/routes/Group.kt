@@ -8,6 +8,7 @@ import com.physman.group.GroupRepository
 import com.physman.solution.additionalNotesValidator
 import com.physman.solution.titleValidator
 import com.physman.templates.*
+import com.physman.utils.smartRedirect
 import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*
@@ -150,18 +151,21 @@ fun Route.postCreateGroup(groupRepository: GroupRepository, groupCreationForm: F
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
+        val group = Group(
+            title = title,
+            description = description,
+            leaderId = userId,
+            memberIds = listOf(userId),
+            thumbnailId = null
+        )
+
         groupRepository.createGroup(
-            Group(
-                title = title,
-                description = description,
-                leaderId = userId,
-                memberIds = listOf(userId),
-                thumbnailId = null
-            ),
+            group = group,
             groupThumbnailFile = image
         )
 
-        call.respondRedirect("/")
+        formSubmissionData.cleanup()
+        call.smartRedirect(redirectUrl = "/${group.id}")
     }
 }
 
