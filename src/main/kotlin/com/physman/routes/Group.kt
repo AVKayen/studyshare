@@ -5,7 +5,6 @@ import com.physman.authentication.user.UserSession
 import com.physman.forms.*
 import com.physman.group.Group
 import com.physman.group.GroupRepository
-import com.physman.group.GroupView
 import com.physman.solution.additionalNotesValidator
 import com.physman.solution.titleValidator
 import com.physman.templates.*
@@ -88,12 +87,9 @@ fun Route.getGroupCreationModal(groupCreationForm: Form) {
 fun Route.getGroupList(groupRepository: GroupRepository, userRepository: UserRepository) {
     get {
         val userSession = call.sessions.get<UserSession>()!!
-        val groups = userRepository.getUserById(userSession.id)?.groupIds ?: emptySet()
-        val groupViews = mutableListOf<GroupView>()
-        // TODO: Create something like getGroupsByIds
-        for (group in groups) {
-            groupRepository.getGroup(group)?.let { groupViews.add(it) }
-        }
+        val groupIds = userRepository.getUserById(userSession.id)?.groupIds ?: emptySet()
+        val groupViews = groupRepository.getGroups(groupIds.toList())
+
         call.respondHtml {
             body {
                 div {

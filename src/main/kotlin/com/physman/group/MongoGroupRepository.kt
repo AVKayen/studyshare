@@ -1,6 +1,7 @@
 package com.physman.group
 
 import com.mongodb.client.model.Filters
+import com.mongodb.client.model.Sorts
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.physman.attachment.AttachmentRepository
@@ -8,6 +9,7 @@ import com.physman.authentication.user.UserRepository
 import com.physman.forms.UploadFileData
 import com.physman.task.TaskRepository
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
 
 class MongoGroupRepository(
@@ -56,8 +58,8 @@ class MongoGroupRepository(
     }
 
     override suspend fun isUserMember(groupId: ObjectId, userId: ObjectId): Boolean {
-        val filters = Filters.eq("_id", groupId)
-        val group = groupCollection.find(filters).firstOrNull() ?: return false
+        val filter = Filters.eq("_id", groupId)
+        val group = groupCollection.find(filter).firstOrNull() ?: return false
         return group.memberIds.contains(userId)
     }
 
@@ -67,5 +69,16 @@ class MongoGroupRepository(
             group = group,
             thumbnail = group.thumbnailId?.let { attachmentRepository.getAttachment(it) }
         )
+    }
+
+    override suspend fun getGroups(groupIds: List<ObjectId>): List<GroupView> {
+        val filter = Filters.`in`("_id", groupIds)
+        val sort = Sorts.descending("_id")
+        return groupCollection.find(filter).sort(sort).toList().map { group: Group ->
+            GroupView(
+                group = group,
+                thumbnail = group.thumbnailId?.let { attachmentRepository.getAttachment(it) }
+            )
+        }
     }
 }
