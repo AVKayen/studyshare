@@ -28,6 +28,8 @@ data class Solution(
     override val title: String,
     override val authorName: String,
     override val authorId: ObjectId,
+    override val groupName: String,
+    override val groupId: ObjectId,
     override val additionalNotes: String? = null,
     override val commentAmount: Int = 0,
     val upvotes: List<ObjectId> = emptyList(), // Ids of users who upvoted the solution

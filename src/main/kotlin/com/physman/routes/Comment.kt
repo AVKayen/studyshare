@@ -4,10 +4,13 @@ import com.physman.authentication.user.UserSession
 import com.physman.comment.Comment
 import com.physman.comment.CommentRepository
 import com.physman.comment.commentValidator
+import com.physman.group.GroupRepository
 import com.physman.solution.SolutionRepository
 import com.physman.task.TaskRepository
 import com.physman.templates.commentCountTemplate
 import com.physman.templates.commentTemplate
+import com.physman.utils.Post
+import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -18,17 +21,17 @@ import io.ktor.server.sessions.*
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
-fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
+fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository: SolutionRepository, taskRepository: TaskRepository, groupRepository: GroupRepository) {
     route("/comments") {
-        getCommentView(commentRepository)
+        getCommentView(taskRepository, solutionRepository, commentRepository, groupRepository)
         deleteComment(commentRepository, solutionRepository, taskRepository)
         route("/comment") {
-            postComment(taskRepository, solutionRepository, commentRepository)
+            postComment(taskRepository, solutionRepository, commentRepository, groupRepository)
         }
     }
 }
 
-fun Route.getCommentView(commentRepository: CommentRepository) {
+fun Route.getCommentView(taskRepository: TaskRepository, solutionRepository: SolutionRepository, commentRepository: CommentRepository, groupRepository: GroupRepository) {
     get {
         val objectIds: Map<String, ObjectId> = validateRequiredObjectIds(call, "parentId") ?: return@get
 
@@ -37,6 +40,12 @@ fun Route.getCommentView(commentRepository: CommentRepository) {
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
         val comments = commentRepository.getComments(parentId!!)
+        val parentPost = when (parentPostClassName.lowercase()) {
+            "task" -> taskRepository.getTask(parentId)?.task
+            "solution" -> solutionRepository.getSolution(parentId)
+            else -> return@get
+        }
+        if (!validateGroupBelonging(call, groupRepository, parentPost?.groupId)) return@get
 
         call.respondHtml {
             body {
@@ -67,7 +76,7 @@ fun Route.getCommentView(commentRepository: CommentRepository) {
     }
 }
 
-fun Route.postComment(taskRepository: TaskRepository, solutionRepository: SolutionRepository, commentRepository: CommentRepository) {
+fun Route.postComment(taskRepository: TaskRepository, solutionRepository: SolutionRepository, commentRepository: CommentRepository, groupRepository: GroupRepository) {
     post {
         val objectIds: Map<String, ObjectId> = validateRequiredObjectIds(call, "parentId") ?: return@post
         val parentId = objectIds["parentId"]
@@ -80,9 +89,27 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
             return@post
         }
 
-        val newComment = Comment(parentId = parentId!!, content = content, authorName = userSession.name, authorId = ObjectId(userSession.id))
+        val parentPost: Post? = when (postType?.lowercase()) {
+            "task" -> taskRepository.getTask(parentId!!)?.task
+            "solution" -> solutionRepository.getSolution(parentId!!)
+            else -> return@post
+        }
 
-        when (postType?.lowercase()) {
+        if (parentPost == null) {
+            call.respond(HttpStatusCode.NotFound)
+            return@post
+        }
+
+        if (!validateGroupBelonging(call, groupRepository, parentPost.groupId)) return@post
+
+        val newComment = Comment(
+            parentId = parentId,
+            content = content,
+            authorName = userSession.name,
+            authorId = ObjectId(userSession.id)
+        )
+
+        when (postType.lowercase()) {
             "task" -> taskRepository.updateCommentAmount(parentId, 1)
             "solution" -> solutionRepository.updateCommentAmount(parentId, 1)
             else -> return@post

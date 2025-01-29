@@ -52,12 +52,14 @@ suspend fun validateOptionalObjectIds(call: RoutingCall, vararg parameterNames: 
     return validatedObjectIds
 }
 
-suspend fun validateGroupBelonging(call: RoutingCall, groupRepository: GroupRepository, providedGroupId: ObjectId? = null): Unit {
+suspend fun validateGroupBelonging(call: RoutingCall, groupRepository: GroupRepository, providedGroupId: ObjectId? = null): Boolean {
     val userSession = call.sessions.get<UserSession>()!!
 
     val groupId: ObjectId = providedGroupId ?: validateRequiredObjectIds(call, "groupId")?.get("groupId")!!
 
     if (!groupRepository.isUserMember(groupId, ObjectId(userSession.id))) {
         call.smartRedirect("/")
+        return false
     }
+    return true
 }

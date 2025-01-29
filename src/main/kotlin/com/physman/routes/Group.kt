@@ -9,7 +9,6 @@ import com.physman.group.GroupView
 import com.physman.solution.additionalNotesValidator
 import com.physman.solution.titleValidator
 import com.physman.templates.*
-import com.physman.utils.smartRedirect
 import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*

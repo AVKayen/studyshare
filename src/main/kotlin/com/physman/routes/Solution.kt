@@ -30,11 +30,11 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository:
         route("/{id}") {
             deleteSolution(solutionRepository, taskRepository)
             route("/{voteAction}") {
-                postVote(solutionRepository)
+                postVote(solutionRepository, groupRepository)
             }
         }
         getSolutions(taskRepository, solutionRepository, groupRepository)
-        postSolutionCreation(solutionRepository, groupRepository, solutionCreationForm)
+        postSolutionCreation(taskRepository, solutionRepository, groupRepository, solutionCreationForm)
     }
 }
 
@@ -55,17 +55,16 @@ fun routeSolutionCreationForm(): Form {
 fun Route.getSolutionCreationModal(solutionCreationForm: Form) {
     get {
         val taskId = call.request.queryParameters["taskId"]
-        val groupId = call.request.queryParameters["groupId"]
 
-        if (taskId == null || groupId == null) {
-            call.respondText("Task/Group Id not specified.", status = HttpStatusCode.BadRequest)
+        if (taskId == null) {
+            call.respondText("Task Id not specified.", status = HttpStatusCode.BadRequest)
             return@get
         }
         call.respondHtml {
             body {
                 formModalDialog(
                     form = solutionCreationForm,
-                    callbackUrl = "/solutions?taskId=$taskId&groupId=$groupId",
+                    callbackUrl = "/solutions?taskId=$taskId",
                     requestType = POST
                 )
             }
@@ -76,9 +75,8 @@ fun Route.getSolutionCreationModal(solutionCreationForm: Form) {
 fun Route.getSolutionDeletionModal() {
     get {
         val solutionId = call.request.queryParameters["solutionId"]
-        val groupId = call.request.queryParameters["groupId"]
 
-        if (solutionId == null || groupId == null) {
+        if (solutionId == null) {
             call.respondText("Solution Id not specified.", status = HttpStatusCode.BadRequest)
             return@get
         }
@@ -90,7 +88,7 @@ fun Route.getSolutionDeletionModal() {
                     details = "Are you sure you want to delete this solution?",
                     submitText = "Delete",
                     submitAttributes = mapOf(
-                        "hx-delete" to "/solutions/$solutionId?groupId=$groupId",
+                        "hx-delete" to "/solutions/$solutionId",
                         "hx-target" to "#article-$solutionId",
                         "hx-swap" to "outerHTML"
                     )
@@ -102,7 +100,6 @@ fun Route.getSolutionDeletionModal() {
 
 fun Route.getSolutions(taskRepository: TaskRepository, solutionRepository: SolutionRepository, groupRepository: GroupRepository) {
     get {
-        validateGroupBelonging(call, groupRepository)
 
         val pageSize = 8
 
@@ -115,9 +112,10 @@ fun Route.getSolutions(taskRepository: TaskRepository, solutionRepository: Solut
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-
         val parentTask = taskRepository.getTask(taskId) ?: return@get
         val parentAuthorId = parentTask.task.authorId
+
+        if (!validateGroupBelonging(call, groupRepository, parentTask.task.groupId)) return@get
 
         val solutionViews = solutionRepository.getSolutions(
             taskId = taskId, userId = userId, lastId = lastId, resultCount = pageSize
@@ -145,10 +143,8 @@ fun Route.getSolutions(taskRepository: TaskRepository, solutionRepository: Solut
     }
 }
 
-fun Route.postSolutionCreation(solutionRepository: SolutionRepository, groupRepository: GroupRepository, solutionCreationForm: Form) {
+fun Route.postSolutionCreation(taskRepository: TaskRepository, solutionRepository: SolutionRepository, groupRepository: GroupRepository, solutionCreationForm: Form) {
     post {
-        validateGroupBelonging(call, groupRepository)
-
         val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@post
         val taskId = objectIds["taskId"]!!
 
@@ -160,7 +156,11 @@ fun Route.postSolutionCreation(solutionRepository: SolutionRepository, groupRepo
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
 
-        val solution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId, authorId = userId, authorName = userName)
+        val task = taskRepository.getTask(taskId) ?: return@post call.respond(HttpStatusCode.NotFound)
+
+        if (!validateGroupBelonging(call, groupRepository, task.task.groupId)) return@post
+
+        val solution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId, authorId = userId, authorName = userName, groupId = task.task.groupId, groupName = task.task.groupName)
 
         val solutionView = solutionRepository.createSolution(solution, formSubmissionData.files, userId)
         formSubmissionData.cleanup()
@@ -196,8 +196,7 @@ fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository:
     }
 }
 
-fun Route.postVote(solutionRepository: SolutionRepository) {
-    // TODO: validate group belonging
+fun Route.postVote(solutionRepository: SolutionRepository, groupRepository: GroupRepository) {
     post  {
         val action = call.parameters["voteAction"]
         val objectIds = validateRequiredObjectIds(call, "id") ?: return@post
@@ -205,6 +204,8 @@ fun Route.postVote(solutionRepository: SolutionRepository) {
 
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
+
+        if (!validateGroupBelonging(call, groupRepository, solutionRepository.getSolution(solutionId)?.groupId)) return@post
 
         if (action == null) {
             call.respondText("Action not specified.", status = HttpStatusCode.BadRequest)

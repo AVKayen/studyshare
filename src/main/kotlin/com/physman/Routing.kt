@@ -29,7 +29,7 @@ fun Application.configureRouting(
             indexViewRouter(groupRepository, userRepository)
 
             authenticate("USER") {
-                commentRouter(commentRepository, solutionRepository, taskRepository)
+                commentRouter(commentRepository, solutionRepository, taskRepository, groupRepository)
                 groupRouter(groupRepository, userRepository)
                 taskRouter(taskRepository, groupRepository)
                 solutionRouter(solutionRepository, taskRepository, groupRepository)
