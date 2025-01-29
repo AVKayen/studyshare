@@ -7,6 +7,7 @@ import com.physman.solution.*
 import com.physman.task.TaskRepository
 import com.physman.templates.*
 import com.physman.utils.smartRedirect
+import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateOptionalObjectIds
 import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*
@@ -27,7 +28,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository:
             getSolutionDeletionModal()
         }
         route("/{id}") {
-            deleteSolution(solutionRepository, taskRepository, groupRepository)
+            deleteSolution(solutionRepository, taskRepository)
             route("/{voteAction}") {
                 postVote(solutionRepository)
             }
@@ -101,11 +102,12 @@ fun Route.getSolutionDeletionModal() {
 
 fun Route.getSolutions(taskRepository: TaskRepository, solutionRepository: SolutionRepository, groupRepository: GroupRepository) {
     get {
+        validateGroupBelonging(call, groupRepository)
+
         val pageSize = 8
 
-        val objectIds = validateRequiredObjectIds(call, "taskId", "groupId") ?: return@get
+        val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@get
         val taskId = objectIds["taskId"]!!
-        val groupId = objectIds["groupId"]!!
 
         val optionalObjectIds = validateOptionalObjectIds(call, "lastId") ?: return@get
         val lastId = optionalObjectIds["lastId"]
@@ -113,9 +115,6 @@ fun Route.getSolutions(taskRepository: TaskRepository, solutionRepository: Solut
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        if (!groupRepository.isUserMember(groupId, userId)) {
-            call.smartRedirect("/")
-        }
 
         val parentTask = taskRepository.getTask(taskId) ?: return@get
         val parentAuthorId = parentTask.task.authorId
@@ -148,17 +147,14 @@ fun Route.getSolutions(taskRepository: TaskRepository, solutionRepository: Solut
 
 fun Route.postSolutionCreation(solutionRepository: SolutionRepository, groupRepository: GroupRepository, solutionCreationForm: Form) {
     post {
-        val objectIds = validateRequiredObjectIds(call, "taskId", "groupId") ?: return@post
+        validateGroupBelonging(call, groupRepository)
+
+        val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@post
         val taskId = objectIds["taskId"]!!
-        val groupId = objectIds["groupId"]!!
 
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
         val userName = userSession.name
-
-        if (!groupRepository.isUserMember(groupId, userId)) {
-            call.smartRedirect("/")
-        }
 
         val formSubmissionData: FormSubmissionData = solutionCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
@@ -177,11 +173,10 @@ fun Route.postSolutionCreation(solutionRepository: SolutionRepository, groupRepo
     }
 }
 
-fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository: TaskRepository, groupRepository: GroupRepository) {
+fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
     delete {
-        val objectIds = validateRequiredObjectIds(call, "id", "groupId") ?: return@delete
+        val objectIds = validateRequiredObjectIds(call, "id") ?: return@delete
         val solutionId = objectIds["id"]!!
-        val groupId = objectIds["groupId"]!!
 
         val solution = solutionRepository.getSolution(solutionId) ?: return@delete
         val parentTask = taskRepository.getTask(solution.taskId) ?: return@delete
@@ -189,10 +184,6 @@ fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository:
         val parentAuthorId = parentTask.task.authorId
         val authorId = solution.authorId
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
-
-        if (!groupRepository.isUserMember(groupId, userId)) {
-            call.smartRedirect("/")
-        }
 
         if (authorId == userId || parentAuthorId == userId) {
             solutionRepository.deleteSolution(solutionId)
@@ -206,6 +197,7 @@ fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository:
 }
 
 fun Route.postVote(solutionRepository: SolutionRepository) {
+    // TODO: validate group belonging
     post  {
         val action = call.parameters["voteAction"]
         val objectIds = validateRequiredObjectIds(call, "id") ?: return@post

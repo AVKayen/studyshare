@@ -1,8 +1,11 @@
 package com.physman.utils
 
+import com.physman.authentication.user.UserSession
+import com.physman.group.GroupRepository
 import io.ktor.http.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.sessions.*
 import org.bson.types.ObjectId
 
 suspend fun validateRequiredObjectIds(call: RoutingCall, vararg parameterNames: String): Map<String, ObjectId>? {
@@ -47,4 +50,14 @@ suspend fun validateOptionalObjectIds(call: RoutingCall, vararg parameterNames: 
         }
     }
     return validatedObjectIds
+}
+
+suspend fun validateGroupBelonging(call: RoutingCall, groupRepository: GroupRepository, providedGroupId: ObjectId? = null): Unit {
+    val userSession = call.sessions.get<UserSession>()!!
+
+    val groupId: ObjectId = providedGroupId ?: validateRequiredObjectIds(call, "groupId")?.get("groupId")!!
+
+    if (!groupRepository.isUserMember(groupId, ObjectId(userSession.id))) {
+        call.smartRedirect("/")
+    }
 }

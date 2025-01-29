@@ -20,6 +20,7 @@ import kotlinx.html.*
 import com.physman.forms.*
 import com.physman.task.Task
 import com.physman.utils.smartRedirect
+import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateOptionalObjectIds
 import org.bson.types.ObjectId
 
@@ -45,6 +46,8 @@ fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepos
 
 fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepository) {
     get {
+        validateGroupBelonging(call, groupRepository)
+
         val objectIds = validateRequiredObjectIds(call, "taskId", "groupId") ?: return@get
         val taskId = objectIds["taskId"]!!
         val groupId = objectIds["groupId"]!!
@@ -56,10 +59,6 @@ fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepo
         }
 
         val userSession = call.sessions.get<UserSession>()!!
-
-        if (!groupRepository.isUserMember(groupId, ObjectId(userSession.id))) {
-            call.smartRedirect("/")
-        }
 
         call.respondHtml(HttpStatusCode.OK) {
             index(
@@ -98,16 +97,12 @@ fun routeTaskForms(): Form {
 
 fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepository) {
     get {
+        validateGroupBelonging(call, groupRepository)
+
         val pageSize = 50
 
         val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
         val groupId = objectIds["groupId"]!!
-
-        val userSession = call.sessions.get<UserSession>()!!
-
-        if (!groupRepository.isUserMember(groupId, ObjectId(userSession.id))) {
-            call.smartRedirect("/")
-        }
 
         val optionalObjectIds = validateOptionalObjectIds(call, "lastId") ?: return@get
         val lastId = optionalObjectIds["lastId"]
@@ -163,6 +158,8 @@ fun Route.getTaskDeletionModal() {
 
 fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: GroupRepository, taskCreationForm: Form) {
     post {
+        validateGroupBelonging(call, groupRepository)
+
         val formSubmissionData: FormSubmissionData = taskCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
@@ -172,10 +169,6 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
         val group = groupRepository.getGroup(groupId) ?: return@post call.respond(HttpStatusCode.NotFound)
 
         val userSession = call.sessions.get<UserSession>()!!
-
-        if (!groupRepository.isUserMember(groupId, ObjectId(userSession.id))) {
-            call.smartRedirect("/")
-        }
 
         val task = Task(
             title = title,
