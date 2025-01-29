@@ -9,6 +9,7 @@ import com.physman.group.GroupView
 import com.physman.solution.additionalNotesValidator
 import com.physman.solution.titleValidator
 import com.physman.templates.*
+import com.physman.utils.smartRedirect
 import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -113,6 +114,11 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
 
         val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
         val userSession = call.sessions.get<UserSession>()!!
+
+        if (!groupRepository.isUserMember(groupId, ObjectId(userSession.id))) {
+            call.smartRedirect("/")
+        }
+
         call.respondHtml(HttpStatusCode.OK) {
             index(
                 title = "StudyShare",

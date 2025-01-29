@@ -28,11 +28,11 @@ fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepos
     route("/{groupId}") {
         postTaskCreation(taskRepository, groupRepository, taskCreationForm)
         route("/{taskId}") {
-            getTaskView(taskRepository)
+            getTaskView(taskRepository, groupRepository)
             deleteTask(taskRepository)
         }
         route("/tasks") {
-            getTaskList(taskRepository)
+            getTaskList(taskRepository, groupRepository)
         }
         route("/creation-modal") {
             getTaskCreationModal(taskCreationForm)
@@ -43,7 +43,7 @@ fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepos
     }
 }
 
-fun Route.getTaskView(taskRepository: TaskRepository) {
+fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepository) {
     get {
         val objectIds = validateRequiredObjectIds(call, "taskId", "groupId") ?: return@get
         val taskId = objectIds["taskId"]!!
@@ -56,6 +56,10 @@ fun Route.getTaskView(taskRepository: TaskRepository) {
         }
 
         val userSession = call.sessions.get<UserSession>()!!
+
+        if (!groupRepository.isUserMember(groupId, ObjectId(userSession.id))) {
+            call.smartRedirect("/")
+        }
 
         call.respondHtml(HttpStatusCode.OK) {
             index(
@@ -92,12 +96,18 @@ fun routeTaskForms(): Form {
     return taskCreationForm
 }
 
-fun Route.getTaskList(taskRepository: TaskRepository) {
+fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepository) {
     get {
         val pageSize = 50
 
         val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
         val groupId = objectIds["groupId"]!!
+
+        val userSession = call.sessions.get<UserSession>()!!
+
+        if (!groupRepository.isUserMember(groupId, ObjectId(userSession.id))) {
+            call.smartRedirect("/")
+        }
 
         val optionalObjectIds = validateOptionalObjectIds(call, "lastId") ?: return@get
         val lastId = optionalObjectIds["lastId"]
@@ -162,6 +172,10 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
         val group = groupRepository.getGroup(groupId) ?: return@post call.respond(HttpStatusCode.NotFound)
 
         val userSession = call.sessions.get<UserSession>()!!
+
+        if (!groupRepository.isUserMember(groupId, ObjectId(userSession.id))) {
+            call.smartRedirect("/")
+        }
 
         val task = Task(
             title = title,
