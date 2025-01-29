@@ -5,7 +5,8 @@ import com.physman.forms.*
 import com.physman.solution.*
 import com.physman.task.TaskRepository
 import com.physman.templates.*
-import com.physman.utils.validateObjectIds
+import com.physman.utils.validateOptionalObjectIds
+import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
@@ -18,7 +19,7 @@ import org.bson.types.ObjectId
 fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
     val solutionCreationForm = Form("Create a new solution", "solutionForm", formAttributes = mapOf(
         "hx-target" to "#solution-list",
-        "hx-swap" to "beforeend"
+        "hx-swap" to "afterbegin"
     ))
     solutionCreationForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))
     solutionCreationForm.addInput(TextlikeInput("Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
@@ -69,8 +70,13 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository:
     }
 
     get {
-        val objectIds = validateObjectIds(call, "taskId") ?: return@get
+        val pageSize = 8
+
+        val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@get
         val taskId = objectIds["taskId"]!!
+
+        val optionalObjectIds = validateOptionalObjectIds(call, "lastId") ?: return@get
+        val lastId = optionalObjectIds["lastId"]
 
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
@@ -78,7 +84,9 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository:
         val parentTask = taskRepository.getTask(taskId) ?: return@get
         val parentAuthorId = parentTask.task.authorId
 
-        val solutionViews = solutionRepository.getSolutions(taskId = taskId, userId = userId)
+        val solutionViews = solutionRepository.getSolutions(
+            taskId = taskId, userId = userId, lastId = lastId, resultCount = pageSize
+        )
 
         call.respondHtml {
             body {
@@ -91,13 +99,17 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository:
 
                         solutionTemplate(solutionView, isAuthor)
                     }
+                    if (solutionViews.size == pageSize) {
+                        val newLastId = solutionViews.last().solution.id
+                        contentLoadTemplate(url = "/solutions?taskId=$taskId&lastId=$newLastId")
+                    }
                 }
             }
         }
     }
 
     post {
-        val objectIds = validateObjectIds(call, "taskId") ?: return@post
+        val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@post
         val taskId = objectIds["taskId"]!!
 
         val userSession = call.sessions.get<UserSession>()!!
@@ -123,7 +135,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository:
     route("/{id}") {
 
         delete {
-            val objectIds = validateObjectIds(call, "id") ?: return@delete
+            val objectIds = validateRequiredObjectIds(call, "id") ?: return@delete
             val solutionId = objectIds["id"]!!
             val solution = solutionRepository.getSolution(solutionId) ?: return@delete
             val parentTask = taskRepository.getTask(solution.taskId) ?: return@delete
@@ -144,7 +156,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository:
 
         post ("/{voteAction}") {
             val action = call.parameters["voteAction"]
-            val objectIds = validateObjectIds(call, "id") ?: return@post
+            val objectIds = validateRequiredObjectIds(call, "id") ?: return@post
             val solutionId = objectIds["id"]!!
 
             val userSession = call.sessions.get<UserSession>()!!

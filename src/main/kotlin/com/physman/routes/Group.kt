@@ -9,7 +9,7 @@ import com.physman.group.GroupView
 import com.physman.solution.additionalNotesValidator
 import com.physman.solution.titleValidator
 import com.physman.templates.*
-import com.physman.utils.validateObjectIds
+import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
@@ -108,7 +108,7 @@ fun Route.getGroupList(groupRepository: GroupRepository, userRepository: UserRep
 
 fun Route.getGroupView(groupRepository: GroupRepository) {
     get {
-        val objectIds = validateObjectIds(call, "groupId") ?: return@get
+        val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
         val groupId = objectIds["groupId"]!!
 
         val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)

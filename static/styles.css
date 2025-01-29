@@ -305,3 +305,11 @@ nav {
 .post-more-options {
     margin: 1rem;
 }
+
+.comment {
+    display: flex;
+}
+
+.comment div:first-child {
+    flex-grow: 1;
+}
