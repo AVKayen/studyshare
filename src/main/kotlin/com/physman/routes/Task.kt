@@ -57,6 +57,10 @@ fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepo
             call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
             return@get
         }
+        if(taskView.task.groupId != groupId) {
+            call.respondText(text = "Task does not belong to this group. How did we get here?", status = HttpStatusCode.NotFound)
+            return@get
+        }
 
         val userSession = call.sessions.get<UserSession>()!!
 
