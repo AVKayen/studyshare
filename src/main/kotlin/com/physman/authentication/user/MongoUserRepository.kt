@@ -4,6 +4,7 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.mongodb.client.model.Filters.*
 import com.mongodb.client.model.Updates.addToSet
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
 import org.mindrot.jbcrypt.BCrypt
 

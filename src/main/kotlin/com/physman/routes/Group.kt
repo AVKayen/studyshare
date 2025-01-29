@@ -20,6 +20,7 @@ import org.bson.types.ObjectId
 
 fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepository) {
     val groupCreationForm = routeGroupCreationForm()
+    val userAdditionForm = routeUserAdditionForm()
     route("/groups") {
         getGroupList(groupRepository, userRepository)
         postCreateGroup(groupRepository, groupCreationForm)
@@ -29,6 +30,10 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
     }
     route("/{groupId}") {
         getGroupView(groupRepository)
+        route("/add-user") {
+            getAddUserToGroupModal(userAdditionForm)
+            postAddUserToGroup(groupRepository, userRepository, userAdditionForm)
+        }
     }
 }
 
@@ -44,6 +49,25 @@ fun routeGroupCreationForm(): Form {
     globalFormRouter.routeFormValidators(groupCreationForm)
 
     return groupCreationForm
+}
+
+val nonEmptyValidator = fun(title: String): String? {
+    if(title.isEmpty()) {
+        return "This field cannot be empty"
+    }
+    return null
+}
+
+fun routeUserAdditionForm(): Form {
+    val userAdditionForm = Form("Add a user to the group", "userAdditionForm", formAttributes = mapOf(
+        "hx-swap" to "none"
+    ))
+
+    userAdditionForm.addInput(TextlikeInput("Username", "user", InputType.text, nonEmptyValidator))
+
+    globalFormRouter.routeFormValidators(userAdditionForm)
+
+    return userAdditionForm
 }
 
 fun Route.getGroupCreationModal(groupCreationForm: Form) {
@@ -101,7 +125,15 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
                         modalUrl = "/${groupId}/creation-modal",
                         additionalClasses = setOf("wide-button", "outline")
                     )
+                    if (userSession.id == groupView.group.leaderId.toHexString()) {
+                        formModalOpenButton(
+                            buttonText = "Add a user",
+                            modalUrl = "/${groupId}/add-user",
+                            additionalClasses = setOf("wide-button", "outline")
+                        )
+                    }
                 }
+
                 contentLoadTemplate("/${groupId}/tasks")
             }
         }
@@ -130,5 +162,44 @@ fun Route.postCreateGroup(groupRepository: GroupRepository, groupCreationForm: F
         )
 
         call.respondRedirect("/")
+    }
+}
+
+fun Route.postAddUserToGroup(groupRepository: GroupRepository, userRepository: UserRepository, userAdditionForm: Form) {
+    post {
+        val formSubmissionData = userAdditionForm.validateSubmission(call) ?: return@post
+        val user = formSubmissionData.fields["user"]!!
+        val objectIds = validateObjectIds(call, "groupId") ?: return@post
+        val groupId = objectIds["groupId"]!!
+
+        val userToAdd = userRepository.getUserByName(user)
+        if (userToAdd == null) {
+            userAdditionForm.respondFormError(call, "User \"$user\" not found")
+            return@post
+        }
+        if (groupRepository.isUserMember(groupId, ObjectId(userToAdd.id))) {
+            userAdditionForm.respondFormError(call, "User \"$user\" is already a member of this group")
+            return@post
+        }
+        groupRepository.addUser(groupId, ObjectId(userToAdd.id))
+
+        call.respondRedirect("/${groupId}")
+    }
+}
+
+fun Route.getAddUserToGroupModal(userAdditionForm: Form) {
+    get {
+        val objectIds = validateObjectIds(call, "groupId") ?: return@get
+        val groupId = objectIds["groupId"]!!
+
+        call.respondHtml {
+            body {
+                formModalDialog(
+                    form = userAdditionForm,
+                    callbackUrl = "/${groupId}/add-user",
+                    requestType = POST
+                )
+            }
+        }
     }
 }
