@@ -29,8 +29,10 @@ fun Application.configureRouting(
             indexViewRouter(groupRepository, userRepository)
 
             authenticate("USER") {
+                commentRouter(commentRepository, solutionRepository, taskRepository, groupRepository)
                 groupRouter(groupRepository, userRepository)
                 taskRouter(taskRepository, groupRepository)
+                solutionRouter(solutionRepository, taskRepository, groupRepository)
             }
         }
 
@@ -40,15 +42,6 @@ fun Application.configureRouting(
         }
         route("/auth") {
             authRouter(userRepository)
-        }
-        authenticate("USER") {
-            route("/solutions") {
-                solutionRouter(solutionRepository, taskRepository)
-            }
-
-            route("/comments") {
-                commentRouter(commentRepository, solutionRepository, taskRepository)
-            }
         }
     }
 }

@@ -20,6 +20,7 @@ import kotlinx.html.*
 import com.physman.forms.*
 import com.physman.task.Task
 import com.physman.utils.smartRedirect
+import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateOptionalObjectIds
 import org.bson.types.ObjectId
 
@@ -28,11 +29,11 @@ fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepos
     route("/{groupId}") {
         postTaskCreation(taskRepository, groupRepository, taskCreationForm)
         route("/{taskId}") {
-            getTaskView(taskRepository)
+            getTaskView(taskRepository, groupRepository)
             deleteTask(taskRepository)
         }
         route("/tasks") {
-            getTaskList(taskRepository)
+            getTaskList(taskRepository, groupRepository)
         }
         route("/creation-modal") {
             getTaskCreationModal(taskCreationForm)
@@ -43,8 +44,10 @@ fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepos
     }
 }
 
-fun Route.getTaskView(taskRepository: TaskRepository) {
+fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepository) {
     get {
+        validateGroupBelonging(call, groupRepository)
+
         val objectIds = validateRequiredObjectIds(call, "taskId", "groupId") ?: return@get
         val taskId = objectIds["taskId"]!!
         val groupId = objectIds["groupId"]!!
@@ -52,6 +55,10 @@ fun Route.getTaskView(taskRepository: TaskRepository) {
         val taskView = taskRepository.getTask(taskId)
         if(taskView == null) {
             call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
+            return@get
+        }
+        if(taskView.task.groupId != groupId) {
+            call.respondText(text = "Task does not belong to this group. How did we get here?", status = HttpStatusCode.NotFound)
             return@get
         }
 
@@ -70,11 +77,11 @@ fun Route.getTaskView(taskRepository: TaskRepository) {
                     classes = setOf("wide-button-container")
                     formModalOpenButton(
                         buttonText = "Create a solution",
-                        modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}",
+                        modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}&groupId=${groupId}",
                         additionalClasses = setOf("wide-button", "outline")
                     )
                 }
-                contentLoadTemplate(url = "/solutions?taskId=${taskView.task.id}")
+                contentLoadTemplate(url = "/solutions?taskId=${taskView.task.id}&groupId=${groupId}")
             }
         }
     }
@@ -92,8 +99,10 @@ fun routeTaskForms(): Form {
     return taskCreationForm
 }
 
-fun Route.getTaskList(taskRepository: TaskRepository) {
+fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepository) {
     get {
+        validateGroupBelonging(call, groupRepository)
+
         val pageSize = 50
 
         val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
@@ -153,6 +162,8 @@ fun Route.getTaskDeletionModal() {
 
 fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: GroupRepository, taskCreationForm: Form) {
     post {
+        validateGroupBelonging(call, groupRepository)
+
         val formSubmissionData: FormSubmissionData = taskCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
