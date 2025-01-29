@@ -18,12 +18,17 @@ import io.ktor.server.sessions.*
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
-
-
-
 fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
+    route("/comments") {
+        getCommentView(commentRepository)
+        deleteComment(commentRepository, solutionRepository, taskRepository)
+        route("/comment") {
+            postComment(taskRepository, solutionRepository, commentRepository)
+        }
+    }
+}
 
-    //TODO: put in actual urls, or transfer values in an other way
+fun Route.getCommentView(commentRepository: CommentRepository) {
     get {
         val objectIds: Map<String, ObjectId> = validateRequiredObjectIds(call, "parentId") ?: return@get
 
@@ -59,38 +64,37 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
                 }
             }
         }
-
     }
+}
 
-    route("/comment") {
-        post {
-            val objectIds: Map<String, ObjectId> = validateRequiredObjectIds(call, "parentId") ?: return@post
-            val parentId = objectIds["parentId"]
-            val postType = call.request.queryParameters["postType"]
-            val userSession = call.sessions.get<UserSession>()!!
+fun Route.postComment(taskRepository: TaskRepository, solutionRepository: SolutionRepository, commentRepository: CommentRepository) {
+    post {
+        val objectIds: Map<String, ObjectId> = validateRequiredObjectIds(call, "parentId") ?: return@post
+        val parentId = objectIds["parentId"]
+        val postType = call.request.queryParameters["postType"]
+        val userSession = call.sessions.get<UserSession>()!!
 
-            val content = call.receiveParameters()["content"]
-            if (content == null || commentValidator(content) != null) {
-                call.response.status(HttpStatusCode.BadRequest)
-                return@post
-            }
-
-            val newComment = Comment(parentId = parentId!!, content = content, authorName = userSession.name, authorId = ObjectId(userSession.id))
-
-            if (postType.equals("task", true)) {
-                taskRepository.updateCommentAmount(parentId, 1)
-            } else if (postType.equals("solution", true)) {
-                solutionRepository.updateCommentAmount(parentId, 1)
-            } else {
-                return@post
-            }
-
-            commentRepository.createComment(newComment)
-
-            call.respondRedirect("/comments?parentId=${parentId}&postType=${postType}")
+        val content = call.receiveParameters()["content"]
+        if (content == null || commentValidator(content) != null) {
+            call.response.status(HttpStatusCode.BadRequest)
+            return@post
         }
-    }
 
+        val newComment = Comment(parentId = parentId!!, content = content, authorName = userSession.name, authorId = ObjectId(userSession.id))
+
+        when (postType?.lowercase()) {
+            "task" -> taskRepository.updateCommentAmount(parentId, 1)
+            "solution" -> solutionRepository.updateCommentAmount(parentId, 1)
+            else -> return@post
+        }
+
+        commentRepository.createComment(newComment)
+
+        call.respondRedirect("/comments?parentId=${parentId}&postType=${postType}")
+    }
+}
+
+fun Route.deleteComment(commentRepository: CommentRepository, solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
     delete {
         val objectIds = validateRequiredObjectIds(call, "commentId", "parentId") ?: return@delete
         val commentId = objectIds["commentId"]!!
@@ -101,35 +105,21 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
 
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
-        val newCommentAmount: Int
-
-        when (postType) {
-            "task" -> {
-                if (authorId == userId) {
-                    newCommentAmount = taskRepository.updateCommentAmount(parentId, -1)
-                } else {
-                    call.respondText(
-                        "Resource Modification Restricted - Ownership Required",
-                        status = HttpStatusCode.Forbidden
-                    )
-                    return@delete
-                }
-            }
-            "solution" -> {
-                if (authorId == userId) {
-                    newCommentAmount = solutionRepository.updateCommentAmount(parentId, -1)
-                } else {
-                    call.respondText(
-                        "Resource Modification Restricted - Ownership Required",
-                        status = HttpStatusCode.Forbidden
-                    )
-                    return@delete
-                }
-            }
-            else -> {
-                return@delete
-            }
+        if (authorId != userId) {
+            call.respondText(
+                "Resource Modification Restricted - Ownership Required",
+                status = HttpStatusCode.Forbidden
+            )
+            return@delete
         }
+
+        val newCommentAmount = when (postType) {
+            "task" -> taskRepository.updateCommentAmount(parentId, -1)
+            "solution" -> solutionRepository.updateCommentAmount(parentId, -1)
+            else -> return@delete
+        }
+
+
         commentRepository.deleteComment(commentId)
         call.respondHtml {
             body {
@@ -142,38 +132,3 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
         }
     }
 }
-
-
-//when (postType) {
-//    "task" -> {
-//        if (isAuthor(commentId, parentId, userId, postType)) {
-//            commentRepository.deleteComment(commentId)
-//            taskRepository.updateCommentAmount(parentId, -1)
-//            call.respondHtml { body() }
-//        } else {
-//            call.respondText(
-//                "Resource Modification Restricted - Ownership Required",
-//                status = HttpStatusCode.Forbidden
-//            )
-//            return@delete
-//        }
-//    }
-//
-//    "solution" -> {
-//        if (isAuthor(commentId, parentId, userId, postType)) {
-//            commentRepository.deleteComment(commentId)
-//            solutionRepository.updateCommentAmount(parentId, -1)
-//            call.respondHtml { body() }
-//        } else {
-//            call.respondText(
-//                "Resource Modification Restricted - Ownership Required",
-//                status = HttpStatusCode.Forbidden
-//            )
-//            return@delete
-//        }
-//    }
-//
-//    else -> {
-//        return@delete
-//    }
-//}
