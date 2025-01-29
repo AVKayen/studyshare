@@ -10,4 +10,5 @@ interface GroupRepository {
     suspend fun isUserMember(groupId: ObjectId, userId: ObjectId): Boolean
     suspend fun deleteUser(groupId: ObjectId, userId: ObjectId)
     suspend fun getGroup(groupId: ObjectId): GroupView?
+    suspend fun getGroups(groupIds: List<ObjectId>): List<GroupView>
 }
