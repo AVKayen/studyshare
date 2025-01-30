@@ -6,9 +6,6 @@ import com.physman.forms.Form
 import com.physman.forms.TextlikeInput
 import com.physman.forms.globalFormRouter
 import com.physman.group.GroupRepository
-import com.physman.task.TaskRepository
-import com.physman.task.additionalNotesValidator
-import com.physman.task.titleValidator
 import com.physman.templates.*
 import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*
@@ -18,7 +15,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.html.*
 import com.physman.forms.*
-import com.physman.task.Task
+import com.physman.task.*
 import com.physman.utils.smartRedirect
 import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateOptionalObjectIds
@@ -36,7 +33,7 @@ fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepos
             getTaskList(taskRepository, groupRepository)
         }
         route("/creation-modal") {
-            getTaskCreationModal(taskCreationForm)
+            getTaskCreationModal(taskCreationForm, groupRepository)
         }
         route("/deletion-modal") {
             getTaskDeletionModal()
@@ -91,6 +88,7 @@ fun routeTaskForms(): Form {
     val taskCreationForm = Form("Create a new task", "taskForm")
 
     taskCreationForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))
+    taskCreationForm.addInput(TextlikeInput("Category", "category", InputType.text, categoryValidator))
     taskCreationForm.addInput(TextlikeInput("Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
     taskCreationForm.addInput(FileInput("Upload files", "files", inputAttributes = mapOf("multiple" to "true")))
 
@@ -125,9 +123,10 @@ fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepo
     }
 }
 
-fun Route.getTaskCreationModal(taskCreationForm: Form) {
+fun Route.getTaskCreationModal(taskCreationForm: Form, groupRepository: GroupRepository) {
     get {
         val groupId = validateRequiredObjectIds(call, "groupId")?.get("groupId") ?: return@get
+        val group = groupRepository.getGroup(groupId)
         call.respondHtml {
             body {
                 formModalDialog(

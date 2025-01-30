@@ -82,13 +82,17 @@ class Form(
         }
     }
 
-    fun renderInputFields(flowContent: FlowContent) {
+    fun renderInputFields(flowContent: FlowContent, inputDataLists: Map<String, List<String>>? = null) {
         flowContent.div {
             for (input in this@Form.inputs) {
 
                 if (input is TextlikeInput) {
                     if (validatorsRoute != null) {
-                        input.render(flowContent, validationUrl = this@Form.validatorsRoute!!)
+                        input.render(
+                            flowContent,
+                            validationUrl = this@Form.validatorsRoute!!,
+                            dataList = inputDataLists?.get(input.inputName)
+                        )
                     } else {
                         // TODO: What error type to throw??
                         throw UninitializedPropertyAccessException("Form ${this@Form.formName} is not routed")

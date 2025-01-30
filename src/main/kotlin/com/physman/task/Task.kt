@@ -6,9 +6,10 @@ import org.bson.types.ObjectId
 
 const val TITLE_MAX_LENGTH = 512
 const val ADDITIONAL_NOTES_MAX_LENGTH = 512
+const val CATEGORY_MAX_LENGTH = 30
 
 val titleValidator = fun(title: String): String? {
-     if(title.isEmpty()) {
+     if (title.isEmpty()) {
         return "Title must not be empty"
      }
      if (title.length > TITLE_MAX_LENGTH) {
@@ -20,6 +21,16 @@ val titleValidator = fun(title: String): String? {
 val additionalNotesValidator = fun(additionalNotes: String): String? {
     if(additionalNotes.length > ADDITIONAL_NOTES_MAX_LENGTH) {
         return "Additional notes too long (max length $ADDITIONAL_NOTES_MAX_LENGTH)"
+    }
+    return null
+}
+
+val categoryValidator = fun(category: String): String? {
+    if (category.isEmpty()) {
+        return "Category must not be empty"
+    }
+    if (category.length > CATEGORY_MAX_LENGTH) {
+        return "Category too long (max length $CATEGORY_MAX_LENGTH)"
     }
     return null
 }
