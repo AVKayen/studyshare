@@ -120,6 +120,23 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
                 username = userSession.name,
                 lastBreadcrumb = groupView.group.title
             ) {
+                div(classes = "group-info") {
+                    div {
+                        classes = setOf("group-thumbnail")
+                        groupView.thumbnail?.let {
+                            img(src = it.thumbnailUrl, alt = "${groupView.group.title}'s thumbnail")
+                        }
+                    }
+                    div {
+                        classes = setOf("group-info-text")
+                        h1 {
+                            +groupView.group.title
+                        }
+                        groupView.group.description?.let {
+                            p { +it }
+                        }
+                    }
+                }
                 section(classes = "modal-btn-container, wide-button-container") {
                     formModalOpenButton(
                         buttonText = "Create a task",
