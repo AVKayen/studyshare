@@ -9,6 +9,7 @@ import com.physman.comment.CommentRepository
 import com.physman.forms.UploadFileData
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
+import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 
@@ -35,6 +36,22 @@ class MongoSolutionRepository(
             isUpvoted = solution.upvotes.contains(userId),
             isDownvoted = solution.downvotes.contains(userId)
         )
+    }
+    //TODO: consider attachments for update
+    override suspend fun updateSolution(id: ObjectId, solutionView: SolutionView): SolutionView {
+        val filter = Filters.eq("_id", id)
+
+        val updates = Document(mapOf(
+            Solution::title.name to solutionView.solution.title,
+            Solution::additionalNotes.name to solutionView.solution.additionalNotes)
+        )
+
+
+        solutionCollection.findOneAndUpdate(filter, updates)
+
+
+        return solutionView
+
     }
 
     override suspend fun deleteSolution(id: ObjectId) {

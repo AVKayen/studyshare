@@ -32,6 +32,7 @@ fun FlowContent.solutionTemplate(solutionView: SolutionView, isAuthor: Boolean) 
                     }
                 }
                 if (isAuthor) {
+                    postEditingButton(post = solutionView.solution)
                     postDeletionButton(post = solutionView.solution)
                 }
             }
