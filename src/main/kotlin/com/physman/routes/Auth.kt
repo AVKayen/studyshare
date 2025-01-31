@@ -15,9 +15,10 @@ import kotlinx.html.*
 
 
 fun Route.authRouter(userRepository: UserRepository) {
-    val loginForm = Form("Login", "loginForm", formAttributes = mapOf(
+    val loginForm = Form("Login", "loginForm", formAttributes = mutableMapOf(
         "hx-swap" to "none"
-    ))
+    )
+    )
     loginForm.addInput(TextlikeInput(
         "Username",
         "name",
@@ -33,9 +34,10 @@ fun Route.authRouter(userRepository: UserRepository) {
         validateOnInput = false
     ))
 
-    val registerForm = Form("Register", "registerForm", formAttributes = mapOf(
+    val registerForm = Form("Register", "registerForm", formAttributes = mutableMapOf(
         "hx-swap" to "none"
-    ))
+    )
+    )
 
     registerForm.addInput(TextlikeInput(
         "Username",

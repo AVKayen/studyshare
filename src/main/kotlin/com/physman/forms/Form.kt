@@ -57,7 +57,7 @@ class Form(
     val formTitle: String,
     val formName: String,
     val submitBtnText: String = "Submit",
-    private val formAttributes: Map<String, String>? = null
+    val formAttributes: MutableMap<String, String> = mutableMapOf() //TODO: undo making it public and mutable
 ) {
     var validatorsRoute: String? = null
     var inputs : List<ControlledInput> = emptyList()
