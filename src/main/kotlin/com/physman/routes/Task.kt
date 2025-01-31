@@ -131,8 +131,7 @@ fun Route.getTaskCreationModal(taskCreationForm: Form, groupRepository: GroupRep
             body {
                 formModalDialog(
                     form = taskCreationForm,
-                    callbackUrl = "/${groupId}",
-                    requestType = POST
+                    callbackUrl = "/${groupId}"
                 )
             }
         }

@@ -77,8 +77,7 @@ fun Route.getGroupCreationModal(groupCreationForm: Form) {
             body {
                 formModalDialog(
                     form = groupCreationForm,
-                    callbackUrl = "/groups",
-                    requestType = POST
+                    callbackUrl = "/groups"
                 )
             }
         }
@@ -200,8 +199,7 @@ fun Route.getAddUserToGroupModal(userAdditionForm: Form) {
             body {
                 formModalDialog(
                     form = userAdditionForm,
-                    callbackUrl = "/${groupId}/add-user",
-                    requestType = POST
+                    callbackUrl = "/${groupId}/add-user"
                 )
             }
         }

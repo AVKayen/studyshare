@@ -2,7 +2,6 @@ package com.physman.routes
 
 import com.physman.authentication.user.*
 import com.physman.forms.Form
-import com.physman.forms.POST
 import com.physman.forms.TextlikeInput
 import com.physman.forms.globalFormRouter
 import com.physman.templates.index
@@ -65,7 +64,7 @@ fun Route.authRouter(userRepository: UserRepository) {
             call.respondHtml {
                 index("Login", lastBreadcrumb = "Login") {
                     section {
-                        loginForm.render(this, "/auth/login?redirectUrl=$redirectUrl", POST)
+                        loginForm.render(this, "/auth/login?redirectUrl=$redirectUrl")
                     }
                     section {
                         +"Don't have an account? "
@@ -99,7 +98,7 @@ fun Route.authRouter(userRepository: UserRepository) {
             call.respondHtml {
                 index("Register", lastBreadcrumb = "Register") {
                     section {
-                        registerForm.render(this, "/auth/register?redirectUrl=$redirectUrl", POST)
+                        registerForm.render(this, "/auth/register?redirectUrl=$redirectUrl")
                     }
                     section {
                         +"Already have an account? "

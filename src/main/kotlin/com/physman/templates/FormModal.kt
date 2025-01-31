@@ -1,6 +1,7 @@
 package com.physman.templates
 
 import com.physman.forms.Form
+import com.physman.forms.HtmxRequestType
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
@@ -15,7 +16,7 @@ fun FlowContent.formModalOpenButton(buttonText: String, modalUrl: String, additi
     }
 }
 
-fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: String) {
+fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: HtmxRequestType = HtmxRequestType.POST) {
 
     val formScript = """
         on htmx:afterRequest

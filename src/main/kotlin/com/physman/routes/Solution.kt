@@ -6,7 +6,6 @@ import com.physman.group.GroupRepository
 import com.physman.solution.*
 import com.physman.task.TaskRepository
 import com.physman.templates.*
-import com.physman.utils.smartRedirect
 import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateOptionalObjectIds
 import com.physman.utils.validateRequiredObjectIds
@@ -64,8 +63,7 @@ fun Route.getSolutionCreationModal(solutionCreationForm: Form) {
             body {
                 formModalDialog(
                     form = solutionCreationForm,
-                    callbackUrl = "/solutions?taskId=$taskId",
-                    requestType = POST
+                    callbackUrl = "/solutions?taskId=$taskId"
                 )
             }
         }
