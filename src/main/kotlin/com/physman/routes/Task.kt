@@ -85,7 +85,9 @@ fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepo
 }
 
 fun routeTaskForms(): Form {
-    val taskCreationForm = Form("Create a new task", "taskForm")
+    val taskCreationForm = Form("Create a new task", "taskForm", formAttributes = mapOf(
+        "hx-swap" to "none"
+    ))
 
     taskCreationForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))
     taskCreationForm.addInput(TextlikeInput("Category", "category", InputType.text, categoryValidator))
