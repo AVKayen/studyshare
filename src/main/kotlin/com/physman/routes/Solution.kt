@@ -6,7 +6,6 @@ import com.physman.group.GroupRepository
 import com.physman.solution.*
 import com.physman.task.TaskRepository
 import com.physman.templates.*
-import com.physman.utils.smartRedirect
 import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateOptionalObjectIds
 import com.physman.utils.validateRequiredObjectIds
@@ -20,14 +19,19 @@ import org.bson.types.ObjectId
 
 fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository: TaskRepository, groupRepository: GroupRepository) {
     val solutionCreationForm = routeSolutionCreationForm()
+    val solutionEditingForm = routeSolutionEditingForm()
     route("/solutions") {
         route("/creation-modal") {
             getSolutionCreationModal(solutionCreationForm)
+        }
+        route("/editing-modal") {
+            getSolutionEditingModal(solutionEditingForm)
         }
         route("/deletion-modal") {
             getSolutionDeletionModal()
         }
         route("/{id}") {
+            patchSolutionEditing(taskRepository, solutionRepository, solutionEditingForm)
             deleteSolution(solutionRepository, taskRepository)
             route("/{voteAction}") {
                 postVote(solutionRepository, groupRepository)
@@ -52,6 +56,20 @@ fun routeSolutionCreationForm(): Form {
     return solutionCreationForm
 }
 
+fun routeSolutionEditingForm(): Form {
+    val solutionEditingForm = Form("Edit your solution", "solutionEditingForm", formAttributes = mapOf(
+        "hx-target" to "#solution-list",
+        "hx-swap" to "afterbegin"
+    ))
+    solutionEditingForm.addInput(TextlikeInput("New Title", "title", InputType.text, titleValidator))
+    solutionEditingForm.addInput(TextlikeInput("New Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+    solutionEditingForm.addInput(FileInput("New Upload files", "files", inputAttributes = mapOf("multiple" to "true")))
+
+    globalFormRouter.routeFormValidators(solutionEditingForm)
+
+    return solutionEditingForm
+}
+
 fun Route.getSolutionCreationModal(solutionCreationForm: Form) {
     get {
         val taskId = call.request.queryParameters["taskId"]
@@ -66,6 +84,27 @@ fun Route.getSolutionCreationModal(solutionCreationForm: Form) {
                     form = solutionCreationForm,
                     callbackUrl = "/solutions?taskId=$taskId",
                     requestType = POST
+                )
+            }
+        }
+    }
+}
+
+fun Route.getSolutionEditingModal(solutionEditingForm: Form) {
+    get {
+        val id = call.request.queryParameters["id"]
+        val taskId = call.request.queryParameters["taskId"]
+
+        if (taskId == null) {
+            call.respondText("Task Id not specified.", status = HttpStatusCode.BadRequest)
+            return@get
+        }
+        call.respondHtml {
+            body {
+                formModalDialog(
+                    form = solutionEditingForm,
+                    callbackUrl = "/solutions/$id?taskId=${taskId}",
+                    requestType = PATCH
                 )
             }
         }
@@ -173,14 +212,48 @@ fun Route.postSolutionCreation(taskRepository: TaskRepository, solutionRepositor
     }
 }
 
+fun Route.patchSolutionEditing(taskRepository: TaskRepository, solutionRepository: SolutionRepository, solutionEditingForm: Form) {
+    patch {
+        val objectIds = validateRequiredObjectIds(call, "id", "taskId") ?: return@patch
+        val solutionId = objectIds["id"]!!
+        val taskId = objectIds["taskId"]!!
+
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+        val userName = userSession.name
+
+        val formSubmissionData: FormSubmissionData = solutionEditingForm.validateSubmission(call) ?: return@patch
+        val title = formSubmissionData.fields["title"]!!
+        val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
+
+        val task = taskRepository.getTask(taskId) ?: return@patch call.respond(HttpStatusCode.NotFound)
+
+        val solution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId, authorId = userId, authorName = userName, groupId = task.task.groupId, groupName = task.task.groupName)
+
+        //TODO: change this to incorporate attachments
+        val solutionView1 = SolutionView(solution, emptyList(), false, false)
+        println("hi3.1")
+        val solutionView = solutionRepository.updateSolution(solutionId, solutionView1)
+        println("hi3.2")
+        formSubmissionData.cleanup()
+
+        call.respondHtml(HttpStatusCode.OK) {
+            body {
+                solutionTemplate(solutionView, true)
+            }
+        }
+    }
+}
+
 fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
     delete {
+        println("now1")
         val objectIds = validateRequiredObjectIds(call, "id") ?: return@delete
         val solutionId = objectIds["id"]!!
 
         val solution = solutionRepository.getSolution(solutionId) ?: return@delete
         val parentTask = taskRepository.getTask(solution.taskId) ?: return@delete
-
+        println("now2")
         val parentAuthorId = parentTask.task.authorId
         val authorId = solution.authorId
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)

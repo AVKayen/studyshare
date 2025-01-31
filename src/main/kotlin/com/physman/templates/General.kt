@@ -142,7 +142,7 @@ fun FlowContent.postDeletionButton(post: Post) {
 
 fun FlowContent.postEditingButton(post: Post) {
     val url = when (post) {
-        is Solution -> "/solutions/editing-modal?solutionId=${post.id}"
+        is Solution -> "/solutions/editing-modal?id=${post.id}&taskId=${post.taskId}" //TODO: may change this (id)
         is Task -> "/${post.groupId}/editing-modal?taskId=${post.id}"
         else -> throw IllegalArgumentException("Invalid post")
     }

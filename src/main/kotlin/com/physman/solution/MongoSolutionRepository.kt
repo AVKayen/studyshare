@@ -9,7 +9,6 @@ import com.physman.comment.CommentRepository
 import com.physman.forms.UploadFileData
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
-import org.bson.Document
 import org.bson.conversions.Bson
 import org.bson.types.ObjectId
 
@@ -40,15 +39,16 @@ class MongoSolutionRepository(
     //TODO: consider attachments for update
     override suspend fun updateSolution(id: ObjectId, solutionView: SolutionView): SolutionView {
         val filter = Filters.eq("_id", id)
+        println("repo1")
 
-        val updates = Document(mapOf(
-            Solution::title.name to solutionView.solution.title,
-            Solution::additionalNotes.name to solutionView.solution.additionalNotes)
+        val updates = Updates.combine(
+            Updates.set(Solution::title.name, solutionView.solution.title),
+            Updates.set(Solution::additionalNotes.name, solutionView.solution.additionalNotes)
         )
-
-
+        println("repo2")
+        //IT STOPS HERE
         solutionCollection.findOneAndUpdate(filter, updates)
-
+        println("repo3")
 
         return solutionView
 
