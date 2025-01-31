@@ -58,11 +58,8 @@ fun routeSolutionCreationForm(): Form {
 }
 
 fun routeSolutionEditingForm(): Form {
-    val solutionEditingForm = Form("Edit your solution", "solutionEditingForm", formAttributes = mutableMapOf(
-        "hx-target" to "#solution-list",
-        "hx-swap" to "afterbegin"
-    )
-    )
+    val solutionEditingForm = Form("Edit your solution", "solutionEditingForm", formAttributes = mutableMapOf())
+
     solutionEditingForm.addInput(TextlikeInput("New Title", "title", InputType.text, titleValidator))
     solutionEditingForm.addInput(TextlikeInput("New Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
     solutionEditingForm.addInput(FileInput("New Upload files", "files", inputAttributes = mapOf("multiple" to "true")))
@@ -101,8 +98,10 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form) {
             call.respondText("Task Id not specified.", status = HttpStatusCode.BadRequest)
             return@get
         }
+
         solutionEditingForm.formAttributes["hx-target"] = "#article-${id}"
         solutionEditingForm.formAttributes["hx-swap"] = "outerHTML"
+
         call.respondHtml {
             body {
                 formModalDialog(
