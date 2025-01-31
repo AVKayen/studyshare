@@ -313,3 +313,23 @@ nav {
 .comment div:first-child {
     flex-grow: 1;
 }
+
+.task-category > h3 {
+    margin-top: calc(var(--pico-typography-spacing-vertical) * 0.5);
+    margin-bottom: calc(var(--pico-typography-spacing-vertical) * 0.5);
+}
+
+.task-details {
+    margin-bottom: 0;
+}
+
+.task-list {
+    margin-left: .5rem;
+    margin-right: .5rem;
+    width: 100%;
+}
+
+.task-list article a h4 {
+    margin-top: calc(var(--pico-typography-spacing-vertical) * .25);
+    margin-bottom: calc(var(--pico-typography-spacing-vertical) * .25);
+}

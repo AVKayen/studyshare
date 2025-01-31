@@ -134,7 +134,9 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
                     }
                 }
 
-                contentLoadTemplate("/${groupId}/tasks")
+                groupView.group.taskCategories.forEach {
+                    taskCategoryAccordion(groupId, it)
+                }
             }
         }
     }

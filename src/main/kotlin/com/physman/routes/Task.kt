@@ -111,14 +111,24 @@ fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepo
         val optionalObjectIds = validateOptionalObjectIds(call, "lastId") ?: return@get
         val lastId = optionalObjectIds["lastId"]
 
-        val taskViews = taskRepository.getTasks(
-            groupId = groupId, category = null, lastId = lastId, resultCount = pageSize // TODO: Pass a real category
+        val category = call.request.queryParameters["category"]
+        if (category == null) {
+            call.respondText(text = "Category must not be null.", status = HttpStatusCode.BadRequest)
+            return@get
+        }
+
+        val tasks = taskRepository.getTasks(
+            groupId = groupId, category = category, lastId = lastId, resultCount = pageSize
         )
 
         call.respondHtml {
             body {
-                for (task in taskViews) {
+                for (task in tasks) {
                     taskPreviewTemplate(task)
+                }
+                if (tasks.size == pageSize) {
+                    val newLastId = tasks.last().id
+                    contentLoadTemplate(url = "/$groupId/tasks?lastId=$newLastId&category=$category")
                 }
             }
         }
