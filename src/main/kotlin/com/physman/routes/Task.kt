@@ -126,12 +126,17 @@ fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepo
 fun Route.getTaskCreationModal(taskCreationForm: Form, groupRepository: GroupRepository) {
     get {
         val groupId = validateRequiredObjectIds(call, "groupId")?.get("groupId") ?: return@get
-        val group = groupRepository.getGroup(groupId)
+        val groupView = groupRepository.getGroup(groupId)
+        if (groupView == null) {
+            call.respondText(text = "Group does not exist.", status = HttpStatusCode.NotFound)
+            return@get
+        }
         call.respondHtml {
             body {
                 formModalDialog(
                     form = taskCreationForm,
-                    callbackUrl = "/${groupId}"
+                    callbackUrl = "/${groupId}",
+                    inputDataLists = mapOf("category" to groupView.group.taskCategories)
                 )
             }
         }
@@ -164,6 +169,7 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
 
         val formSubmissionData: FormSubmissionData = taskCreationForm.validateSubmission(call) ?: return@post
         val title = formSubmissionData.fields["title"]!!
+        val category = formSubmissionData.fields["category"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
         val files = formSubmissionData.files
 
@@ -179,7 +185,7 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
             authorId = ObjectId(userSession.id),
             groupName = group.group.title,
             groupId = groupId,
-            category = "fakeCategory" // TODO: set a user-chosen category
+            category = category
         )
 
         taskRepository.createTask(task, files)

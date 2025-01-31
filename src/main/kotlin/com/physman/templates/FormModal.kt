@@ -16,7 +16,12 @@ fun FlowContent.formModalOpenButton(buttonText: String, modalUrl: String, additi
     }
 }
 
-fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: HtmxRequestType = HtmxRequestType.POST) {
+fun FlowContent.formModalDialog(
+    form: Form,
+    callbackUrl: String,
+    requestType: HtmxRequestType = HtmxRequestType.POST,
+    inputDataLists: Map<String, List<String>>? = null
+) {
 
     val formScript = """
         on htmx:afterRequest
@@ -38,6 +43,6 @@ fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: Ht
         submitAttributes = mapOf(),
         modalWrapper = modalWrapper
     ) {
-        form.renderInputFields(this)
+        form.renderInputFields(this, inputDataLists = inputDataLists)
     }
 }
