@@ -8,6 +8,7 @@ import com.physman.group.GroupRepository
 import com.physman.solution.additionalNotesValidator
 import com.physman.solution.titleValidator
 import com.physman.templates.*
+
 import com.physman.utils.smartRedirect
 import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateRequiredObjectIds
@@ -120,9 +121,9 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
                 lastBreadcrumb = groupView.group.title
             ) {
                 div(classes = "group-info") {
-                    div {
-                        classes = setOf("group-thumbnail")
-                        groupView.thumbnail?.let {
+                    groupView.thumbnail?.let {
+                        div {
+                            classes = setOf("group-thumbnail")
                             img(src = it.thumbnailUrl, alt = "${groupView.group.title}'s thumbnail")
                         }
                     }
