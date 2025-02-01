@@ -175,7 +175,9 @@ nav {
     width: calc(100% - 1rem) !important;
 }
 
-.solution-content > p, section, details {
+.solution-content > p,
+.solution-content > section,
+.solution-content > details {
     width: calc(100% - 2rem) !important;
 }
 
@@ -275,6 +277,7 @@ nav {
     justify-content: center;
     margin-bottom: 1rem;
 }
+
 .wide-button {
     width: 50%;
     --pico-box-shadow: var(--pico-button-hover-box-shadow, 0 0 0 rgba(0, 0, 0, 0)),0 0 0 var(--pico-outline-width) var(--pico-primary-focus);
@@ -314,22 +317,34 @@ nav {
     flex-grow: 1;
 }
 
-.task-category > h3 {
-    margin-top: calc(var(--pico-typography-spacing-vertical) * 0.5);
-    margin-bottom: calc(var(--pico-typography-spacing-vertical) * 0.5);
+.container hr:last-child {
+    display: none;
 }
 
-.task-details {
-    margin-bottom: 0;
+.task-preview-title {
+    margin-bottom: 0.3rem;
 }
 
-.task-list {
-    margin-left: .5rem;
-    margin-right: .5rem;
-    width: 100%;
+.group-info {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 1rem;
 }
 
-.task-list article a h4 {
-    margin-top: calc(var(--pico-typography-spacing-vertical) * .25);
-    margin-bottom: calc(var(--pico-typography-spacing-vertical) * .25);
+.group-info > .group-thumbnail {
+    aspect-ratio: 1;
+    object-fit: cover;
+    width: 20%;
+    margin-right: 1rem;
+}
+
+
+@media (max-width: 768px) {
+    .group-info > .group-thumbnail {
+        width: 30%;
+    }
+}
+
+.group-info > .group-thumbnail > img {
+    border-radius: 0.25rem;
 }
