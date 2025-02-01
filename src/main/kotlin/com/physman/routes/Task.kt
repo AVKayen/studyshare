@@ -197,7 +197,7 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
             authorId = ObjectId(userSession.id),
             groupName = group.group.title,
             groupId = groupId,
-            category = category
+            category = category.lowercase().replaceFirstChar(Char::titlecase)
         )
 
         taskRepository.createTask(task, files)
