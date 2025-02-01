@@ -43,7 +43,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository:
 }
 
 fun routeSolutionCreationForm(): Form {
-    val solutionCreationForm = Form("Create a new solution", "solutionForm", formAttributes = mutableMapOf(
+    val solutionCreationForm = Form("Create a new solution", "solutionForm", formAttributes = mapOf(
         "hx-target" to "#solution-list",
         "hx-swap" to "afterbegin"
     )
@@ -58,7 +58,7 @@ fun routeSolutionCreationForm(): Form {
 }
 
 fun routeSolutionEditingForm(): Form {
-    val solutionEditingForm = Form("Edit your solution", "solutionEditingForm", formAttributes = mutableMapOf())
+    val solutionEditingForm = Form("Edit your solution", "solutionEditingForm", formAttributes = mapOf())
 
     solutionEditingForm.addInput(TextlikeInput("New Title", "title", InputType.text, titleValidator))
     solutionEditingForm.addInput(TextlikeInput("New Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
@@ -99,15 +99,16 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form) {
             return@get
         }
 
-        solutionEditingForm.formAttributes["hx-target"] = "#article-${id}"
-        solutionEditingForm.formAttributes["hx-swap"] = "outerHTML"
+//        solutionEditingForm.formAttributes["hx-target"] = "#article-${id}"
+//        solutionEditingForm.formAttributes["hx-swap"] = "outerHTML"
 
         call.respondHtml {
             body {
                 formModalDialog(
                     form = solutionEditingForm,
                     callbackUrl = "/solutions/$id?taskId=${taskId}",
-                    requestType = PATCH
+                    requestType = PATCH,
+                    //extraAttributes = M
                 )
             }
         }

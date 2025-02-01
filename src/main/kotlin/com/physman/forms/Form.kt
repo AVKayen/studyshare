@@ -57,7 +57,7 @@ class Form(
     val formTitle: String,
     val formName: String,
     val submitBtnText: String = "Submit",
-    val formAttributes: MutableMap<String, String> = mutableMapOf() //TODO: undo making it public and mutable
+    private val formAttributes: Map<String, String>? = null
 ) {
     var validatorsRoute: String? = null
     var inputs : List<ControlledInput> = emptyList()
@@ -119,6 +119,7 @@ class Form(
         callbackUrl: String,
         requestType: String,
         formHyperscript: String? = null,
+        extraAttributes: Map<String, String>?,
         formContent: FORM.() -> Unit
     ) {
 
@@ -146,6 +147,7 @@ class Form(
             attributes["_"] = if (formHyperscript != null) "$formScript $formHyperscript" else formScript
             attributes[requestType] = callbackUrl
 
+
             if (isMultipart) {
                 attributes["hx-encoding"] = "multipart/form-data"
             }
@@ -154,12 +156,16 @@ class Form(
                 attributes.putAll(formAttributes)
             }
 
+            if(extraAttributes != null) {
+                attributes.putAll(extraAttributes)
+            }
+
             formContent()
         }
     }
 
-    fun render(flowContent: FlowContent, callbackUrl: String, requestType: String) {
-        renderFormElement(flowContent = flowContent, callbackUrl = callbackUrl, requestType = requestType) {
+    fun render(flowContent: FlowContent, callbackUrl: String, requestType: String, extraAttributes: Map<String, String>? = null) {
+        renderFormElement(flowContent = flowContent, callbackUrl = callbackUrl, requestType = requestType, extraAttributes = extraAttributes) {
             renderFormTitle(flowContent)
             renderInputFields(flowContent)
             renderFormSubmit(flowContent)

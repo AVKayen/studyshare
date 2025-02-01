@@ -39,7 +39,7 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
 }
 
 fun routeGroupCreationForm(): Form {
-    val groupCreationForm = Form("Create a new group", "groupForm", formAttributes = mutableMapOf(
+    val groupCreationForm = Form("Create a new group", "groupForm", formAttributes = mapOf(
         "hx-swap" to "none"
     )
     )
@@ -61,7 +61,7 @@ val nonEmptyValidator = fun(title: String): String? {
 }
 
 fun routeUserAdditionForm(): Form {
-    val userAdditionForm = Form("Add a user to the group", "userAdditionForm", formAttributes = mutableMapOf(
+    val userAdditionForm = Form("Add a user to the group", "userAdditionForm", formAttributes = mapOf(
         "hx-swap" to "none"
     )
     )

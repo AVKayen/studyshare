@@ -15,7 +15,7 @@ fun FlowContent.formModalOpenButton(buttonText: String, modalUrl: String, additi
     }
 }
 
-fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: String) {
+fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: String, extraAttributes: Map<String, String>? = null) {
 
     val formScript = """
         on htmx:afterRequest
@@ -26,7 +26,7 @@ fun FlowContent.formModalDialog(form: Form, callbackUrl: String, requestType: St
     """.trimIndent()
 
     val modalWrapper: FlowContent.(block: FlowContent.() -> Unit) -> Unit = { block ->
-        form.renderFormElement(flowContent = this, callbackUrl = callbackUrl, requestType = requestType, formHyperscript = formScript) {
+        form.renderFormElement(flowContent = this, callbackUrl = callbackUrl, requestType = requestType, formHyperscript = formScript, extraAttributes) {
             block()
         }
     }
