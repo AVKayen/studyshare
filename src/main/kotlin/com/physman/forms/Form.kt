@@ -24,13 +24,6 @@ const val MAX_FILE_SIZE: Long = 48 // MB
 const val MAX_FILE_SIZE_BYTES: Long = MAX_FILE_SIZE * 1024 * 1024
 
 
-const val GET: String = "hx-get"
-const val POST: String = "hx-post"
-const val PUT: String = "hx-put"
-const val PATCH: String = "hx-patch"
-const val DELETE: String = "hx-delete"
-
-
 class UploadFileData(
     val filePath: java.nio.file.Path,
     val originalName: String,
@@ -82,13 +75,17 @@ class Form(
         }
     }
 
-    fun renderInputFields(flowContent: FlowContent) {
+    fun renderInputFields(flowContent: FlowContent, inputDataLists: Map<String, List<String>>? = null) {
         flowContent.div {
             for (input in this@Form.inputs) {
 
                 if (input is TextlikeInput) {
                     if (validatorsRoute != null) {
-                        input.render(flowContent, validationUrl = this@Form.validatorsRoute!!)
+                        input.render(
+                            flowContent,
+                            validationUrl = this@Form.validatorsRoute!!,
+                            dataList = inputDataLists?.get(input.inputName)
+                        )
                     } else {
                         // TODO: What error type to throw??
                         throw UninitializedPropertyAccessException("Form ${this@Form.formName} is not routed")
@@ -117,7 +114,7 @@ class Form(
     fun renderFormElement(
         flowContent: FlowContent,
         callbackUrl: String,
-        requestType: String,
+        requestType: HtmxRequestType = HtmxRequestType.POST,
         formHyperscript: String? = null,
         formContent: FORM.() -> Unit
     ) {
@@ -144,7 +141,7 @@ class Form(
         flowContent.form {
 
             attributes["_"] = if (formHyperscript != null) "$formScript $formHyperscript" else formScript
-            attributes[requestType] = callbackUrl
+            attributes[requestType.requestType] = callbackUrl
 
             if (isMultipart) {
                 attributes["hx-encoding"] = "multipart/form-data"
@@ -158,7 +155,7 @@ class Form(
         }
     }
 
-    fun render(flowContent: FlowContent, callbackUrl: String, requestType: String) {
+    fun render(flowContent: FlowContent, callbackUrl: String, requestType: HtmxRequestType = HtmxRequestType.POST) {
         renderFormElement(flowContent = flowContent, callbackUrl = callbackUrl, requestType = requestType) {
             renderFormTitle(flowContent)
             renderInputFields(flowContent)

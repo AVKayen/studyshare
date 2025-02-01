@@ -87,7 +87,8 @@ class TextlikeInput(
 
     fun render(
         flowContent: FlowContent,
-        validationUrl: String
+        validationUrl: String,
+        dataList: List<String>? = null
     ) {
         val inputScript = """
             on input
@@ -122,6 +123,9 @@ class TextlikeInput(
             input(type = inputType, name = inputName) {
                 attributes["id"] = inputId
                 attributes["_"] = if (confirmationInputLabel != null) "$inputScript $confirmationInputScript" else inputScript
+                if (dataList != null) {
+                    attributes["list"] = "options-$inputName"
+                }
 
                 if (clearAfterSubmit) {
                     classes = setOf("clear-after-submit")
@@ -134,21 +138,32 @@ class TextlikeInput(
                     attributes["hx-sync"] = "closest form:abort"
 
                 }
-                small {
-                    attributes["id"] = errorTagId
-                }
+            }
+            small {
+                attributes["id"] = errorTagId
+            }
 
-                if (confirmationInputLabel != null) {
-                    renderConfirmationInput(flowContent)
-                }
-
-                if (inputDescription != null) {
-                    small(classes = "input-info") {
-                        span(classes = "material-symbols-rounded") {
-                            +"info"
+            if (dataList != null) {
+                dataList {
+                    attributes["id"] = "options-$inputName"
+                    for (option: String in dataList) {
+                        option {
+                            attributes["value"] = option
                         }
-                        +inputDescription
                     }
+                }
+            }
+
+            if (confirmationInputLabel != null) {
+                renderConfirmationInput(flowContent)
+            }
+
+            if (inputDescription != null) {
+                small(classes = "input-info") {
+                    span(classes = "material-symbols-rounded") {
+                        +"info"
+                    }
+                    +inputDescription
                 }
             }
         }

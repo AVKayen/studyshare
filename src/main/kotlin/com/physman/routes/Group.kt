@@ -8,6 +8,7 @@ import com.physman.group.GroupRepository
 import com.physman.solution.additionalNotesValidator
 import com.physman.solution.titleValidator
 import com.physman.templates.*
+
 import com.physman.utils.smartRedirect
 import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateRequiredObjectIds
@@ -77,8 +78,7 @@ fun Route.getGroupCreationModal(groupCreationForm: Form) {
             body {
                 formModalDialog(
                     form = groupCreationForm,
-                    callbackUrl = "/groups",
-                    requestType = POST
+                    callbackUrl = "/groups"
                 )
             }
         }
@@ -121,9 +121,9 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
                 lastBreadcrumb = groupView.group.title
             ) {
                 div(classes = "group-info") {
-                    div {
-                        classes = setOf("group-thumbnail")
-                        groupView.thumbnail?.let {
+                    groupView.thumbnail?.let {
+                        div {
+                            classes = setOf("group-thumbnail")
                             img(src = it.thumbnailUrl, alt = "${groupView.group.title}'s thumbnail")
                         }
                     }
@@ -152,7 +152,9 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
                     }
                 }
 
-                contentLoadTemplate("/${groupId}/tasks")
+                groupView.group.taskCategories.forEach {
+                    taskCategoryAccordion(groupId, it)
+                }
             }
         }
     }
@@ -217,8 +219,7 @@ fun Route.getAddUserToGroupModal(userAdditionForm: Form) {
             body {
                 formModalDialog(
                     form = userAdditionForm,
-                    callbackUrl = "/${groupId}/add-user",
-                    requestType = POST
+                    callbackUrl = "/${groupId}/add-user"
                 )
             }
         }

@@ -81,4 +81,16 @@ class MongoGroupRepository(
             )
         }
     }
+
+    override suspend fun addTaskCategory(groupId: ObjectId, taskCategory: String) {
+        val filters = Filters.eq("_id", groupId)
+        val updates = Updates.addToSet(Group::taskCategories.name, taskCategory)
+        groupCollection.updateOne(filters, updates)
+    }
+
+    override suspend fun removeTaskCategory(groupId: ObjectId, taskCategory: String) {
+        val filters = Filters.eq("_id", groupId)
+        val updates = Updates.pull(Group::taskCategories.name, taskCategory)
+        groupCollection.updateOne(filters, updates)
+    }
 }
