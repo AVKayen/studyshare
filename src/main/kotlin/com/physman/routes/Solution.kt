@@ -99,8 +99,6 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form) {
             return@get
         }
 
-//        solutionEditingForm.formAttributes["hx-target"] = "#article-${id}"
-//        solutionEditingForm.formAttributes["hx-swap"] = "outerHTML"
 
         call.respondHtml {
             body {
@@ -108,7 +106,10 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form) {
                     form = solutionEditingForm,
                     callbackUrl = "/solutions/$id?taskId=${taskId}",
                     requestType = PATCH,
-                    //extraAttributes = M
+                    extraAttributes = mapOf(
+                        "hx-target" to "#article-${id}",
+                        "hx-swap" to "outerHTML"
+                    )
                 )
             }
         }
