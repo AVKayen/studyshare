@@ -35,6 +35,7 @@ fun FlowContent.userListItem(user: User, groupId: ObjectId, showKickButton: Bool
         }
         if (showKickButton) {
             button(classes = "btn secondary outline") {
+                attributes["_"] = "on click add .invisible to me toggle @disabled on me"
                 attributes["hx-get"] = "/$groupId/user-deletion-confirmation?userId=${user.id}&name=${user.name}"
                 attributes["hx-target"] = "#$userItemId"
                 attributes["hx-swap"] = "afterend"
@@ -48,6 +49,8 @@ fun FlowContent.userListItem(user: User, groupId: ObjectId, showKickButton: Bool
 }
 
 fun FlowContent.userDeletionConfirmation(groupId: String, userId: String, name: String) {
+
+    val userListItemId = "user-list-item-$userId"
     val confirmationId = "user-deletion-confirmation-${userId}"
 
     div(classes = "user-deletion-confirmation") {
@@ -56,7 +59,16 @@ fun FlowContent.userDeletionConfirmation(groupId: String, userId: String, name: 
             +"Are you sure you want to kick $name from this group?"
         }
         button(classes = "secondary outline") {
-            attributes["_"] = "on click remove #$confirmationId"
+            attributes["_"] = """
+                on click
+                    remove #$confirmationId
+                    set parentUserListItem to <button/> in #$userListItemId
+                    remove .invisible from parentUserListItem
+                    toggle @disabled on parentUserListItem
+                    remove .invisible from
+                end
+            """.trimIndent()
+
             +"Cancel"
         }
         button(classes = "secondary") {

@@ -401,3 +401,7 @@ div.user-deletion-confirmation > p {
 div.user-deletion-confirmation > button {
     padding: .25rem 0.75rem;
 }
+
+.invisible {
+    opacity: 0;
+}
