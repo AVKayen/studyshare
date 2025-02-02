@@ -5,14 +5,14 @@ import kotlinx.html.*
 private fun FlowContent.modalContent(title: String, secondaryButtonText: String?, submitText: String?, submitAttributes: Map<String, String>?, modalBody: ARTICLE.() -> Unit) {
     article {
         header {
+            h2 {
+                +title
+            }
             button {
                 attributes["type"] = "button"
                 attributes["aria-label"] = "Close"
                 attributes["rel"] = "prev"
                 attributes["_"] = "on click trigger closeModal"
-            }
-            h2 {
-                +title
             }
         }
 
