@@ -7,7 +7,7 @@ interface SolutionRepository {
     suspend fun getSolution(solutionId: ObjectId, userId: ObjectId): SolutionView?
     suspend fun getSolutions(taskId: ObjectId, userId: ObjectId, resultCount: Int, lastId: ObjectId?): List<SolutionView>
     suspend fun createSolution(solution: Solution, files: List<UploadFileData>, userId: ObjectId): SolutionView
-    suspend fun updateSolution(id: ObjectId, solutionView: SolutionView)
+    suspend fun updateSolution(id: ObjectId, newSolution: Solution)
     suspend fun deleteSolutions(taskId: ObjectId)
     suspend fun deleteSolution(id: ObjectId)
 

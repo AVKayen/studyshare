@@ -15,6 +15,7 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.html.*
 import com.physman.forms.*
+import com.physman.solution.SolutionView
 import com.physman.task.*
 import com.physman.utils.smartRedirect
 import com.physman.utils.validateGroupBelonging
@@ -23,10 +24,12 @@ import org.bson.types.ObjectId
 
 fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepository) {
     val taskCreationForm = routeTaskCreationForm()
+    val taskEditingForm = routeTaskEditingForm()
     route("/{groupId}") {
         postTaskCreation(taskRepository, groupRepository, taskCreationForm)
         route("/{taskId}") {
             getTaskView(taskRepository, groupRepository)
+            patchTaskEditing(taskRepository, taskEditingForm)
             deleteTask(taskRepository, groupRepository)
         }
         route("/tasks") {
@@ -34,6 +37,9 @@ fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepos
         }
         route("/creation-modal") {
             getTaskCreationModal(taskCreationForm, groupRepository)
+        }
+        route("/editing-modal") {
+            getTaskEditingModal(taskEditingForm)
         }
         route("/deletion-modal") {
             getTaskDeletionModal()
@@ -168,6 +174,29 @@ fun Route.getTaskCreationModal(taskCreationForm: Form, groupRepository: GroupRep
     }
 }
 
+fun Route.getTaskEditingModal(taskEditingForm: Form) {
+    get {
+        val id = call.request.queryParameters["taskId"]
+
+        if (id == null) {
+            call.respondText("Id not specified.", status = HttpStatusCode.BadRequest)
+            return@get
+        }
+        call.respondHtml {
+            body {
+                formModalDialog(
+                    form = taskEditingForm,
+                    callbackUrl = "/tasks/$id",
+                    requestType = HtmxRequestType.PATCH,
+                    extraAttributes = mapOf(
+                        "hx-target" to "#article-${id}"
+                    )
+                )
+            }
+        }
+    }
+}
+
 fun Route.getTaskDeletionModal() {
     get {
         val objectIds = validateRequiredObjectIds(call, "taskId", "groupId") ?: return@get
@@ -218,6 +247,50 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
         formSubmissionData.cleanup()
 
         call.smartRedirect(redirectUrl = "/${groupId}/${task.id}")
+    }
+}
+
+fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form) {
+    patch {
+        val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@patch
+        val taskId = objectIds["taskId"]!!
+
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+
+        val formSubmissionData: FormSubmissionData = taskEditingForm.validateSubmission(call) ?: return@patch
+        val title = formSubmissionData.fields["title"]!!
+        val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
+        formSubmissionData.cleanup()
+
+        val previousTask = taskRepository.getTask(taskId) ?: return@patch call.respond(HttpStatusCode.NotFound)
+
+        if (previousTask.task.authorId != userId) {
+            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+            return@patch
+        }
+
+        val newTask = Task(
+            title = title,
+            additionalNotes = additionalNotes,
+            id = previousTask.task.id,
+            authorName = previousTask.task.authorName,
+            authorId = previousTask.task.authorId,
+            groupName = previousTask.task.groupName,
+            groupId = previousTask.task.groupId,
+            commentAmount = previousTask.task.commentAmount,
+            attachmentIds = previousTask.task.attachmentIds,
+            category = previousTask.task.category)
+
+        taskRepository.updateTask(taskId, newTask)
+
+        val newTaskView = TaskView(newTask, previousTask.attachments)
+
+        call.respondHtml(HttpStatusCode.OK) {
+            body {
+                taskTemplate(newTaskView, true)
+            }
+        }
     }
 }
 

@@ -37,11 +37,11 @@ class MongoSolutionRepository(
         )
     }
 
-    override suspend fun updateSolution(id: ObjectId, solutionView: SolutionView) {
+    override suspend fun updateSolution(id: ObjectId, newSolution: Solution) {
         val filter = Filters.eq("_id", id)
         val updates = Updates.combine(
-            Updates.set(Solution::title.name, solutionView.solution.title),
-            Updates.set(Solution::additionalNotes.name, solutionView.solution.additionalNotes)
+            Updates.set(Solution::title.name, newSolution.title),
+            Updates.set(Solution::additionalNotes.name, newSolution.additionalNotes)
         )
 
         solutionCollection.findOneAndUpdate(filter, updates)

@@ -96,6 +96,7 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form) {
             call.respondText("Id not specified.", status = HttpStatusCode.BadRequest)
             return@get
         }
+
         call.respondHtml {
             body {
                 formModalDialog(
@@ -223,16 +224,22 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
         val formSubmissionData: FormSubmissionData = solutionEditingForm.validateSubmission(call) ?: return@patch
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
+        formSubmissionData.cleanup()
 
         val previousSolution = solutionRepository.getSolution(solutionId, userId) ?: return@patch call.respond(HttpStatusCode.NotFound)
+
+        if (previousSolution.solution.authorId != userId) {
+            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+            return@patch
+        }
 
         val newSolution = Solution(
             title = title,
             additionalNotes = additionalNotes,
             id = previousSolution.solution.id,
             authorName = previousSolution.solution.authorName,
-            authorId = previousSolution.solution.id,
-            taskId = previousSolution.solution.id,
+            authorId = previousSolution.solution.authorId,
+            taskId = previousSolution.solution.taskId,
             groupName = previousSolution.solution.groupName,
             groupId = previousSolution.solution.groupId,
             commentAmount = previousSolution.solution.commentAmount,
@@ -241,9 +248,9 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
             attachmentIds = previousSolution.solution.attachmentIds
         )
 
-        val newSolutionView = SolutionView(newSolution, previousSolution.attachments, previousSolution.isUpvoted, previousSolution.isDownvoted)
+        solutionRepository.updateSolution(solutionId, newSolution)
 
-        formSubmissionData.cleanup()
+        val newSolutionView = SolutionView(newSolution, previousSolution.attachments, previousSolution.isUpvoted, previousSolution.isDownvoted)
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
