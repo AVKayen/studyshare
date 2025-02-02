@@ -81,8 +81,7 @@ fun Route.getSolutionCreationModal(solutionCreationForm: Form) {
             body {
                 formModalDialog(
                     form = solutionCreationForm,
-                    callbackUrl = "/solutions?taskId=$taskId",
-                    requestType = POST
+                    callbackUrl = "/solutions?taskId=$taskId"
                 )
             }
         }

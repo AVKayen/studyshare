@@ -60,13 +60,15 @@ class MongoTaskRepository(
         )
     }
 
-    override suspend fun deleteTask(id: ObjectId) {
+    override suspend fun deleteTask(id: ObjectId): Task? {
         val filter = Filters.eq("_id", id)
-        val task = taskCollection.findOneAndDelete(filter) ?: return
+        val task = taskCollection.findOneAndDelete(filter) ?: return null
 
         commentRepository.deleteComments(id)
         solutionRepository.deleteSolutions(taskId = task.id)
         attachmentRepository.deleteAttachments(task.attachmentIds)
+
+        return task
     }
 
     override suspend fun deleteTasks(groupId: ObjectId) {
@@ -87,4 +89,12 @@ class MongoTaskRepository(
 
          return solution.commentAmount + amount
      }
+
+    override suspend fun doesCategoryExist(groupId: ObjectId, category: String): Boolean {
+        val filter = Filters.and(
+            Filters.eq("_id", groupId),
+            Filters.eq(Task::category.name, category)
+        )
+        return taskCollection.find(filter).firstOrNull() != null
+    }
  }

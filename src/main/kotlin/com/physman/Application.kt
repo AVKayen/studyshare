@@ -16,19 +16,22 @@ import io.ktor.server.html.*
 import io.ktor.server.netty.*
 import io.ktor.server.plugins.statuspages.StatusPages
 import kotlinx.html.*
+import org.slf4j.LoggerFactory
 
 fun main(args: Array<String>) {
     EngineMain.main(args)
 }
 
 var isDevelopment: Boolean = false
+private val logger = LoggerFactory.getLogger("Application")
+
 
 fun Application.module() {
     // check if in production or development mode
     isDevelopment = this.developmentMode
     val environment = Environment(true)
     val mongodbClient = MongoClient.create(environment.MONGODB_CONNECTION_STRING)
-    val database = mongodbClient.getDatabase("task-category-studyshare")
+    val database = mongodbClient.getDatabase("task-category-another-studyshare")
 
     val imageRepository = MongoGCloudAttachmentRepository(bucketName = "studyshare-files", database = database)
     val commentRepository = MongoCommentRepository(database)
@@ -39,6 +42,7 @@ fun Application.module() {
 
     install(StatusPages) {
         exception<Throwable> { call, cause ->
+            logger.error("Internal server error", cause)
             call.respondHtml(HttpStatusCode.InternalServerError) {
                 index("Error") {
                     h1 {
@@ -60,7 +64,6 @@ fun Application.module() {
             }
         }
     }
-
     configureSecurity(userRepository)
     configureRouting(
         solutionRepository = solutionRepository,
