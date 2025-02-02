@@ -15,7 +15,6 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.html.*
 import com.physman.forms.*
-import com.physman.solution.SolutionView
 import com.physman.task.*
 import com.physman.utils.smartRedirect
 import com.physman.utils.validateGroupBelonging

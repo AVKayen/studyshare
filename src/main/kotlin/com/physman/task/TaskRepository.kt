@@ -1,7 +1,6 @@
 package com.physman.task
 
 import com.physman.forms.UploadFileData
-import com.physman.solution.SolutionView
 import org.bson.types.ObjectId
 
 interface TaskRepository {
