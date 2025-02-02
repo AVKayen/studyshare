@@ -151,3 +151,14 @@ fun FlowContent.localDateSpan(objectId: ObjectId) {
         attributes["data-date"] = objectId.timestamp.toString()
     }
 }
+
+fun FlowContent.wideButton(buttonText: String, url: String, additionalButtonAttributes: Map<String, String>? = null) {
+    button(classes = "btn primary outline wide-button") {
+        attributes["hx-get"] = url
+        if (additionalButtonAttributes != null) {
+            attributes.putAll(additionalButtonAttributes)
+        }
+
+        +buttonText
+    }
+}

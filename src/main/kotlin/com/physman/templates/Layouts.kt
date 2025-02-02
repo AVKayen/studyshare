@@ -131,6 +131,14 @@ fun HTML.index(
         title { +title }
     }
     body {
+        attributes["_"] = """      
+            on keydown
+                set topModal to last <dialog/> in me
+                if event.code == "Escape" and topModal
+                    send closeModal to topModal
+                end
+            end
+        """.trimIndent()
         layoutHeader(username = username, breadcrumbs = breadcrumbs, lastBreadcrumb = lastBreadcrumb)
         main(classes = "container") {
             block()
