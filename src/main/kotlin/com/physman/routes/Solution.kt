@@ -232,7 +232,21 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
 
         val previousSolution = solutionRepository.getSolution(solutionId, userId) ?: return@patch call.respond(HttpStatusCode.NotFound)
 
-        val newSolution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId, authorId = userId, authorName = userName, groupId = previousSolution.solution.groupId, groupName = previousSolution.solution.groupName)
+        val newSolution = Solution(
+            title = title,
+            additionalNotes = additionalNotes,
+            id = previousSolution.solution.id,
+            authorName = previousSolution.solution.authorName,
+            authorId = previousSolution.solution.id,
+            taskId = previousSolution.solution.id,
+            groupName = previousSolution.solution.groupName,
+            groupId = previousSolution.solution.groupId,
+            commentAmount = previousSolution.solution.commentAmount,
+            upvotes = previousSolution.solution.upvotes,
+            downvotes = previousSolution.solution.downvotes,
+            attachmentIds = previousSolution.solution.attachmentIds)
+
+
 
         var newSolutionView = SolutionView(newSolution, previousSolution.attachments, previousSolution.isUpvoted, previousSolution.isDownvoted)
         println("hi3.1")
