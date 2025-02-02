@@ -104,7 +104,7 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form) {
                 formModalDialog(
                     form = solutionEditingForm,
                     callbackUrl = "/solutions/$id?taskId=${taskId}",
-                    requestType = PATCH,
+                    requestType = HtmxRequestType.PATCH,
                     extraAttributes = mapOf(
                         "hx-target" to "#article-${id}",
                         "hx-swap" to "outerHTML"

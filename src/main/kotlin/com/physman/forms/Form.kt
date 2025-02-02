@@ -114,7 +114,7 @@ class Form(
     fun renderFormElement(
         flowContent: FlowContent,
         callbackUrl: String,
-        requestType: String,
+        requestType: HtmxRequestType,
         formHyperscript: String? = null,
         extraAttributes: Map<String, String>?,
         formContent: FORM.() -> Unit
@@ -142,7 +142,7 @@ class Form(
         flowContent.form {
 
             attributes["_"] = if (formHyperscript != null) "$formScript $formHyperscript" else formScript
-            attributes[requestType] = callbackUrl
+            attributes[requestType.requestType] = callbackUrl
 
             if (isMultipart) {
                 attributes["hx-encoding"] = "multipart/form-data"
