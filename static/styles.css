@@ -436,3 +436,10 @@ details summary {
 article > .user-list-item:first-of-type {
     margin: 0.5rem 0;
 }
+
+.modal-content header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
