@@ -75,16 +75,24 @@ class Form(
         }
     }
 
-    fun renderInputFields(flowContent: FlowContent, inputDataLists: Map<String, List<String>>? = null) {
+    fun renderInputFields(flowContent: FlowContent, inputDataLists: Map<String, List<String>>? = null, inputValues: List<String?> = emptyList()) {
+        val valuesIterator = inputValues.iterator()
+        var inputValue: String
         flowContent.div {
             for (input in this@Form.inputs) {
+                if (valuesIterator.hasNext()) {
+                    inputValue = valuesIterator.next() ?: ""
+                } else {
+                    inputValue = ""
+                }
 
                 if (input is TextlikeInput) {
                     if (validatorsRoute != null) {
                         input.render(
                             flowContent,
                             validationUrl = this@Form.validatorsRoute!!,
-                            dataList = inputDataLists?.get(input.inputName)
+                            dataList = inputDataLists?.get(input.inputName),
+                            inputValue = inputValue
                         )
                     } else {
                         // TODO: What error type to throw??

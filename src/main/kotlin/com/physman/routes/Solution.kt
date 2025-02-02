@@ -25,7 +25,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository:
             getSolutionCreationModal(solutionCreationForm)
         }
         route("/editing-modal") {
-            getSolutionEditingModal(solutionEditingForm)
+            getSolutionEditingModal(solutionEditingForm, solutionRepository)
         }
         route("/deletion-modal") {
             getSolutionDeletionModal()
@@ -88,12 +88,21 @@ fun Route.getSolutionCreationModal(solutionCreationForm: Form) {
     }
 }
 
-fun Route.getSolutionEditingModal(solutionEditingForm: Form) {
+fun Route.getSolutionEditingModal(solutionEditingForm: Form, solutionRepository: SolutionRepository) {
     get {
         val id = call.request.queryParameters["id"]
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
 
         if (id == null) {
             call.respondText("Id not specified.", status = HttpStatusCode.BadRequest)
+            return@get
+        }
+
+        val solutionView = solutionRepository.getSolution(ObjectId(id), userId) ?: return@get
+
+        if (solutionView.solution.authorId != userId) {
+            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
             return@get
         }
 
@@ -105,6 +114,10 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form) {
                     requestType = HtmxRequestType.PATCH,
                     extraAttributes = mapOf(
                         "hx-target" to "#article-${id}"
+                    ),
+                    inputValues = listOf(
+                        solutionView.solution.title,
+                        solutionView.solution.additionalNotes
                     )
                 )
             }

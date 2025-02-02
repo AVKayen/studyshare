@@ -88,7 +88,8 @@ class TextlikeInput(
     fun render(
         flowContent: FlowContent,
         validationUrl: String,
-        dataList: List<String>? = null
+        dataList: List<String>? = null,
+        inputValue: String = ""
     ) {
         val inputScript = """
             on input
@@ -121,6 +122,7 @@ class TextlikeInput(
             }
 
             input(type = inputType, name = inputName) {
+                attributes["value"] = inputValue
                 attributes["id"] = inputId
                 attributes["_"] = if (confirmationInputLabel != null) "$inputScript $confirmationInputScript" else inputScript
                 if (dataList != null) {

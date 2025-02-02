@@ -21,7 +21,8 @@ fun FlowContent.formModalDialog(
     callbackUrl: String,
     requestType: HtmxRequestType = HtmxRequestType.POST,
     inputDataLists: Map<String, List<String>>? = null,
-    extraAttributes: Map<String, String>? = null
+    extraAttributes: Map<String, String>? = null,
+    inputValues: List<String?> = emptyList()
 ) {
 
     val formScript = """
@@ -44,6 +45,6 @@ fun FlowContent.formModalDialog(
         submitAttributes = mapOf(),
         modalWrapper = modalWrapper
     ) {
-        form.renderInputFields(this, inputDataLists = inputDataLists)
+        form.renderInputFields(this, inputDataLists = inputDataLists, inputValues = inputValues)
     }
 }

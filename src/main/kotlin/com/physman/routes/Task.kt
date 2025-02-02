@@ -38,7 +38,7 @@ fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepos
             getTaskCreationModal(taskCreationForm, groupRepository)
         }
         route("/editing-modal") {
-            getTaskEditingModal(taskEditingForm)
+            getTaskEditingModal(taskEditingForm, taskRepository)
         }
         route("/deletion-modal") {
             getTaskDeletionModal()
@@ -173,14 +173,24 @@ fun Route.getTaskCreationModal(taskCreationForm: Form, groupRepository: GroupRep
     }
 }
 
-fun Route.getTaskEditingModal(taskEditingForm: Form) {
+fun Route.getTaskEditingModal(taskEditingForm: Form, taskRepository: TaskRepository) {
     get {
         val id = call.request.queryParameters["taskId"]
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
 
         if (id == null) {
             call.respondText("Id not specified.", status = HttpStatusCode.BadRequest)
             return@get
         }
+
+        val taskView = taskRepository.getTask(ObjectId(id)) ?: return@get
+
+        if (taskView.task.authorId != userId) {
+            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+            return@get
+        }
+
         call.respondHtml {
             body {
                 formModalDialog(
@@ -189,6 +199,10 @@ fun Route.getTaskEditingModal(taskEditingForm: Form) {
                     requestType = HtmxRequestType.PATCH,
                     extraAttributes = mapOf(
                         "hx-target" to "#article-${id}"
+                    ),
+                    inputValues = listOf(
+                        taskView.task.title,
+                        taskView.task.additionalNotes
                     )
                 )
             }
@@ -248,7 +262,7 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
         call.smartRedirect(redirectUrl = "/${groupId}/${task.id}")
     }
 }
-
+//TODO: if form is not right dont post it
 fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form) {
     patch {
         val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@patch
