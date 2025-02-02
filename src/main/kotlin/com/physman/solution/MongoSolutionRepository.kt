@@ -90,10 +90,17 @@ class MongoSolutionRepository(
         }
     }
 
-    override suspend fun getSolution(solutionId: ObjectId): Solution? {
+    override suspend fun getSolution(solutionId: ObjectId, userId: ObjectId): SolutionView? {
         val filter = Filters.eq("_id", solutionId)
-        return solutionCollection.find(filter).firstOrNull()
+        val solution = solutionCollection.find(filter).firstOrNull() ?: return null
+        return SolutionView(
+                solution = solution,
+                attachments = attachmentRepository.getAttachments(solution.attachmentIds),
+                isUpvoted = solution.upvotes.contains(userId),
+                isDownvoted = solution.downvotes.contains(userId)
+            )
     }
+
 
 
     override suspend fun updateCommentAmount(solutionId: ObjectId, amount: Int): Int {

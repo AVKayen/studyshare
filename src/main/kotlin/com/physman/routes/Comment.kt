@@ -42,7 +42,7 @@ fun Route.getCommentView(taskRepository: TaskRepository, solutionRepository: Sol
         val comments = commentRepository.getComments(parentId!!)
         val parentPost = when (parentPostClassName.lowercase()) {
             "task" -> taskRepository.getTask(parentId)?.task
-            "solution" -> solutionRepository.getSolution(parentId)
+            "solution" -> solutionRepository.getSolution(parentId, userId)?.solution
             else -> return@get
         }
         if (!validateGroupBelonging(call, groupRepository, parentPost?.groupId)) return@get
@@ -82,6 +82,7 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
         val parentId = objectIds["parentId"]
         val postType = call.request.queryParameters["postType"]
         val userSession = call.sessions.get<UserSession>()!!
+        val authorId = ObjectId(userSession.id)
 
         val content = call.receiveParameters()["content"]
         if (content == null || commentValidator(content) != null) {
@@ -91,7 +92,7 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
 
         val parentPost: Post? = when (postType?.lowercase()) {
             "task" -> taskRepository.getTask(parentId!!)?.task
-            "solution" -> solutionRepository.getSolution(parentId!!)
+            "solution" -> solutionRepository.getSolution(parentId!!, authorId)?.solution
             else -> return@post
         }
 
@@ -106,7 +107,7 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
             parentId = parentId,
             content = content,
             authorName = userSession.name,
-            authorId = ObjectId(userSession.id)
+            authorId = authorId
         )
 
         when (postType.lowercase()) {

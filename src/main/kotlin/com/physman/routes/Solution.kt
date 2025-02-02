@@ -31,7 +31,7 @@ fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository:
             getSolutionDeletionModal()
         }
         route("/{id}") {
-            patchSolutionEditing(taskRepository, solutionRepository, solutionEditingForm)
+            patchSolutionEditing(solutionRepository, solutionEditingForm)
             deleteSolution(solutionRepository, taskRepository)
             route("/{voteAction}") {
                 postVote(solutionRepository, groupRepository)
@@ -216,7 +216,7 @@ fun Route.postSolutionCreation(taskRepository: TaskRepository, solutionRepositor
     }
 }
 
-fun Route.patchSolutionEditing(taskRepository: TaskRepository, solutionRepository: SolutionRepository, solutionEditingForm: Form) {
+fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionEditingForm: Form) {
     patch {
         val objectIds = validateRequiredObjectIds(call, "id", "taskId") ?: return@patch
         val solutionId = objectIds["id"]!!
@@ -230,20 +230,19 @@ fun Route.patchSolutionEditing(taskRepository: TaskRepository, solutionRepositor
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
 
-        val task = taskRepository.getTask(taskId) ?: return@patch call.respond(HttpStatusCode.NotFound)
+        val previousSolution = solutionRepository.getSolution(solutionId, userId) ?: return@patch call.respond(HttpStatusCode.NotFound)
 
-        val solution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId, authorId = userId, authorName = userName, groupId = task.task.groupId, groupName = task.task.groupName)
+        val newSolution = Solution(title = title, additionalNotes = additionalNotes, taskId = taskId, authorId = userId, authorName = userName, groupId = previousSolution.solution.groupId, groupName = previousSolution.solution.groupName)
 
-        //TODO: change this to incorporate attachments
-        val solutionView1 = SolutionView(solution, emptyList(), false, false)
+        var newSolutionView = SolutionView(newSolution, previousSolution.attachments, previousSolution.isUpvoted, previousSolution.isDownvoted)
         println("hi3.1")
-        val solutionView = solutionRepository.updateSolution(solutionId, solutionView1)
+        newSolutionView = solutionRepository.updateSolution(solutionId, newSolutionView)
         println("hi3.2")
         formSubmissionData.cleanup()
-
+        //TODO: fix comments not appearing after editing and voteCount
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(solutionView, true)
+                solutionTemplate(newSolutionView, true)
             }
         }
     }
@@ -254,13 +253,13 @@ fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository:
         println("now1")
         val objectIds = validateRequiredObjectIds(call, "id") ?: return@delete
         val solutionId = objectIds["id"]!!
+        val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
-        val solution = solutionRepository.getSolution(solutionId) ?: return@delete
-        val parentTask = taskRepository.getTask(solution.taskId) ?: return@delete
+        val solutionView = solutionRepository.getSolution(solutionId, userId) ?: return@delete
+        val parentTask = taskRepository.getTask(solutionView.solution.taskId) ?: return@delete
         println("now2")
         val parentAuthorId = parentTask.task.authorId
-        val authorId = solution.authorId
-        val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
+        val authorId = solutionView.solution.authorId
 
         if (authorId == userId || parentAuthorId == userId) {
             solutionRepository.deleteSolution(solutionId)
@@ -282,7 +281,7 @@ fun Route.postVote(solutionRepository: SolutionRepository, groupRepository: Grou
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        if (!validateGroupBelonging(call, groupRepository, solutionRepository.getSolution(solutionId)?.groupId)) return@post
+        if (!validateGroupBelonging(call, groupRepository, solutionRepository.getSolution(solutionId, userId)?.solution?.groupId)) return@post
 
         if (action == null) {
             call.respondText("Action not specified.", status = HttpStatusCode.BadRequest)
