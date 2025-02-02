@@ -124,8 +124,8 @@ fun FlowContent.contentLoadTemplate(url: String) {
 
 fun FlowContent.postEditingButton(post: Post) {
     val url = when (post) {
-        is Solution -> "/solutions/editing-modal?id=${post.id}&taskId=${post.taskId}"
-        is Task -> "/${post.groupId}/editing-modal?taskId=${post.id}"
+        is Task -> "/tasks/editing-modal?id=${post.id}"
+        is Solution -> "/solutions/editing-modal?id=${post.id}"
         else -> throw IllegalArgumentException("Invalid post")
     }
 

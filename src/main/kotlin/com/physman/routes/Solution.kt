@@ -50,7 +50,6 @@ fun routeSolutionCreationForm(): Form {
     )
     solutionCreationForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))
     solutionCreationForm.addInput(TextlikeInput("Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
-    solutionCreationForm.addInput(FileInput("Upload files", "files", inputAttributes = mapOf("multiple" to "true")))
 
     globalFormRouter.routeFormValidators(solutionCreationForm)
 
@@ -58,11 +57,12 @@ fun routeSolutionCreationForm(): Form {
 }
 
 fun routeSolutionEditingForm(): Form {
-    val solutionEditingForm = Form("Edit your solution", "solutionEditingForm", formAttributes = mapOf())
+    val solutionEditingForm = Form("Edit your solution", "solutionEditingForm", formAttributes = mapOf(
+        "hx-swap" to "outerHTML"
+    ))
 
     solutionEditingForm.addInput(TextlikeInput("New Title", "title", InputType.text, titleValidator))
     solutionEditingForm.addInput(TextlikeInput("New Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
-    solutionEditingForm.addInput(FileInput("New Upload files", "files", inputAttributes = mapOf("multiple" to "true")))
 
     globalFormRouter.routeFormValidators(solutionEditingForm)
 
@@ -91,23 +91,19 @@ fun Route.getSolutionCreationModal(solutionCreationForm: Form) {
 fun Route.getSolutionEditingModal(solutionEditingForm: Form) {
     get {
         val id = call.request.queryParameters["id"]
-        val taskId = call.request.queryParameters["taskId"]
 
-        if (taskId == null) {
-            call.respondText("Task Id not specified.", status = HttpStatusCode.BadRequest)
+        if (id == null) {
+            call.respondText("Id not specified.", status = HttpStatusCode.BadRequest)
             return@get
         }
-
-
         call.respondHtml {
             body {
                 formModalDialog(
                     form = solutionEditingForm,
-                    callbackUrl = "/solutions/$id?taskId=${taskId}",
+                    callbackUrl = "/solutions/$id",
                     requestType = HtmxRequestType.PATCH,
                     extraAttributes = mapOf(
-                        "hx-target" to "#article-${id}",
-                        "hx-swap" to "outerHTML"
+                        "hx-target" to "#article-${id}"
                     )
                 )
             }
@@ -218,7 +214,7 @@ fun Route.postSolutionCreation(taskRepository: TaskRepository, solutionRepositor
 
 fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionEditingForm: Form) {
     patch {
-        val objectIds = validateRequiredObjectIds(call, "id", "taskId") ?: return@patch
+        val objectIds = validateRequiredObjectIds(call, "id") ?: return@patch
         val solutionId = objectIds["id"]!!
 
         val userSession = call.sessions.get<UserSession>()!!

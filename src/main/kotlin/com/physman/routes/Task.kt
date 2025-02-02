@@ -22,7 +22,7 @@ import com.physman.utils.validateOptionalObjectIds
 import org.bson.types.ObjectId
 
 fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepository) {
-    val taskCreationForm = routeTaskForms()
+    val taskCreationForm = routeTaskCreationForm()
     route("/{groupId}") {
         postTaskCreation(taskRepository, groupRepository, taskCreationForm)
         route("/{taskId}") {
@@ -84,7 +84,7 @@ fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepo
     }
 }
 
-fun routeTaskForms(): Form {
+fun routeTaskCreationForm(): Form {
     val taskCreationForm = Form("Create a new task", "taskForm", formAttributes = mapOf(
         "hx-swap" to "none"
     ))
@@ -97,6 +97,19 @@ fun routeTaskForms(): Form {
     globalFormRouter.routeFormValidators(taskCreationForm)
 
     return taskCreationForm
+}
+
+fun routeTaskEditingForm(): Form {
+    val taskEditingForm = Form("Edit your task", "taskEditingForm", formAttributes = mapOf(
+        "hx-swap" to "outerHTML"
+    ))
+
+    taskEditingForm.addInput(TextlikeInput("New Title", "title", InputType.text, titleValidator))
+    taskEditingForm.addInput(TextlikeInput("New Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+
+    globalFormRouter.routeFormValidators(taskEditingForm)
+
+    return taskEditingForm
 }
 
 fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepository) {
