@@ -133,8 +133,9 @@ fun HTML.index(
     body {
         attributes["_"] = """      
             on keydown
-                if event.code == "Escape"
-                    send closeModal to .modal
+                set topModal to last <dialog/> in me
+                if event.code == "Escape" and topModal
+                    send closeModal to topModal
                 end
             end
         """.trimIndent()
