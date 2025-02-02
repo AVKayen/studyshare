@@ -36,6 +36,9 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
             getAddUserToGroupModal(userAdditionForm)
             postAddUserToGroup(groupRepository, userRepository, userAdditionForm)
         }
+        route("/users-modal") {
+            getUsersModal(groupRepository, userRepository)
+        }
     }
 }
 
@@ -137,17 +140,19 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
                         }
                     }
                 }
-                section(classes = "modal-btn-container, wide-button-container") {
-                    formModalOpenButton(
+                section(classes = "wide-button-container") {
+                    modalOpenButton(
                         buttonText = "Create a task",
-                        modalUrl = "/${groupId}/creation-modal",
-                        additionalClasses = setOf("wide-button", "outline")
+                        modalUrl = "/${groupId}/creation-modal"
+                    )
+                    modalOpenButton(
+                        buttonText = "Show members",
+                        modalUrl = "/${groupId}/users-modal"
                     )
                     if (userSession.id == groupView.group.leaderId.toHexString()) {
-                        formModalOpenButton(
+                        modalOpenButton(
                             buttonText = "Add a user",
-                            modalUrl = "/${groupId}/add-user",
-                            additionalClasses = setOf("wide-button", "outline")
+                            modalUrl = "/${groupId}/add-user"
                         )
                     }
                 }
@@ -159,6 +164,33 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
         }
     }
 }
+
+fun Route.getUsersModal(groupRepository: GroupRepository, userRepository: UserRepository) {
+    get {
+        val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
+        val groupId = objectIds["groupId"]!!
+
+        val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
+
+        val groupMembers = userRepository.getUsersByIds(groupView.group.memberIds)
+
+        call.respondHtml {
+            body {
+                modalTemplate(
+                    title = "Group members",
+                    secondaryButtonText = null
+                ) {
+                    groupMembers.forEach {
+                        p(classes = "user-list-item") {
+                            +it.name
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 fun Route.postCreateGroup(groupRepository: GroupRepository, groupCreationForm: Form) {
     post {

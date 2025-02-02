@@ -10,7 +10,6 @@ import com.physman.group.GroupRepository
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.http.content.*
-import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import java.io.File
 
@@ -26,7 +25,7 @@ fun Application.configureRouting(
 
         // neo routers
         route("/") {
-            indexViewRouter(groupRepository, userRepository)
+            indexViewRouter()
 
             authenticate("USER") {
                 commentRouter(commentRepository, solutionRepository, taskRepository, groupRepository)

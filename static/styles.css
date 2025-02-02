@@ -271,7 +271,8 @@ nav {
 }
 
 .wide-button {
-    width: 50%;
+    max-width: 50%;
+    flex-grow: 1;
     --pico-box-shadow: var(--pico-button-hover-box-shadow, 0 0 0 rgba(0, 0, 0, 0)),0 0 0 var(--pico-outline-width) var(--pico-primary-focus);
 }
 
@@ -370,4 +371,8 @@ details summary {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+p.user-list-item {
+    margin-left: 1rem;
 }
