@@ -220,11 +220,9 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
     patch {
         val objectIds = validateRequiredObjectIds(call, "id", "taskId") ?: return@patch
         val solutionId = objectIds["id"]!!
-        val taskId = objectIds["taskId"]!!
 
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
-        val userName = userSession.name
 
         val formSubmissionData: FormSubmissionData = solutionEditingForm.validateSubmission(call) ?: return@patch
         val title = formSubmissionData.fields["title"]!!
@@ -244,16 +242,13 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
             commentAmount = previousSolution.solution.commentAmount,
             upvotes = previousSolution.solution.upvotes,
             downvotes = previousSolution.solution.downvotes,
-            attachmentIds = previousSolution.solution.attachmentIds)
+            attachmentIds = previousSolution.solution.attachmentIds
+        )
 
+        val newSolutionView = SolutionView(newSolution, previousSolution.attachments, previousSolution.isUpvoted, previousSolution.isDownvoted)
 
-
-        var newSolutionView = SolutionView(newSolution, previousSolution.attachments, previousSolution.isUpvoted, previousSolution.isDownvoted)
-        println("hi3.1")
-        newSolutionView = solutionRepository.updateSolution(solutionId, newSolutionView)
-        println("hi3.2")
         formSubmissionData.cleanup()
-        //TODO: fix comments not appearing after editing and voteCount
+
         call.respondHtml(HttpStatusCode.OK) {
             body {
                 solutionTemplate(newSolutionView, true)
@@ -264,14 +259,13 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
 
 fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
     delete {
-        println("now1")
         val objectIds = validateRequiredObjectIds(call, "id") ?: return@delete
         val solutionId = objectIds["id"]!!
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
         val solutionView = solutionRepository.getSolution(solutionId, userId) ?: return@delete
         val parentTask = taskRepository.getTask(solutionView.solution.taskId) ?: return@delete
-        println("now2")
+
         val parentAuthorId = parentTask.task.authorId
         val authorId = solutionView.solution.authorId
 

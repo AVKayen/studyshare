@@ -122,6 +122,24 @@ fun FlowContent.contentLoadTemplate(url: String) {
     }
 }
 
+fun FlowContent.postEditingButton(post: Post) {
+    val url = when (post) {
+        is Solution -> "/solutions/editing-modal?id=${post.id}&taskId=${post.taskId}"
+        is Task -> "/${post.groupId}/editing-modal?taskId=${post.id}"
+        else -> throw IllegalArgumentException("Invalid post")
+    }
+
+    button(classes = "btn secondary outline") {
+        attributes["hx-get"] = url
+        attributes["hx-target"] = "body"
+        attributes["hx-swap"] = "beforeend"
+
+        span(classes = "material-symbols-rounded") {
+            +"edit"
+        }
+    }
+}
+
 fun FlowContent.postDeletionButton(post: Post) {
     val url = when (post) {
         is Solution -> "/solutions/deletion-modal?solutionId=${post.id}"
@@ -136,24 +154,6 @@ fun FlowContent.postDeletionButton(post: Post) {
 
         span(classes = "material-symbols-rounded") {
             +"delete"
-        }
-    }
-}
-
-fun FlowContent.postEditingButton(post: Post) {
-    val url = when (post) {
-        is Solution -> "/solutions/editing-modal?id=${post.id}&taskId=${post.taskId}" //TODO: may change this (id)
-        is Task -> "/${post.groupId}/editing-modal?taskId=${post.id}"
-        else -> throw IllegalArgumentException("Invalid post")
-    }
-
-    button(classes = "btn secondary outline") {
-        attributes["hx-get"] = url
-        attributes["hx-target"] = "body"
-        attributes["hx-swap"] = "beforeend"
-
-        span(classes = "material-symbols-rounded") {
-            +"edit"
         }
     }
 }

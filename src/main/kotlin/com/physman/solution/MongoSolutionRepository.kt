@@ -36,22 +36,15 @@ class MongoSolutionRepository(
             isDownvoted = solution.downvotes.contains(userId)
         )
     }
-    //TODO: consider attachments for update
-    override suspend fun updateSolution(id: ObjectId, solutionView: SolutionView): SolutionView {
-        val filter = Filters.eq("_id", id)
-        println("repo1")
 
+    override suspend fun updateSolution(id: ObjectId, solutionView: SolutionView) {
+        val filter = Filters.eq("_id", id)
         val updates = Updates.combine(
             Updates.set(Solution::title.name, solutionView.solution.title),
             Updates.set(Solution::additionalNotes.name, solutionView.solution.additionalNotes)
         )
-        println("repo2")
-        //IT STOPS HERE
+
         solutionCollection.findOneAndUpdate(filter, updates)
-        println("repo3")
-
-        return solutionView
-
     }
 
     override suspend fun deleteSolution(id: ObjectId) {
