@@ -373,6 +373,31 @@ details summary {
     align-items: center;
 }
 
-p.user-list-item {
+div.user-list-item {
+    display: flex;
+    justify-content: space-between;
+}
+
+div.user-list-item > p {
+    margin: 0.5rem 1rem;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0;
+    display: flex;
+    align-items: center;
+}
+
+div.user-deletion-confirmation {
     margin-left: 1rem;
+    padding: 0 1rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+div.user-deletion-confirmation > p {
+    display: flex;
+    align-items: center;
+}
+
+div.user-deletion-confirmation > button {
+    padding: .25rem 0.75rem;
 }

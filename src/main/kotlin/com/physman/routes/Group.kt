@@ -39,6 +39,14 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
         route("/users-modal") {
             getUsersModal(groupRepository, userRepository)
         }
+        route("/user-deletion-confirmation") {
+            getUserDeletionConfirmation()
+        }
+        route("/users") {
+            route ("/{userId}") {
+                deleteUserFromGroup(groupRepository)
+            }
+        }
     }
 }
 
@@ -170,6 +178,9 @@ fun Route.getUsersModal(groupRepository: GroupRepository, userRepository: UserRe
         val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
         val groupId = objectIds["groupId"]!!
 
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+
         val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
 
         val groupMembers = userRepository.getUsersByIds(groupView.group.memberIds)
@@ -181,16 +192,13 @@ fun Route.getUsersModal(groupRepository: GroupRepository, userRepository: UserRe
                     secondaryButtonText = null
                 ) {
                     groupMembers.forEach {
-                        p(classes = "user-list-item") {
-                            +it.name
-                        }
+                        userListItem(it, groupId, it.id != userId && groupView.group.canUserKick(userId))
                     }
                 }
             }
         }
     }
 }
-
 
 fun Route.postCreateGroup(groupRepository: GroupRepository, groupCreationForm: Form) {
     post {
@@ -232,11 +240,11 @@ fun Route.postAddUserToGroup(groupRepository: GroupRepository, userRepository: U
             userAdditionForm.respondFormError(call, "User \"$user\" not found")
             return@post
         }
-        if (groupRepository.isUserMember(groupId, ObjectId(userToAdd.id))) {
+        if (groupRepository.isUserMember(groupId, userToAdd.id)) {
             userAdditionForm.respondFormError(call, "User \"$user\" is already a member of this group")
             return@post
         }
-        groupRepository.addUser(groupId, ObjectId(userToAdd.id))
+        groupRepository.addUser(groupId, userToAdd.id)
 
         call.respondRedirect("/${groupId}")
     }
@@ -255,5 +263,44 @@ fun Route.getAddUserToGroupModal(userAdditionForm: Form) {
                 )
             }
         }
+    }
+}
+
+fun Route.getUserDeletionConfirmation() {
+    get {
+        val objectIds = validateRequiredObjectIds(call, "groupId", "userId") ?: return@get
+        val groupId = objectIds["groupId"]!!
+        val userId = objectIds["userId"]!!
+
+        val name = call.request.queryParameters["name"] ?: "user"
+
+        call.respondHtml {
+            body {
+                userDeletionConfirmation(
+                    groupId = groupId.toHexString(), userId = userId.toHexString(), name = name
+                )
+            }
+        }
+    }
+}
+
+fun Route.deleteUserFromGroup(groupRepository: GroupRepository) {
+    delete {
+        val objectIds = validateRequiredObjectIds(call, "groupId", "userId") ?: return@delete
+        val groupId = objectIds["groupId"]!!
+        val targetUserId = objectIds["userId"]!!
+
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+
+        val groupView = groupRepository.getGroup(groupId) ?: return@delete call.respond(HttpStatusCode.NotFound)
+        if (!groupView.group.canUserKick(userId)) {
+            call.respond(HttpStatusCode.NotFound)
+            return@delete
+        }
+
+        groupRepository.deleteUser(groupId, targetUserId)
+
+        call.respondHtml { body() }
     }
 }
