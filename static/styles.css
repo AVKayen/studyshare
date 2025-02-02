@@ -273,6 +273,7 @@ nav {
 .wide-button {
     max-width: 50%;
     flex-grow: 1;
+    flex-basis: 0;
     --pico-box-shadow: var(--pico-button-hover-box-shadow, 0 0 0 rgba(0, 0, 0, 0)),0 0 0 var(--pico-outline-width) var(--pico-primary-focus);
 }
 
@@ -310,7 +311,7 @@ nav {
     flex-grow: 1;
 }
 
-.container hr:last-child {
+hr:last-child {
     display: none;
 }
 
@@ -342,11 +343,23 @@ nav {
     border-radius: 0.25rem;
 }
 
-dialog form {
+.modal-content {
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
+    margin: 2rem;
+}
+
+.modal-content form {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.modal-content article {
+    margin: 0;
 }
 
 .task-category, .comment-button  {
@@ -373,35 +386,53 @@ details summary {
     align-items: center;
 }
 
-div.user-list-item {
+.user-list-item {
     display: flex;
     justify-content: space-between;
 }
 
-div.user-list-item > p {
-    margin: 0.5rem 1rem;
-    padding: 0.5rem 1rem;
-    margin-bottom: 0;
+.user-list-item > p {
+    margin: 0 0 0 0.5rem;
     display: flex;
     align-items: center;
 }
 
-div.user-deletion-confirmation {
-    margin-left: 1rem;
-    padding: 0 1rem;
-    display: flex;
-    justify-content: space-between;
-}
-
-div.user-deletion-confirmation > p {
+.user-list-item > button {
+    margin: 0;
     display: flex;
     align-items: center;
 }
 
-div.user-deletion-confirmation > button {
-    padding: .25rem 0.75rem;
+.user-deletion-confirmation {
+    display: flex;
+    justify-content: end;
+    gap: 0.5rem;
+}
+
+.user-deletion-confirmation > small {
+    display: flex;
+    align-items: center;
+}
+
+.user-deletion-confirmation > button {
+    padding: 0 0.5rem;
+    background-color: var(--pico-del-color);
+    border: 1px solid var(--pico-del-color);
+}
+
+.user-deletion-confirmation > button.outline {
+    background-color: transparent;
+    border: 1px solid var(--pico-muted-color);
+}
+
+.user-list-item-hr {
+    margin: 0;
 }
 
 .invisible {
     opacity: 0;
+}
+
+article > .user-list-item:first-of-type {
+    margin: 0.5rem 0;
 }

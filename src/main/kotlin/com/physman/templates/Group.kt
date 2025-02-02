@@ -28,6 +28,7 @@ fun FlowContent.groupTemplate(group: GroupView) {
 
 fun FlowContent.userListItem(user: User, groupId: ObjectId, showKickButton: Boolean) {
     val userItemId = "user-list-item-${user.id}"
+    val userHrId = "user-list-item-hr-${user.id}"
     div(classes = "user-list-item") {
         attributes["id"] = userItemId
         p {
@@ -46,16 +47,21 @@ fun FlowContent.userListItem(user: User, groupId: ObjectId, showKickButton: Bool
             }
         }
     }
+    hr {
+        attributes["id"] = userHrId
+        classes = setOf("user-list-item-hr")
+    }
 }
 
 fun FlowContent.userDeletionConfirmation(groupId: String, userId: String, name: String) {
 
     val userListItemId = "user-list-item-$userId"
+    val userListHrId = "user-list-item-hr-$userId"
     val confirmationId = "user-deletion-confirmation-${userId}"
 
     div(classes = "user-deletion-confirmation") {
         attributes["id"] = confirmationId
-        p {
+        small {
             +"Are you sure you want to kick $name from this group?"
         }
         button(classes = "secondary outline") {
@@ -76,6 +82,11 @@ fun FlowContent.userDeletionConfirmation(groupId: String, userId: String, name: 
             attributes["hx-delete"] = "/$groupId/users/$userId"
             attributes["hx-target"] = "#user-list-item-${userId}"
             attributes["hx-swap"] = "delete"
+            attributes["_"] = """
+                on click
+                    remove #$confirmationId
+                end
+            """.trimIndent()
             +"Kick"
         }
     }
