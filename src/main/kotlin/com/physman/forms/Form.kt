@@ -75,16 +75,20 @@ class Form(
         }
     }
 
-    fun renderInputFields(flowContent: FlowContent, inputDataLists: Map<String, List<String>>? = null) {
+    fun renderInputFields(
+        flowContent: FlowContent,
+        inputDataLists: Map<String, List<String>>? = null,
+        inputValues: Map<String, String>? = null
+    ) {
         flowContent.div {
             for (input in this@Form.inputs) {
-
                 if (input is TextlikeInput) {
                     if (validatorsRoute != null) {
                         input.render(
                             flowContent,
                             validationUrl = this@Form.validatorsRoute!!,
-                            dataList = inputDataLists?.get(input.inputName)
+                            dataList = inputDataLists?.get(input.inputName),
+                            inputValue = inputValues?.get(input.inputName)
                         )
                     } else {
                         // TODO: What error type to throw??
@@ -114,8 +118,9 @@ class Form(
     fun renderFormElement(
         flowContent: FlowContent,
         callbackUrl: String,
-        requestType: HtmxRequestType = HtmxRequestType.POST,
+        requestType: HtmxRequestType,
         formHyperscript: String? = null,
+        extraAttributes: Map<String, String>?,
         formContent: FORM.() -> Unit
     ) {
 
@@ -151,12 +156,16 @@ class Form(
                 attributes.putAll(formAttributes)
             }
 
+            if(extraAttributes != null) {
+                attributes.putAll(extraAttributes)
+            }
+
             formContent()
         }
     }
 
-    fun render(flowContent: FlowContent, callbackUrl: String, requestType: HtmxRequestType = HtmxRequestType.POST) {
-        renderFormElement(flowContent = flowContent, callbackUrl = callbackUrl, requestType = requestType) {
+    fun render(flowContent: FlowContent, callbackUrl: String, requestType: HtmxRequestType = HtmxRequestType.POST, extraAttributes: Map<String, String>? = null) {
+        renderFormElement(flowContent = flowContent, callbackUrl = callbackUrl, requestType = requestType, extraAttributes = extraAttributes) {
             renderFormTitle(flowContent)
             renderInputFields(flowContent)
             renderFormSubmit(flowContent)

@@ -25,9 +25,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     route("/comments") {
         getCommentView(taskRepository, solutionRepository, commentRepository, groupRepository)
         deleteComment(commentRepository, solutionRepository, taskRepository)
-        route("/comment") {
-            postComment(taskRepository, solutionRepository, commentRepository, groupRepository)
-        }
+        postComment(taskRepository, solutionRepository, commentRepository, groupRepository)
     }
 }
 
@@ -42,20 +40,33 @@ fun Route.getCommentView(taskRepository: TaskRepository, solutionRepository: Sol
         val comments = commentRepository.getComments(parentId!!)
         val parentPost = when (parentPostClassName.lowercase()) {
             "task" -> taskRepository.getTask(parentId)?.task
-            "solution" -> solutionRepository.getSolution(parentId)
+            "solution" -> solutionRepository.getSolution(parentId, userId)?.solution
             else -> return@get
         }
         if (!validateGroupBelonging(call, groupRepository, parentPost?.groupId)) return@get
 
         call.respondHtml {
             body {
-                for (comment in comments) {
-                    val isAuthor = userId == comment.authorId
-                    commentTemplate(comment, isAuthor, parentPostClassName)
+                div {
+                    attributes["id"] = "comment-list-${parentId}"
+
+                    for (comment in comments) {
+                        val isAuthor = userId == comment.authorId
+                        commentTemplate(comment, isAuthor, parentPostClassName)
+                    }
                 }
                 form {
-                    attributes["hx-post"] = "/comments/comment?parentId=${parentId}&postType=${parentPostClassName}"
-                    attributes["hx-target"] = "#comments-${parentId}"
+                    attributes["hx-post"] = "/comments?parentId=${parentId}&postType=${parentPostClassName}"
+                    attributes["hx-target"] = "#comment-list-${parentId}"
+                    attributes["hx-swap"] = "beforeend"
+                    attributes["_"] = """
+                        on submit
+                            log "lol"
+                            set targetTextarea to first <textarea/> in me
+                            log targetTextarea
+                            set {value: ""} on targetTextarea
+                        end
+                    """.trimIndent()
                     textArea {
                         name = "content"
                         placeholder = "Write a comment..."
@@ -82,6 +93,7 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
         val parentId = objectIds["parentId"]
         val postType = call.request.queryParameters["postType"]
         val userSession = call.sessions.get<UserSession>()!!
+        val authorId = ObjectId(userSession.id)
 
         val content = call.receiveParameters()["content"]
         if (content == null || commentValidator(content) != null) {
@@ -91,7 +103,7 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
 
         val parentPost: Post? = when (postType?.lowercase()) {
             "task" -> taskRepository.getTask(parentId!!)?.task
-            "solution" -> solutionRepository.getSolution(parentId!!)
+            "solution" -> solutionRepository.getSolution(parentId!!, authorId)?.solution
             else -> return@post
         }
 
@@ -106,7 +118,7 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
             parentId = parentId,
             content = content,
             authorName = userSession.name,
-            authorId = ObjectId(userSession.id)
+            authorId = authorId
         )
 
         when (postType.lowercase()) {
@@ -117,7 +129,11 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
 
         commentRepository.createComment(newComment)
 
-        call.respondRedirect("/comments?parentId=${parentId}&postType=${postType}")
+        call.respondHtml {
+            body {
+                commentTemplate(newComment, true, postType)
+            }
+        }
     }
 }
 
