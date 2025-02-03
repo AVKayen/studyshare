@@ -89,7 +89,7 @@ class TextlikeInput(
         flowContent: FlowContent,
         validationUrl: String,
         dataList: List<String>? = null,
-        inputValue: String = ""
+        inputValue: String? = null
     ) {
         val inputScript = """
             on input
@@ -122,7 +122,6 @@ class TextlikeInput(
             }
 
             input(type = inputType, name = inputName) {
-                attributes["value"] = inputValue
                 attributes["id"] = inputId
                 attributes["_"] = if (confirmationInputLabel != null) "$inputScript $confirmationInputScript" else inputScript
                 if (dataList != null) {
@@ -138,7 +137,10 @@ class TextlikeInput(
 
                     attributes["hx-trigger"] = "keyup changed delay:${validationDelay}ms"
                     attributes["hx-sync"] = "closest form:abort"
+                }
 
+                if (inputValue != null) {
+                    value = inputValue
                 }
             }
             small {

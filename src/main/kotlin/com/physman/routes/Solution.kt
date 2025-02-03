@@ -115,9 +115,9 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form, solutionRepository:
                     extraAttributes = mapOf(
                         "hx-target" to "#article-${id}"
                     ),
-                    inputValues = listOf(
-                        solutionView.solution.title,
-                        solutionView.solution.additionalNotes
+                    inputValues = mapOf(
+                        "title" to solutionView.solution.title,
+                        "additionalNotes" to (solutionView.solution.additionalNotes ?: "")
                     )
                 )
             }

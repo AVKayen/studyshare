@@ -22,7 +22,7 @@ fun FlowContent.formModalDialog(
     requestType: HtmxRequestType = HtmxRequestType.POST,
     inputDataLists: Map<String, List<String>>? = null,
     extraAttributes: Map<String, String>? = null,
-    inputValues: List<String?> = emptyList()
+    inputValues: Map<String, String>? = null
 ) {
 
     val formScript = """

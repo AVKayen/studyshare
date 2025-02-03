@@ -200,9 +200,9 @@ fun Route.getTaskEditingModal(taskEditingForm: Form, taskRepository: TaskReposit
                     extraAttributes = mapOf(
                         "hx-target" to "#article-${id}"
                     ),
-                    inputValues = listOf(
-                        taskView.task.title,
-                        taskView.task.additionalNotes
+                    inputValues = mapOf(
+                        "title" to taskView.task.title,
+                        "additionalNotes" to (taskView.task.additionalNotes ?: "")
                     )
                 )
             }
