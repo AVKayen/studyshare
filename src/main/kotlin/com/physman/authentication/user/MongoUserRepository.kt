@@ -3,6 +3,7 @@ package com.physman.authentication.user
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.mongodb.client.model.Filters.*
 import com.mongodb.client.model.Updates.addToSet
+import com.mongodb.client.model.Updates.pull
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
@@ -34,6 +35,10 @@ class MongoUserRepository(database: MongoDatabase) : UserRepository {
 
     override suspend fun addGroupToUser(userId: ObjectId, groupId: ObjectId) {
         users.updateOne(eq("_id", userId), addToSet(User::groupIds.name, groupId))
+    }
+
+    override suspend fun removeGroupFromUser(userId: ObjectId, groupId: ObjectId) {
+        users.updateOne(eq("_id", userId), pull(User::groupIds.name, groupId))
     }
 
     override suspend fun login(name: String, password: String): UserSession? {
