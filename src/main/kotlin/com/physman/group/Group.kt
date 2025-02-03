@@ -12,4 +12,6 @@ data class Group(
     val memberIds: List<ObjectId>,
     val thumbnailId: ObjectId?, // ObjectId pointing to an Attachment
     val taskCategories: List<String> = emptyList()
-)
+) {
+    fun canUserKick(userId: ObjectId): Boolean = leaderId == userId
+}

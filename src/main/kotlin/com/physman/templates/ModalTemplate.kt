@@ -2,40 +2,45 @@ package com.physman.templates
 
 import kotlinx.html.*
 
-private fun FlowContent.modalContent(title: String, submitText: String, submitAttributes: Map<String, String>? = null, modalBody: ARTICLE.() -> Unit) {
+private fun FlowContent.modalContent(title: String, secondaryButtonText: String?, submitText: String?, submitAttributes: Map<String, String>?, modalBody: ARTICLE.() -> Unit) {
     article {
         header {
+            h2 {
+                +title
+            }
             button {
                 attributes["type"] = "button"
                 attributes["aria-label"] = "Close"
                 attributes["rel"] = "prev"
                 attributes["_"] = "on click trigger closeModal"
             }
-            h2 {
-                +title
-            }
         }
 
         modalBody()
 
-        footer {
-            button(classes = "secondary") {
-                attributes["role"] = "button"
-                attributes["type"] = "button"
-                attributes["_"] = "on click trigger closeModal"
+        if (secondaryButtonText != null || submitText != null) {
+            footer {
+                if (secondaryButtonText != null) {
+                    button(classes = "secondary") {
+                        attributes["role"] = "button"
+                        attributes["type"] = "button"
+                        attributes["_"] = "on click trigger closeModal"
 
-                +"Cancel"
-            }
-
-            button {
-                if (submitAttributes != null) {
-                    attributes.putAll(submitAttributes)
+                        +secondaryButtonText
+                    }
                 }
+                if (submitText != null) {
+                    button {
+                        if (submitAttributes != null) {
+                            attributes.putAll(submitAttributes)
+                        }
 
-                span(classes = "htmx-indicator") {
-                    attributes["aria-busy"] = "true"
+                        span(classes = "htmx-indicator") {
+                            attributes["aria-busy"] = "true"
+                        }
+                        +submitText
+                    }
                 }
-                +submitText
             }
         }
     }
@@ -44,8 +49,9 @@ private fun FlowContent.modalContent(title: String, submitText: String, submitAt
 
 fun FlowContent.modalTemplate(
     title: String,
-    submitText: String,
-    submitAttributes: Map<String, String>?,
+    submitText: String? = null,
+    submitAttributes: Map<String, String>? = null,
+    secondaryButtonText: String? = "Cancel",
     modalWrapper: (FlowContent.(block: FlowContent.() -> Unit) -> Unit)? = null,
     modalBody: ARTICLE.() -> Unit
 ) {
@@ -81,16 +87,16 @@ fun FlowContent.modalTemplate(
         end
     """.trimIndent()
 
-    dialog {
+    dialog(classes = "modal") {
         attributes["_"] = dialogScript
 
         div(classes = "modal-content") {
             if (modalWrapper != null) {
                 modalWrapper {
-                    modalContent(title, submitText, submitAttributes, modalBody)
+                    modalContent(title, secondaryButtonText, submitText, submitAttributes, modalBody)
                 }
             } else {
-                modalContent(title, submitText, submitAttributes, modalBody)
+                modalContent(title, secondaryButtonText, submitText, submitAttributes, modalBody)
             }
         }
     }

@@ -20,6 +20,10 @@ class MongoUserRepository(database: MongoDatabase) : UserRepository {
         return users.find(eq("_id", ObjectId(id))).firstOrNull()
     }
 
+    override suspend fun getUsersByIds(ids: List<ObjectId>): List<User> {
+        return users.find(`in`("_id", ids)).toList()
+    }
+
     override suspend fun getUserByName(name: String): User? {
         return users.find(eq(User::name.name, name)).firstOrNull()
     }

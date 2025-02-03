@@ -1,10 +1,8 @@
 package com.physman.routes
 
-import com.physman.authentication.user.UserRepository
 import com.physman.authentication.user.UserSession
-import com.physman.group.GroupRepository
 import com.physman.templates.contentLoadTemplate
-import com.physman.templates.formModalOpenButton
+import com.physman.templates.modalOpenButton
 import com.physman.templates.index
 import io.ktor.http.*
 import io.ktor.server.html.*
@@ -12,13 +10,13 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.*
 import kotlinx.html.*
 
-fun Route.indexViewRouter(groupRepository: GroupRepository, userRepository: UserRepository) {
+fun Route.indexViewRouter() {
     route("/") {
-        getIndexView(groupRepository, userRepository)
+        getIndexView()
     }
 }
 
-fun Route.getIndexView(groupRepository: GroupRepository, userRepository: UserRepository) {
+fun Route.getIndexView() {
     get {
         val userSession = call.sessions.get<UserSession>()
         if (userSession != null) {
@@ -40,10 +38,9 @@ fun HTML.loggedInIndexView(userSession: UserSession) {
     ) {
         div {
             classes = setOf("wide-button-container")
-            formModalOpenButton(
+            modalOpenButton(
                 buttonText = "Create a group",
-                modalUrl = "/groups/creation-modal",
-                additionalClasses = setOf("group-create-button", "wide-button", "outline")
+                modalUrl = "/groups/creation-modal"
             )
         }
         contentLoadTemplate("/groups")

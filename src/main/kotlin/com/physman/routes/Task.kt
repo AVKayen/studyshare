@@ -77,10 +77,9 @@ fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepo
                 taskTemplate(taskView, isAuthor = userSession.id == taskView.task.authorId.toHexString())
                 div {
                     classes = setOf("wide-button-container")
-                    formModalOpenButton(
+                    modalOpenButton(
                         buttonText = "Create a solution",
-                        modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}&groupId=${groupId}",
-                        additionalClasses = setOf("wide-button", "outline")
+                        modalUrl = "/solutions/creation-modal?taskId=${taskView.task.id}&groupId=${groupId}"
                     )
                 }
                 contentLoadTemplate(url = "/solutions?taskId=${taskView.task.id}&groupId=${groupId}")

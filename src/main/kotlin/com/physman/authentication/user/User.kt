@@ -1,8 +1,6 @@
 package com.physman.authentication.user
 
-import org.bson.BsonType
 import org.bson.codecs.pojo.annotations.BsonId
-import org.bson.codecs.pojo.annotations.BsonRepresentation
 import org.bson.types.ObjectId
 
 const val USERNAME_MIN = 5
@@ -43,13 +41,11 @@ val passwordValidatorOnLogin = fun(password: String): String? {
 
 data class User(
     @BsonId
-    @BsonRepresentation(BsonType.OBJECT_ID)
-
-    val id: String = ObjectId().toHexString(),
+    val id: ObjectId = ObjectId(),
     val name: String,
     // val email: String, // hmmm
     val passwordHash: String,
     val groupIds: Set<ObjectId> = emptySet()
 ) {
-    fun toUserSession() = UserSession(id, name)
+    fun toUserSession() = UserSession(id.toHexString(), name)
 }

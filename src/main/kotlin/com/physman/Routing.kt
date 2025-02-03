@@ -25,7 +25,7 @@ fun Application.configureRouting(
 
         // neo routers
         route("/") {
-            indexViewRouter(groupRepository, userRepository)
+            indexViewRouter()
 
             authenticate("USER") {
                 commentRouter(commentRepository, solutionRepository, taskRepository, groupRepository)
