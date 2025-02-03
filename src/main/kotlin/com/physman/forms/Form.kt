@@ -125,6 +125,14 @@ class Form(
     ) {
 
         val formScript = """
+            on load 1
+                set firstInput to first <input/> in me
+                if firstInput
+                    call firstInput.focus()
+                    if firstInput.value
+                        call firstInput.setSelectionRange(0, firstInput.value.length)
+                end
+            end
             on htmx:beforeRequest
                 if event.srcElement is me
                     repeat for input in .confirmation-input
