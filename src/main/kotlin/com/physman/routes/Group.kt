@@ -146,12 +146,11 @@ fun Route.getUsersModal(groupRepository: GroupRepository, userRepository: UserRe
         val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
         val groupId = objectIds["groupId"]!!
 
-        val userSession = call.sessions.get<UserSession>()!!
-        val userId = ObjectId(userSession.id)
-
         val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
 
         val groupMembers = userRepository.getUsersByIds(groupView.group.memberIds)
+        val groupLeader = groupMembers.first { it.id == groupView.group.leaderId }
+        val remainingMembers = groupMembers.filter { it.id != groupView.group.leaderId }
 
         call.respondHtml {
             body {
@@ -159,8 +158,9 @@ fun Route.getUsersModal(groupRepository: GroupRepository, userRepository: UserRe
                     title = "Group members",
                     secondaryButtonText = null
                 ) {
-                    groupMembers.forEach {
-                        userListItem(it, groupId, it.id != userId && groupView.group.canUserKick(userId))
+                    userListItem(groupLeader, groupId, false)
+                    remainingMembers.forEach {
+                        userListItem(it, groupId, true)
                     }
                 }
             }
