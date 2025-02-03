@@ -134,9 +134,9 @@ class TextlikeInput(
 
                 if (validateOnInput) {
                     attributes["hx-post"] = "${validationUrl}/${inputName}"
-
                     attributes["hx-trigger"] = "keyup changed delay:${validationDelay}ms"
                     attributes["hx-sync"] = "closest form:abort"
+                    attributes["hx-swap"] = "none"
                 }
 
                 if (inputValue != null) {
