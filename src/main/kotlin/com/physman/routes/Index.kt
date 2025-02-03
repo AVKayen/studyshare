@@ -59,14 +59,14 @@ fun HTML.entryIndexView() {
             +"StudyShare is a platform for students to share tasks and solutions to them."
         }
         p {
-            +"Please log in or sign up to get started."
+            +"Please log in or sign up to get started:"
         }
         div {
             id = "login-signup"
             a(href = "/auth/login?redirectUrl=/") {
                 +"Log in"
             }
-            +" | "
+            div(classes = "vertical-separator")
             a(href = "/auth/register?redirectUrl=/") {
                 +"Sign up"
             }
