@@ -262,7 +262,7 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
         call.smartRedirect(redirectUrl = "/${groupId}/${task.id}")
     }
 }
-//TODO: if form is not right dont post it
+
 fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form) {
     patch {
         val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@patch
