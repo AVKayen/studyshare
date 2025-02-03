@@ -246,19 +246,9 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
             return@patch
         }
 
-        val newSolution = Solution(
+        val newSolution = previousSolution.solution.copy(
             title = title,
-            additionalNotes = additionalNotes,
-            id = previousSolution.solution.id,
-            authorName = previousSolution.solution.authorName,
-            authorId = previousSolution.solution.authorId,
-            taskId = previousSolution.solution.taskId,
-            groupName = previousSolution.solution.groupName,
-            groupId = previousSolution.solution.groupId,
-            commentAmount = previousSolution.solution.commentAmount,
-            upvotes = previousSolution.solution.upvotes,
-            downvotes = previousSolution.solution.downvotes,
-            attachmentIds = previousSolution.solution.attachmentIds
+            additionalNotes = additionalNotes
         )
 
         solutionRepository.updateSolution(solutionId, newSolution)

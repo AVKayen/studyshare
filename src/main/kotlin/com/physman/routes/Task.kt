@@ -283,17 +283,10 @@ fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form
             return@patch
         }
 
-        val newTask = Task(
+        val newTask = previousTask.task.copy(
             title = title,
-            additionalNotes = additionalNotes,
-            id = previousTask.task.id,
-            authorName = previousTask.task.authorName,
-            authorId = previousTask.task.authorId,
-            groupName = previousTask.task.groupName,
-            groupId = previousTask.task.groupId,
-            commentAmount = previousTask.task.commentAmount,
-            attachmentIds = previousTask.task.attachmentIds,
-            category = previousTask.task.category)
+            additionalNotes = additionalNotes
+        )
 
         taskRepository.updateTask(taskId, newTask)
 
