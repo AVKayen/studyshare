@@ -148,6 +148,9 @@ fun Route.getUsersModal(groupRepository: GroupRepository, userRepository: UserRe
         val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
         val groupId = objectIds["groupId"]!!
 
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = userSession.id
+
         val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
 
         val groupMembers = userRepository.getUsersByIds(groupView.group.memberIds)
@@ -162,7 +165,7 @@ fun Route.getUsersModal(groupRepository: GroupRepository, userRepository: UserRe
                 ) {
                     userListItem(groupLeader, groupId, false)
                     remainingMembers.forEach {
-                        userListItem(it, groupId, true)
+                        userListItem(it, groupId, userId == groupLeader.id.toHexString())
                     }
                 }
             }
@@ -204,6 +207,17 @@ fun Route.postAddUserToGroup(groupRepository: GroupRepository, userRepository: U
         val user = formSubmissionData.fields["user"]!!
         val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@post
         val groupId = objectIds["groupId"]!!
+
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = userSession.id
+
+        if(!groupRepository.isUserGroupLeader(groupId, ObjectId(userId))) {
+            call.respondText(
+                text = "You must be a group leader to add new users to the group.",
+                status = HttpStatusCode.Forbidden
+            )
+            return@post
+        }
 
         val userToAdd = userRepository.getUserByName(user)
         if (userToAdd == null) {

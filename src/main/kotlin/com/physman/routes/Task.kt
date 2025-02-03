@@ -175,8 +175,6 @@ fun Route.getTaskCreationModal(taskCreationForm: Form, groupRepository: GroupRep
 fun Route.getTaskEditingModal(taskEditingForm: Form, taskRepository: TaskRepository) {
     get {
         val id = call.request.queryParameters["taskId"]
-        val userSession = call.sessions.get<UserSession>()!!
-        val userId = ObjectId(userSession.id)
 
         if (id == null) {
             call.respondText("Id not specified.", status = HttpStatusCode.BadRequest)
@@ -184,11 +182,6 @@ fun Route.getTaskEditingModal(taskEditingForm: Form, taskRepository: TaskReposit
         }
 
         val taskView = taskRepository.getTask(ObjectId(id)) ?: return@get
-
-        if (taskView.task.authorId != userId) {
-            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
-            return@get
-        }
 
         call.respondHtml {
             body {

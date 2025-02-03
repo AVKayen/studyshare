@@ -101,11 +101,6 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form, solutionRepository:
 
         val solutionView = solutionRepository.getSolution(ObjectId(id), userId) ?: return@get
 
-        if (solutionView.solution.authorId != userId) {
-            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
-            return@get
-        }
-
         call.respondHtml {
             body {
                 formModalDialog(

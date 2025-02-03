@@ -63,6 +63,12 @@ class MongoGroupRepository(
         return group.memberIds.contains(userId)
     }
 
+    override suspend fun isUserGroupLeader(groupId: ObjectId, userId: ObjectId): Boolean {
+        val filter = Filters.eq("_id", groupId)
+        val group = groupCollection.find(filter).firstOrNull() ?: return false
+        return group.leaderId == userId
+    }
+
     override suspend fun getGroup(groupId: ObjectId): GroupView? {
         val group = groupCollection.find(Filters.eq("_id", groupId)).firstOrNull() ?: return null
         return GroupView(

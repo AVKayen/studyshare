@@ -144,6 +144,25 @@ fun FlowContent.postDeletionButton(post: Post) {
     deletionButton(url)
 }
 
+fun FlowContent.postEditingButton(post: Post) {
+    val url = when (post) {
+        is Task -> "/tasks/editing-modal?taskId=${post.id}"
+        is Solution -> "/solutions/editing-modal?id=${post.id}"
+        else -> throw IllegalArgumentException("Invalid post")
+    }
+
+    button(classes = "btn secondary outline") {
+        attributes["hx-get"] = url
+        attributes["hx-target"] = "body"
+        attributes["hx-swap"] = "beforeend"
+
+        span(classes = "material-symbols-rounded") {
+            +"edit"
+        }
+    }
+}
+
+
 fun FlowContent.localDateSpan(objectId: ObjectId) {
     val script = """
         on load 1
