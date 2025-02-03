@@ -89,6 +89,7 @@ main > #login-signup {
     align-items: center;
     text-align: center;
     font-size: 1.25rem;
+    margin-top: 1.3rem;
 }
 
 .vertical-separator {
@@ -99,6 +100,7 @@ main > #login-signup {
 
 main > p {
     font-size: 1.125rem;
+    text-align: center;
 }
 
 .gallery {
@@ -284,6 +286,7 @@ main > p {
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     text-align: center;
     text-decoration: none;
