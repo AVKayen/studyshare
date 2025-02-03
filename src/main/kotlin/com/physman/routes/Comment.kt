@@ -25,9 +25,7 @@ fun Route.commentRouter(commentRepository: CommentRepository, solutionRepository
     route("/comments") {
         getCommentView(taskRepository, solutionRepository, commentRepository, groupRepository)
         deleteComment(commentRepository, solutionRepository, taskRepository)
-        route("/comment") {
-            postComment(taskRepository, solutionRepository, commentRepository, groupRepository)
-        }
+        postComment(taskRepository, solutionRepository, commentRepository, groupRepository)
     }
 }
 
@@ -49,13 +47,26 @@ fun Route.getCommentView(taskRepository: TaskRepository, solutionRepository: Sol
 
         call.respondHtml {
             body {
-                for (comment in comments) {
-                    val isAuthor = userId == comment.authorId
-                    commentTemplate(comment, isAuthor, parentPostClassName)
+                div {
+                    attributes["id"] = "comment-list-${parentId}"
+
+                    for (comment in comments) {
+                        val isAuthor = userId == comment.authorId
+                        commentTemplate(comment, isAuthor, parentPostClassName)
+                    }
                 }
                 form {
-                    attributes["hx-post"] = "/comments/comment?parentId=${parentId}&postType=${parentPostClassName}"
-                    attributes["hx-target"] = "#comments-${parentId}"
+                    attributes["hx-post"] = "/comments?parentId=${parentId}&postType=${parentPostClassName}"
+                    attributes["hx-target"] = "#comment-list-${parentId}"
+                    attributes["hx-swap"] = "beforeend"
+                    attributes["_"] = """
+                        on submit
+                            log "lol"
+                            set targetTextarea to first <textarea/> in me
+                            log targetTextarea
+                            set {value: ""} on targetTextarea
+                        end
+                    """.trimIndent()
                     textArea {
                         name = "content"
                         placeholder = "Write a comment..."
@@ -118,7 +129,11 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
 
         commentRepository.createComment(newComment)
 
-        call.respondRedirect("/comments?parentId=${parentId}&postType=${postType}")
+        call.respondHtml {
+            body {
+                commentTemplate(newComment, true, postType)
+            }
+        }
     }
 }
 
