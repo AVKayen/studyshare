@@ -19,14 +19,19 @@ import org.bson.types.ObjectId
 
 fun Route.solutionRouter(solutionRepository: SolutionRepository, taskRepository: TaskRepository, groupRepository: GroupRepository) {
     val solutionCreationForm = routeSolutionCreationForm()
+    val solutionEditingForm = routeSolutionEditingForm()
     route("/solutions") {
         route("/creation-modal") {
             getSolutionCreationModal(solutionCreationForm)
+        }
+        route("/editing-modal") {
+            getSolutionEditingModal(solutionEditingForm, solutionRepository)
         }
         route("/deletion-modal") {
             getSolutionDeletionModal()
         }
         route("/{id}") {
+            patchSolutionEditing(solutionRepository, solutionEditingForm)
             deleteSolution(solutionRepository, taskRepository)
             route("/{voteAction}") {
                 postVote(solutionRepository, groupRepository)
@@ -41,14 +46,27 @@ fun routeSolutionCreationForm(): Form {
     val solutionCreationForm = Form("Create a new solution", "solutionForm", formAttributes = mapOf(
         "hx-target" to "#solution-list",
         "hx-swap" to "afterbegin"
-    ))
+    )
+    )
     solutionCreationForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))
     solutionCreationForm.addInput(TextlikeInput("Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
-    solutionCreationForm.addInput(FileInput("Upload files", "files", inputAttributes = mapOf("multiple" to "true")))
 
     globalFormRouter.routeFormValidators(solutionCreationForm)
 
     return solutionCreationForm
+}
+
+fun routeSolutionEditingForm(): Form {
+    val solutionEditingForm = Form("Edit your solution", "solutionEditingForm", formAttributes = mapOf(
+        "hx-swap" to "outerHTML"
+    ))
+
+    solutionEditingForm.addInput(TextlikeInput("New Title", "title", InputType.text, titleValidator))
+    solutionEditingForm.addInput(TextlikeInput("New Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+
+    globalFormRouter.routeFormValidators(solutionEditingForm)
+
+    return solutionEditingForm
 }
 
 fun Route.getSolutionCreationModal(solutionCreationForm: Form) {
@@ -64,6 +82,43 @@ fun Route.getSolutionCreationModal(solutionCreationForm: Form) {
                 formModalDialog(
                     form = solutionCreationForm,
                     callbackUrl = "/solutions?taskId=$taskId"
+                )
+            }
+        }
+    }
+}
+
+fun Route.getSolutionEditingModal(solutionEditingForm: Form, solutionRepository: SolutionRepository) {
+    get {
+        val id = call.request.queryParameters["id"]
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+
+        if (id == null) {
+            call.respondText("Id not specified.", status = HttpStatusCode.BadRequest)
+            return@get
+        }
+
+        val solutionView = solutionRepository.getSolution(ObjectId(id), userId) ?: return@get
+
+        if (solutionView.solution.authorId != userId) {
+            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+            return@get
+        }
+
+        call.respondHtml {
+            body {
+                formModalDialog(
+                    form = solutionEditingForm,
+                    callbackUrl = "/solutions/$id",
+                    requestType = HtmxRequestType.PATCH,
+                    extraAttributes = mapOf(
+                        "hx-target" to "#article-${id}"
+                    ),
+                    inputValues = mapOf(
+                        "title" to solutionView.solution.title,
+                        "additionalNotes" to (solutionView.solution.additionalNotes ?: "")
+                    )
                 )
             }
         }
@@ -171,17 +226,54 @@ fun Route.postSolutionCreation(taskRepository: TaskRepository, solutionRepositor
     }
 }
 
+fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionEditingForm: Form) {
+    patch {
+        val objectIds = validateRequiredObjectIds(call, "id") ?: return@patch
+        val solutionId = objectIds["id"]!!
+
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+
+        val formSubmissionData: FormSubmissionData = solutionEditingForm.validateSubmission(call) ?: return@patch
+        val title = formSubmissionData.fields["title"]!!
+        val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
+        formSubmissionData.cleanup()
+
+        val previousSolution = solutionRepository.getSolution(solutionId, userId) ?: return@patch call.respond(HttpStatusCode.NotFound)
+
+        if (previousSolution.solution.authorId != userId) {
+            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+            return@patch
+        }
+
+        val newSolution = previousSolution.solution.copy(
+            title = title,
+            additionalNotes = additionalNotes
+        )
+
+        solutionRepository.updateSolution(solutionId, newSolution)
+
+        val newSolutionView = SolutionView(newSolution, previousSolution.attachments, previousSolution.isUpvoted, previousSolution.isDownvoted)
+
+        call.respondHtml(HttpStatusCode.OK) {
+            body {
+                solutionTemplate(newSolutionView, true)
+            }
+        }
+    }
+}
+
 fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository: TaskRepository) {
     delete {
         val objectIds = validateRequiredObjectIds(call, "id") ?: return@delete
         val solutionId = objectIds["id"]!!
+        val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
-        val solution = solutionRepository.getSolution(solutionId) ?: return@delete
-        val parentTask = taskRepository.getTask(solution.taskId) ?: return@delete
+        val solutionView = solutionRepository.getSolution(solutionId, userId) ?: return@delete
+        val parentTask = taskRepository.getTask(solutionView.solution.taskId) ?: return@delete
 
         val parentAuthorId = parentTask.task.authorId
-        val authorId = solution.authorId
-        val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
+        val authorId = solutionView.solution.authorId
 
         if (authorId == userId || parentAuthorId == userId) {
             solutionRepository.deleteSolution(solutionId)
@@ -203,7 +295,7 @@ fun Route.postVote(solutionRepository: SolutionRepository, groupRepository: Grou
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        if (!validateGroupBelonging(call, groupRepository, solutionRepository.getSolution(solutionId)?.groupId)) return@post
+        if (!validateGroupBelonging(call, groupRepository, solutionRepository.getSolution(solutionId, userId)?.solution?.groupId)) return@post
 
         if (action == null) {
             call.respondText("Action not specified.", status = HttpStatusCode.BadRequest)

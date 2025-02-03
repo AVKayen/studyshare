@@ -60,6 +60,16 @@ class MongoTaskRepository(
         )
     }
 
+    override suspend fun updateTask(id: ObjectId, newTask: Task) {
+        val filter = Filters.eq("_id", id)
+        val updates = Updates.combine(
+            Updates.set(Task::title.name, newTask.title),
+            Updates.set(Task::additionalNotes.name, newTask.additionalNotes)
+        )
+
+        taskCollection.findOneAndUpdate(filter, updates)
+    }
+
     override suspend fun deleteTask(id: ObjectId): Task? {
         val filter = Filters.eq("_id", id)
         val task = taskCollection.findOneAndDelete(filter) ?: return null

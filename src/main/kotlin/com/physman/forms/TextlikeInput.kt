@@ -88,7 +88,8 @@ class TextlikeInput(
     fun render(
         flowContent: FlowContent,
         validationUrl: String,
-        dataList: List<String>? = null
+        dataList: List<String>? = null,
+        inputValue: String? = null
     ) {
         val inputScript = """
             on input
@@ -133,10 +134,13 @@ class TextlikeInput(
 
                 if (validateOnInput) {
                     attributes["hx-post"] = "${validationUrl}/${inputName}"
-
                     attributes["hx-trigger"] = "keyup changed delay:${validationDelay}ms"
                     attributes["hx-sync"] = "closest form:abort"
+                    attributes["hx-swap"] = "none"
+                }
 
+                if (inputValue != null) {
+                    value = inputValue
                 }
             }
             small {

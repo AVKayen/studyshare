@@ -22,11 +22,13 @@ import com.physman.utils.validateOptionalObjectIds
 import org.bson.types.ObjectId
 
 fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepository) {
-    val taskCreationForm = routeTaskForms()
+    val taskCreationForm = routeTaskCreationForm()
+    val taskEditingForm = routeTaskEditingForm()
     route("/{groupId}") {
         postTaskCreation(taskRepository, groupRepository, taskCreationForm)
         route("/{taskId}") {
             getTaskView(taskRepository, groupRepository)
+            patchTaskEditing(taskRepository, taskEditingForm)
             deleteTask(taskRepository, groupRepository)
         }
         route("/tasks") {
@@ -34,6 +36,9 @@ fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepos
         }
         route("/creation-modal") {
             getTaskCreationModal(taskCreationForm, groupRepository)
+        }
+        route("/editing-modal") {
+            getTaskEditingModal(taskEditingForm, taskRepository)
         }
         route("/deletion-modal") {
             getTaskDeletionModal()
@@ -83,7 +88,7 @@ fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepo
     }
 }
 
-fun routeTaskForms(): Form {
+fun routeTaskCreationForm(): Form {
     val taskCreationForm = Form("Create a new task", "taskForm", formAttributes = mapOf(
         "hx-swap" to "none"
     ))
@@ -96,6 +101,19 @@ fun routeTaskForms(): Form {
     globalFormRouter.routeFormValidators(taskCreationForm)
 
     return taskCreationForm
+}
+
+fun routeTaskEditingForm(): Form {
+    val taskEditingForm = Form("Edit your task", "taskEditingForm", formAttributes = mapOf(
+        "hx-swap" to "outerHTML"
+    ))
+
+    taskEditingForm.addInput(TextlikeInput("New Title", "title", InputType.text, titleValidator))
+    taskEditingForm.addInput(TextlikeInput("New Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+
+    globalFormRouter.routeFormValidators(taskEditingForm)
+
+    return taskEditingForm
 }
 
 fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepository) {
@@ -154,6 +172,43 @@ fun Route.getTaskCreationModal(taskCreationForm: Form, groupRepository: GroupRep
     }
 }
 
+fun Route.getTaskEditingModal(taskEditingForm: Form, taskRepository: TaskRepository) {
+    get {
+        val id = call.request.queryParameters["taskId"]
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+
+        if (id == null) {
+            call.respondText("Id not specified.", status = HttpStatusCode.BadRequest)
+            return@get
+        }
+
+        val taskView = taskRepository.getTask(ObjectId(id)) ?: return@get
+
+        if (taskView.task.authorId != userId) {
+            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+            return@get
+        }
+
+        call.respondHtml {
+            body {
+                formModalDialog(
+                    form = taskEditingForm,
+                    callbackUrl = "/tasks/$id",
+                    requestType = HtmxRequestType.PATCH,
+                    extraAttributes = mapOf(
+                        "hx-target" to "#article-${id}"
+                    ),
+                    inputValues = mapOf(
+                        "title" to taskView.task.title,
+                        "additionalNotes" to (taskView.task.additionalNotes ?: "")
+                    )
+                )
+            }
+        }
+    }
+}
+
 fun Route.getTaskDeletionModal() {
     get {
         val objectIds = validateRequiredObjectIds(call, "taskId", "groupId") ?: return@get
@@ -204,6 +259,43 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
         formSubmissionData.cleanup()
 
         call.smartRedirect(redirectUrl = "/${groupId}/${task.id}")
+    }
+}
+
+fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form) {
+    patch {
+        val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@patch
+        val taskId = objectIds["taskId"]!!
+
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+
+        val formSubmissionData: FormSubmissionData = taskEditingForm.validateSubmission(call) ?: return@patch
+        val title = formSubmissionData.fields["title"]!!
+        val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
+        formSubmissionData.cleanup()
+
+        val previousTask = taskRepository.getTask(taskId) ?: return@patch call.respond(HttpStatusCode.NotFound)
+
+        if (previousTask.task.authorId != userId) {
+            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+            return@patch
+        }
+
+        val newTask = previousTask.task.copy(
+            title = title,
+            additionalNotes = additionalNotes
+        )
+
+        taskRepository.updateTask(taskId, newTask)
+
+        val newTaskView = TaskView(newTask, previousTask.attachments)
+
+        call.respondHtml(HttpStatusCode.OK) {
+            body {
+                taskTemplate(newTaskView, true)
+            }
+        }
     }
 }
 

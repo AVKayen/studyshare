@@ -22,6 +22,7 @@ fun FlowContent.taskTemplate(taskView: TaskView, isAuthor: Boolean) {
                 }
             }
             if (isAuthor) {
+                postEditingButton(taskView.task)
                 postDeletionButton(taskView.task)
             }
         }
