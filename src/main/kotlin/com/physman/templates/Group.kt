@@ -132,13 +132,13 @@ fun FlowContent.userDeletionConfirmation(groupId: String, userId: String, name: 
             +"Cancel"
         }
         button(classes = "secondary") {
-            attributes["_"] = "on click remove #$confirmationId"
             attributes["hx-delete"] = "/$groupId/users/$userId"
             attributes["hx-target"] = "#user-list-item-${userId}"
             attributes["hx-swap"] = "delete"
             attributes["_"] = """
                 on click
                     remove #$confirmationId
+                    remove #$userListHrId
                 end
             """.trimIndent()
             +"Kick"
