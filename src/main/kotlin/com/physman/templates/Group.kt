@@ -1,28 +1,82 @@
 package com.physman.templates
 
 import com.physman.authentication.user.User
+import com.physman.authentication.user.UserSession
 import com.physman.group.GroupView
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
-fun FlowContent.groupTemplate(group: GroupView) {
+fun FlowContent.groupThumbnailTemplate(groupView: GroupView) {
     a {
         classes = setOf("group-link")
-        href = "/${group.group.id}"
+        href = "/${groupView.group.id}"
         span {
             classes = setOf("group")
-            id = "group-${group.group.id}"
-            h1 {
-                +group.group.title
+            id = "group-${groupView.group.id}"
+            div(classes = "group-thumbnail-header") {
+                h3 {
+                    +groupView.group.title
+                }
+                p {
+                    +(groupView.group.description ?: "No description")
+                }
             }
-            p {
-                +(group.group.description ?: "No description")
-            }
-            img {
-                src = group.thumbnail?.thumbnailUrl ?: "/images/group-thumbnail.png" // TODO: Add default group thumbnail?
-                alt = "${group.group.title}'s thumbnail"
+            groupView.thumbnail?.let {
+                img(src = it.thumbnailUrl, alt = "${groupView.group.title}'s thumbnail")
             }
         }
+    }
+}
+
+fun FlowContent.groupViewTemplate(groupView: GroupView, userSession: UserSession) {
+
+    val groupId = groupView.group.id
+
+    div(classes = "group-header") {
+        div(classes = "group-info") {
+            groupView.thumbnail?.let {
+                div {
+                    classes = setOf("group-thumbnail")
+                    img(src = it.thumbnailUrl, alt = "${groupView.group.title}'s thumbnail")
+                }
+            }
+            div {
+                classes = setOf("group-info-text")
+                h1 {
+                    +groupView.group.title
+                }
+                groupView.group.description?.let {
+                    p { +it }
+                }
+            }
+        }
+        div(classes = "group-options") {
+            if (groupView.group.leaderId == ObjectId(userSession.id)) {
+                deletionButton(
+                    getUrl = "/$groupId/group-deletion-confirmation?groupTitle=${groupView.group.title}"
+                )
+            }
+        }
+    }
+    section(classes = "wide-button-container") {
+        modalOpenButton(
+            buttonText = "Create a task",
+            modalUrl = "/${groupId}/creation-modal"
+        )
+        modalOpenButton(
+            buttonText = "Show members",
+            modalUrl = "/${groupId}/users-modal"
+        )
+        if (userSession.id == groupView.group.leaderId.toHexString()) {
+            modalOpenButton(
+                buttonText = "Add a user",
+                modalUrl = "/${groupId}/add-user"
+            )
+        }
+    }
+
+    groupView.group.taskCategories.forEach {
+        taskCategoryAccordion(groupId, it)
     }
 }
 
@@ -78,13 +132,13 @@ fun FlowContent.userDeletionConfirmation(groupId: String, userId: String, name: 
             +"Cancel"
         }
         button(classes = "secondary") {
-            attributes["_"] = "on click remove #$confirmationId"
             attributes["hx-delete"] = "/$groupId/users/$userId"
             attributes["hx-target"] = "#user-list-item-${userId}"
             attributes["hx-swap"] = "delete"
             attributes["_"] = """
                 on click
                     remove #$confirmationId
+                    remove #$userListHrId
                 end
             """.trimIndent()
             +"Kick"
