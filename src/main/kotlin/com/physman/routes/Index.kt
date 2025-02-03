@@ -36,6 +36,9 @@ fun HTML.loggedInIndexView(userSession: UserSession) {
         title = "StudyShare",
         username = userSession.name
     ) {
+        h1 {
+            +"Groups"
+        }
         div {
             classes = setOf("wide-button-container")
             modalOpenButton(

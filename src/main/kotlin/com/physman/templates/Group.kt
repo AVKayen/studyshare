@@ -14,7 +14,7 @@ fun FlowContent.groupThumbnailTemplate(groupView: GroupView) {
             classes = setOf("group")
             id = "group-${groupView.group.id}"
             div(classes = "group-thumbnail-header") {
-                h1 {
+                h3 {
                     +groupView.group.title
                 }
                 p {
