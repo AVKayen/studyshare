@@ -54,6 +54,7 @@ class MongoGroupRepository(
     override suspend fun deleteUser(groupId: ObjectId, userId: ObjectId) {
         val filter = Filters.eq("_id", groupId)
         val updates = Updates.pull(Group::memberIds.name, userId)
+        userRepository.removeGroupFromUser(userId, groupId)
         groupCollection.updateOne(filter, updates)
     }
 
