@@ -6,6 +6,7 @@ import com.physman.group.GroupRepository
 import com.physman.solution.*
 import com.physman.task.TaskRepository
 import com.physman.templates.*
+import com.physman.utils.getAccessLevel
 import com.physman.utils.validateGroupBelonging
 import com.physman.utils.validateOptionalObjectIds
 import com.physman.utils.validateRequiredObjectIds
@@ -176,10 +177,8 @@ fun Route.getSolutions(taskRepository: TaskRepository, solutionRepository: Solut
                     attributes["id"] = "solution-list"
 
                     for (solutionView in solutionViews) {
-                        val isAuthor: Boolean = userId == solutionView.solution.authorId
-                                || userId == parentAuthorId
-
-                        solutionTemplate(solutionView, isAuthor)
+                        val accessLevel = getAccessLevel(userId, solutionView.solution.authorId, parentAuthorId)
+                        solutionTemplate(solutionView, accessLevel)
                     }
                     if (solutionViews.size == pageSize) {
                         val newLastId = solutionViews.last().solution.id
@@ -215,7 +214,7 @@ fun Route.postSolutionCreation(taskRepository: TaskRepository, solutionRepositor
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(solutionView, true)
+                solutionTemplate(solutionView, AccessLevel.EDIT)
             }
         }
     }
@@ -252,7 +251,7 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(newSolutionView, true)
+                solutionTemplate(newSolutionView, AccessLevel.EDIT)
             }
         }
     }

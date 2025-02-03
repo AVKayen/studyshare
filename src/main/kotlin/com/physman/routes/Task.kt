@@ -7,7 +7,6 @@ import com.physman.forms.TextlikeInput
 import com.physman.forms.globalFormRouter
 import com.physman.group.GroupRepository
 import com.physman.templates.*
-import com.physman.utils.validateRequiredObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
@@ -16,9 +15,7 @@ import io.ktor.server.sessions.*
 import kotlinx.html.*
 import com.physman.forms.*
 import com.physman.task.*
-import com.physman.utils.smartRedirect
-import com.physman.utils.validateGroupBelonging
-import com.physman.utils.validateOptionalObjectIds
+import com.physman.utils.*
 import org.bson.types.ObjectId
 
 fun Route.taskRouter(taskRepository: TaskRepository, groupRepository: GroupRepository) {
@@ -73,8 +70,7 @@ fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepo
                 breadcrumbs = mapOf(taskView.task.groupName to "/${groupId}"),
                 lastBreadcrumb = taskView.task.title
             ) {
-
-                taskTemplate(taskView, isAuthor = userSession.id == taskView.task.authorId.toHexString())
+                taskTemplate(taskView, getAccessLevel(ObjectId(userSession.id), taskView.task.authorId))
                 div {
                     classes = setOf("wide-button-container")
                     modalOpenButton(
@@ -286,7 +282,7 @@ fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                taskTemplate(newTaskView, true)
+                taskTemplate(newTaskView, AccessLevel.EDIT)
             }
         }
     }

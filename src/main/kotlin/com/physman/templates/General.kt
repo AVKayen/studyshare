@@ -8,6 +8,12 @@ import com.physman.utils.Post
 import kotlinx.html.*
 import org.bson.types.ObjectId
 
+enum class AccessLevel {
+    NONE,
+    DELETE,
+    EDIT
+}
+
 fun FlowContent.nonImageAttachmentTemplate(nonImageAttachments: List<AttachmentView>) {
     if (nonImageAttachments.isNotEmpty()) {
         section {
@@ -159,6 +165,15 @@ fun FlowContent.postEditingButton(post: Post) {
         span(classes = "material-symbols-rounded") {
             +"edit"
         }
+    }
+}
+
+fun FlowContent.postActions(post: Post, accessLevel: AccessLevel)
+{
+    when (accessLevel) {
+        AccessLevel.NONE -> return
+        AccessLevel.DELETE -> postDeletionButton(post)
+        AccessLevel.EDIT -> {postEditingButton(post); postDeletionButton(post)}
     }
 }
 
