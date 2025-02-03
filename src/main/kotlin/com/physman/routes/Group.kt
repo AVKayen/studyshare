@@ -32,6 +32,7 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
     }
     route("/{groupId}") {
         getGroupView(groupRepository)
+        deleteGroup(groupRepository)
         route("/add-user") {
             getAddUserToGroupModal(userAdditionForm)
             postAddUserToGroup(groupRepository, userRepository, userAdditionForm)
@@ -41,6 +42,9 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
         }
         route("/user-deletion-confirmation") {
             getUserDeletionConfirmation()
+        }
+        route("/group-deletion-confirmation") {
+            groupDeletionConfirmation()
         }
         route("/users") {
             route ("/{userId}") {
@@ -107,7 +111,7 @@ fun Route.getGroupList(groupRepository: GroupRepository, userRepository: UserRep
                 div {
                     classes = setOf("group-grid")
                     for (groupView in groupViews) {
-                        groupTemplate(groupView)
+                        groupThumbnailTemplate(groupView)
                     }
                 }
             }
@@ -131,43 +135,7 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
                 username = userSession.name,
                 lastBreadcrumb = groupView.group.title
             ) {
-                div(classes = "group-info") {
-                    groupView.thumbnail?.let {
-                        div {
-                            classes = setOf("group-thumbnail")
-                            img(src = it.thumbnailUrl, alt = "${groupView.group.title}'s thumbnail")
-                        }
-                    }
-                    div {
-                        classes = setOf("group-info-text")
-                        h1 {
-                            +groupView.group.title
-                        }
-                        groupView.group.description?.let {
-                            p { +it }
-                        }
-                    }
-                }
-                section(classes = "wide-button-container") {
-                    modalOpenButton(
-                        buttonText = "Create a task",
-                        modalUrl = "/${groupId}/creation-modal"
-                    )
-                    modalOpenButton(
-                        buttonText = "Show members",
-                        modalUrl = "/${groupId}/users-modal"
-                    )
-                    if (userSession.id == groupView.group.leaderId.toHexString()) {
-                        modalOpenButton(
-                            buttonText = "Add a user",
-                            modalUrl = "/${groupId}/add-user"
-                        )
-                    }
-                }
-
-                groupView.group.taskCategories.forEach {
-                    taskCategoryAccordion(groupId, it)
-                }
+                groupViewTemplate(groupView, userSession)
             }
         }
     }
@@ -295,12 +263,56 @@ fun Route.deleteUserFromGroup(groupRepository: GroupRepository) {
 
         val groupView = groupRepository.getGroup(groupId) ?: return@delete call.respond(HttpStatusCode.NotFound)
         if (!groupView.group.canUserKick(userId)) {
-            call.respond(HttpStatusCode.NotFound)
+            call.respond(HttpStatusCode.Forbidden)
             return@delete
         }
 
         groupRepository.deleteUser(groupId, targetUserId)
 
         call.respondHtml { body() }
+    }
+}
+
+fun Route.groupDeletionConfirmation() {
+    get {
+        val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
+        val groupId = objectIds["groupId"]!!
+
+        val groupTitle = call.request.queryParameters["groupTitle"] ?: return@get call.respondText(
+            text = "No groupTitle specified.", status = HttpStatusCode.BadRequest
+        )
+
+        call.respondHtml {
+            body {
+                confirmationModalTemplate(
+                    title = "Delete the group?",
+                    details = "Are you sure you want to delete the group \"${groupTitle}\"?",
+                    submitText = "Delete",
+                    submitAttributes = mapOf(
+                        "hx-delete" to "/$groupId"
+                    )
+                )
+            }
+        }
+    }
+}
+
+fun Route.deleteGroup(groupRepository: GroupRepository) {
+    delete {
+        val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@delete
+        val groupId = objectIds["groupId"]!!
+
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+
+        val groupView = groupRepository.getGroup(groupId) ?: return@delete call.respond(HttpStatusCode.NotFound)
+        if (groupView.group.leaderId != userId) {
+            call.respond(HttpStatusCode.Forbidden)
+            return@delete
+        }
+
+        groupRepository.deleteGroup(groupId)
+
+        call.smartRedirect("/")
     }
 }

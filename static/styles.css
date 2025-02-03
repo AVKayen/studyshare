@@ -110,6 +110,12 @@ nav {
     cursor: pointer;
 }
 
+.btn:has(> span.material-symbols-rounded:only-child) {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .solution {
     display: flex;
     padding: 0.5rem;
@@ -237,26 +243,39 @@ nav {
 .group {
     display: flex;
     flex-direction: column;
-    place-content: space-between;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 1rem;
+    background-color: var(--pico-card-background-color);
+    padding: 1rem;
 }
-.group > p {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.group > .group-thumbnail-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
 }
-.group > h1 {
+.group h1 {
     margin-bottom: 0.5rem;
-    overflow: hidden;
+    /* overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: nowrap; */
+    text-align: center;
 }
-.group > img {
-    aspect-ratio: 16/9;
+.group p {
+    /* overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap; */
+    text-align: center;
+}
+.group img {
+    aspect-ratio: 1;
     object-fit: cover;
-    width: 100%;
+    width: 50%;
     height: auto;
     font-size: 0;
-    margin-bottom: 0.5rem;
+    margin: 1rem auto;
+    border-radius: 0.25rem;
 }
 .group-grid {
     display: grid;
@@ -442,4 +461,9 @@ article > .user-list-item:first-of-type {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+}
+
+.group-header {
+    display: flex;
+    justify-content: space-between;
 }
