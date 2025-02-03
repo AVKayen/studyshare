@@ -1,6 +1,6 @@
 package com.physman.utils
 
-import com.physman.group.GroupRepository
+import com.physman.templates.AccessLevel
 import org.bson.types.ObjectId
 
 fun className(any: Any): String {
@@ -10,5 +10,13 @@ fun className(any: Any): String {
         str.substring(lastDotIndex + 1)
     } else {
         str
+    }
+}
+
+fun getAccessLevel(userId: ObjectId, authorId: ObjectId, parentAuthorId: ObjectId? = null): AccessLevel {
+    return when (userId) {
+        authorId -> AccessLevel.EDIT
+        parentAuthorId -> AccessLevel.DELETE
+        else -> AccessLevel.NONE
     }
 }

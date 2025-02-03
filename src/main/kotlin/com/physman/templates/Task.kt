@@ -5,7 +5,7 @@ import com.physman.task.TaskView
 import kotlinx.html.FlowContent
 import kotlinx.html.*
 
-fun FlowContent.taskTemplate(taskView: TaskView, isAuthor: Boolean) {
+fun FlowContent.taskTemplate(taskView: TaskView, accessLevel: AccessLevel) {
     val images = taskView.attachments.filter { attachmentView: AttachmentView -> attachmentView.attachment.isImage }
     val nonImageAttachments =
         taskView.attachments.filter { attachmentView: AttachmentView -> !attachmentView.attachment.isImage }
@@ -21,10 +21,7 @@ fun FlowContent.taskTemplate(taskView: TaskView, isAuthor: Boolean) {
                     localDateSpan(taskView.task.id)
                 }
             }
-            if (isAuthor) {
-                postEditingButton(taskView.task)
-                postDeletionButton(taskView.task)
-            }
+            postActions(post = taskView.task, accessLevel)
         }
         if (taskView.task.additionalNotes != null) {
             p {
