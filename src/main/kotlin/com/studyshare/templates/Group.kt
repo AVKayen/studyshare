@@ -75,7 +75,7 @@ fun FlowContent.groupViewTemplate(groupView: GroupView, userSession: UserSession
         }
     }
 
-    groupView.group.taskCategories.forEach {
+    groupView.group.taskCategories.reversed().forEach {
         taskCategoryAccordion(groupId, it)
     }
 }
