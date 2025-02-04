@@ -10,12 +10,7 @@ import com.studyshare.comment.MongoCommentRepository
 import com.studyshare.group.MongoGroupRepository
 import com.studyshare.solution.MongoSolutionRepository
 import com.studyshare.task.MongoTaskRepository
-import com.studyshare.templates.index
-import io.ktor.http.*
-import io.ktor.server.html.*
 import io.ktor.server.netty.*
-import io.ktor.server.plugins.statuspages.StatusPages
-import kotlinx.html.*
 import org.slf4j.LoggerFactory
 
 fun main(args: Array<String>) {
@@ -40,30 +35,7 @@ fun Application.module() {
     val userRepository = MongoUserRepository(database)
     val groupRepository = MongoGroupRepository(database, taskRepository, imageRepository, userRepository)
 
-    install(StatusPages) {
-        exception<Throwable> { call, cause ->
-            logger.error("Internal server error", cause)
-            call.respondHtml(HttpStatusCode.InternalServerError) {
-                index("Error") {
-                    h1 {
-                        +"A server error occurred: ${cause.localizedMessage}."
-                    }
-                    p {
-                        +"It's not your fault, it's ours. Please try again later."
-                    }
-                }
-            }
-        }
-        status(HttpStatusCode.NotFound) { call, _ -> // cause is redundant to know (it's always page not found)
-            call.respondHtml(HttpStatusCode.NotFound) {
-                index("Not Found") {
-                    h1 {
-                        +"Page not found"
-                    }
-                }
-            }
-        }
-    }
+    configureStatusPages(logger)
     configureSecurity(userRepository)
     configureRouting(
         solutionRepository = solutionRepository,
