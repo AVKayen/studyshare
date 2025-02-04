@@ -10,7 +10,7 @@ plugins {
     id("com.google.cloud.tools.appengine") version "2.8.0"
 }
 
-group = "com.physman"
+group = "com.studyshare"
 version = "0.0.1"
 
 application {

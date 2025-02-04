@@ -1,4 +1,4 @@
-rootProject.name = "fizykamanager"
+rootProject.name = "studyshare"
 
 pluginManagement {
     repositories {
