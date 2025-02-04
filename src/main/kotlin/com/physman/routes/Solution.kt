@@ -51,6 +51,7 @@ fun routeSolutionCreationForm(): Form {
     )
     solutionCreationForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))
     solutionCreationForm.addInput(TextlikeInput("Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+    solutionCreationForm.addInput(FileInput("Upload files", "files", inputAttributes = mapOf("multiple" to "true")))
 
     globalFormRouter.routeFormValidators(solutionCreationForm)
 
