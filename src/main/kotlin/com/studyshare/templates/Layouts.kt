@@ -21,6 +21,10 @@ fun HEAD.headTags(isDevelopment: Boolean = false) {
     // custom CSS and JS
     link(rel = "stylesheet", href = "${staticLocation}/styles.css")
     script { src = "${staticLocation}/helperFunctions.js" }
+    link(rel = "apple-touch-icon", href = "${staticLocation}/apple-touch-icon.png")
+    link(rel = "icon", href = "${staticLocation}/favicon.ico")
+    link(rel = "manifest", href = "${staticLocation}/site.webmanifest")
+
 
     // config for htmx (code 422 for error form reponses)
     meta(
