@@ -21,9 +21,10 @@ fun Application.configureRouting(
     groupRepository: GroupRepository
 ) {
     routing {
-        staticFiles("/static", File("static"))
+        if (!globalEnvironment!!.PRODUCTION) {
+            staticFiles("/static", File("static"))
+        }
 
-        // neo routers
         route("/") {
             indexViewRouter()
 
@@ -35,7 +36,6 @@ fun Application.configureRouting(
             }
         }
 
-        // legacy routers
         route("/forms") {
             configureForms(globalFormRouter)
         }

@@ -17,18 +17,17 @@ fun main(args: Array<String>) {
     EngineMain.main(args)
 }
 
-var isDevelopment: Boolean = false
+var globalEnvironment: Environment? = null
+
 private val logger = LoggerFactory.getLogger("Application")
 
 
 fun Application.module() {
-    // check if in production or development mode
-    isDevelopment = this.developmentMode
-    val environment = Environment(true)
-    val mongodbClient = MongoClient.create(environment.MONGODB_CONNECTION_STRING)
-    val database = mongodbClient.getDatabase("studyshare")
+    globalEnvironment = Environment(!this.developmentMode)
+    val mongodbClient = MongoClient.create(globalEnvironment!!.MONGODB_CONNECTION_STRING)
+    val database = mongodbClient.getDatabase(globalEnvironment!!.DATABASE_NAME)
 
-    val imageRepository = MongoGCloudAttachmentRepository(bucketName = "studyshare-files", database = database)
+    val imageRepository = MongoGCloudAttachmentRepository(bucketName = globalEnvironment!!.BUCKET_NAME, database = database)
     val commentRepository = MongoCommentRepository(database)
     val solutionRepository = MongoSolutionRepository(database, commentRepository, imageRepository)
     val taskRepository = MongoTaskRepository(database, imageRepository, commentRepository, solutionRepository)

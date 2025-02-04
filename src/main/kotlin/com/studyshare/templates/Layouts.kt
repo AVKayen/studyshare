@@ -1,24 +1,27 @@
 package com.studyshare.templates
 
-import com.studyshare.isDevelopment
+import com.studyshare.globalEnvironment
 import kotlinx.html.*
 
-fun HEAD.headTags(isDevelopment: Boolean = false) {
+fun HEAD.headTags() {
+    val googleCloudStaticLocation = "https://storage.googleapis.com/${globalEnvironment!!.STATIC_BUCKET_NAME}"
+
     // htmx
-    script { src = "https://storage.googleapis.com/studyshare-static/htmx-2.0.4.min.js" }
-    // _hyperscript
-    script { src = "https://storage.googleapis.com/studyshare-static/hyperscript-0.9.3.min.js" }
-    // picoCSS defaults
-    link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/pico-2.0.6.min.css")
-    // material icons
+    script { src = "$googleCloudStaticLocation/htmx-2.0.4.min.js" }
+    script { src = "$googleCloudStaticLocation/hyperscript-0.9.3.min.js" }
+
+    // pico.css
+    link(rel = "stylesheet", href = "$googleCloudStaticLocation/pico-2.0.6.min.css")
+
+    // Material Symbols Rounded
     link(rel = "stylesheet", href = "https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded")
 
     // fancybox
-    script { src = "https://storage.googleapis.com/studyshare-static/fancybox-5.0.umd.js" }
-    link(rel = "stylesheet", href = "https://storage.googleapis.com/studyshare-static/fancybox-5.0.css")
+    script { src = "$googleCloudStaticLocation/fancybox-5.0.umd.js" }
+    link(rel = "stylesheet", href = "$googleCloudStaticLocation/fancybox-5.0.css")
 
-    val staticLocation: String = if (isDevelopment) "/static" else "https://storage.googleapis.com/studyshare-static"
-    // custom CSS and JS
+    // On development server, custom/private static files are served from /static
+    val staticLocation: String = if (!globalEnvironment!!.PRODUCTION) "/static" else googleCloudStaticLocation
     link(rel = "stylesheet", href = "${staticLocation}/styles.css")
     script { src = "${staticLocation}/helperFunctions.js" }
     link(rel = "apple-touch-icon", href = "${staticLocation}/apple-touch-icon.png")
@@ -131,7 +134,7 @@ fun HTML.index(
     block: MAIN.() -> Unit
 ) {
     head {
-        headTags(isDevelopment)
+        headTags()
         title { +title }
     }
     body {
