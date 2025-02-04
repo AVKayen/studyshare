@@ -1,2 +1,2 @@
 runtime: java21
-entrypoint: 'java -jar fizykamanager-all.jar'
+entrypoint: 'java -jar studyshare-all.jar'
