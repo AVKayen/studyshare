@@ -263,8 +263,9 @@ main > p {
     justify-content: space-between;
     align-items: center;
     border-radius: 1rem;
-    background-color: var(--pico-card-background-color);
     padding: 1rem;
+    background-color: var(--pico-card-background-color);
+    box-shadow: var(--pico-card-box-shadow);
 }
 .group > .group-thumbnail-header {
     display: flex;
