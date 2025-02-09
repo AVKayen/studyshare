@@ -16,12 +16,6 @@ fun FlowContent.taskPreviewTemplate(task: Task) {
     cite {
         +task.authorName
     }
-    task.additionalNotes?.take(100)?.let {
-        p {
-            +it
-            if (task.additionalNotes.length >= 100) + "..."
-        }
-    }
     hr {
         classes = setOf("task-preview-hr")
     }
