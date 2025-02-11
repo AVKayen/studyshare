@@ -112,6 +112,10 @@ fun FlowContent.wideButton(buttonText: String, url: String, additionalButtonAttr
             attributes.putAll(additionalButtonAttributes)
         }
 
+        span(classes = "htmx-indicator") {
+            attributes["aria-busy"] = "true"
+        }
+
         +buttonText
     }
 }
