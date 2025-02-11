@@ -53,17 +53,19 @@ fun FlowContent.fancyboxSetupScript() {
     }
 }
 
+fun FlowContent.loadingIndicator() {
+    div(classes = "loading-indicator") {
+        attributes["aria-busy"] = "true"
+    }
+}
+
 fun FlowContent.contentLoadTemplate(url: String) {
-    div {
+    div(classes = "content-load") {
         attributes["hx-get"] = url
         attributes["hx-trigger"] = "load"
         attributes["hx-swap"] = "outerHTML"
 
-        article {
-            span(classes = "htmx-indicator") {
-                attributes["aria-busy"] = "true"
-            }
-        }
+        loadingIndicator()
     }
 }
 
