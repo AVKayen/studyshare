@@ -460,7 +460,8 @@ details summary {
 }
 
 .user-list-item > p {
-    margin: 0.25rem 0 0.25rem 0.5rem;
+    padding: 0.4rem 0 0.4rem 0.5rem;
+    margin-bottom: 0;
     display: flex;
     align-items: center;
 }

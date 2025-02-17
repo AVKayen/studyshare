@@ -74,7 +74,9 @@ enum class ButtonType {
     DELETE
 }
 
-fun FlowContent.iconButton(type: ButtonType, getUrl: String) {
+fun FlowContent.iconButton(
+    type: ButtonType, getUrl: String, additionalScript: String? = null, buttonAttributes: Map<String, String>? = null
+) {
     val script = """
         on click
             toggle @disabled on me
@@ -94,7 +96,11 @@ fun FlowContent.iconButton(type: ButtonType, getUrl: String) {
         attributes["hx-target"] = "body"
         attributes["hx-swap"] = "beforeend"
 
-        attributes["_"] = script
+        attributes["_"] = "$script ${additionalScript ?: ""}"
+
+        if (buttonAttributes != null) {
+            attributes.putAll(buttonAttributes)
+        }
 
         span(classes = "material-symbols-rounded") {
             +when (type) {
