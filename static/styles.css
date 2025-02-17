@@ -516,3 +516,7 @@ article > .user-list-item:first-of-type {
     display: flex;
     justify-content: space-between;
 }
+
+.icon-btn::before {
+    margin-inline-end: 0 !important;
+}

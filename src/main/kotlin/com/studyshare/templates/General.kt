@@ -69,28 +69,48 @@ fun FlowContent.contentLoadTemplate(url: String) {
     }
 }
 
-fun FlowContent.deletionButton(getUrl: String) {
-    button(classes = "btn secondary outline") {
+enum class ButtonType {
+    EDIT,
+    DELETE
+}
+
+fun FlowContent.iconButton(type: ButtonType, getUrl: String) {
+    val script = """
+        on click
+            toggle @disabled on me
+            me.setAttribute("aria-busy", true)
+            toggle the *display of the first <span/> in me
+        end
+        on htmx:afterRequest
+            log event
+            toggle @disabled on me
+            me.removeAttribute("aria-busy")
+            toggle the *display of the first <span/> in me
+        end
+    """.trimIndent()
+
+    button(classes = "icon-btn btn secondary outline") {
         attributes["hx-get"] = getUrl
         attributes["hx-target"] = "body"
         attributes["hx-swap"] = "beforeend"
 
+        attributes["_"] = script
+
         span(classes = "material-symbols-rounded") {
-            +"delete"
+            +when (type) {
+                ButtonType.EDIT -> "edit"
+                else -> "delete"
+            }
         }
     }
 }
 
-fun FlowContent.editButton(getUrl: String) {
-    button(classes = "btn secondary outline") {
-        attributes["hx-get"] = getUrl
-        attributes["hx-target"] = "body"
-        attributes["hx-swap"] = "beforeend"
+fun FlowContent.deletionButton(getUrl: String) {
+    iconButton(ButtonType.DELETE, getUrl)
+}
 
-        span(classes = "material-symbols-rounded") {
-            +"edit"
-        }
-    }
+fun FlowContent.editButton(getUrl: String) {
+    iconButton(ButtonType.EDIT, getUrl)
 }
 
 fun FlowContent.localDateSpan(objectId: ObjectId) {
