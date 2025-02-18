@@ -37,6 +37,8 @@ fun FlowContent.taskCategoryAccordion(groupId: ObjectId, taskCategory: String) {
         }
         div(classes = "task-list") {
             id = taskListId
+
+            loadingIndicator()
         }
     }
 }

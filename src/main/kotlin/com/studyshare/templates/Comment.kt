@@ -47,6 +47,8 @@ fun FlowContent.showCommentsAccordion(parentPost: Post) {
         div {
             id = "comments-${parentPost.id}"
             classes = setOf("comments")
+
+            loadingIndicator()
         }
     }
 

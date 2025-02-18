@@ -53,42 +53,70 @@ fun FlowContent.fancyboxSetupScript() {
     }
 }
 
+fun FlowContent.loadingIndicator() {
+    div(classes = "loading-indicator") {
+        attributes["aria-busy"] = "true"
+    }
+}
+
 fun FlowContent.contentLoadTemplate(url: String) {
-    div {
+    div(classes = "content-load") {
         attributes["hx-get"] = url
         attributes["hx-trigger"] = "load"
         attributes["hx-swap"] = "outerHTML"
 
-        article {
-            span(classes = "htmx-indicator") {
-                attributes["aria-busy"] = "true"
+        loadingIndicator()
+    }
+}
+
+enum class ButtonType {
+    EDIT,
+    DELETE
+}
+
+fun FlowContent.iconButton(
+    type: ButtonType, getUrl: String, additionalScript: String? = null, buttonAttributes: Map<String, String>? = null
+) {
+    val script = """
+        on click
+            toggle @disabled on me
+            me.setAttribute("aria-busy", true)
+            toggle the *display of the first <span/> in me
+        end
+        on htmx:afterRequest
+            log event
+            toggle @disabled on me
+            me.removeAttribute("aria-busy")
+            toggle the *display of the first <span/> in me
+        end
+    """.trimIndent()
+
+    button(classes = "icon-btn btn secondary outline") {
+        attributes["hx-get"] = getUrl
+        attributes["hx-target"] = "body"
+        attributes["hx-swap"] = "beforeend"
+
+        attributes["_"] = "$script ${additionalScript ?: ""}"
+
+        if (buttonAttributes != null) {
+            attributes.putAll(buttonAttributes)
+        }
+
+        span(classes = "material-symbols-rounded") {
+            +when (type) {
+                ButtonType.EDIT -> "edit"
+                else -> "delete"
             }
         }
     }
 }
 
 fun FlowContent.deletionButton(getUrl: String) {
-    button(classes = "btn secondary outline") {
-        attributes["hx-get"] = getUrl
-        attributes["hx-target"] = "body"
-        attributes["hx-swap"] = "beforeend"
-
-        span(classes = "material-symbols-rounded") {
-            +"delete"
-        }
-    }
+    iconButton(ButtonType.DELETE, getUrl)
 }
 
 fun FlowContent.editButton(getUrl: String) {
-    button(classes = "btn secondary outline") {
-        attributes["hx-get"] = getUrl
-        attributes["hx-target"] = "body"
-        attributes["hx-swap"] = "beforeend"
-
-        span(classes = "material-symbols-rounded") {
-            +"edit"
-        }
-    }
+    iconButton(ButtonType.EDIT, getUrl)
 }
 
 fun FlowContent.localDateSpan(objectId: ObjectId) {
@@ -108,6 +136,10 @@ fun FlowContent.wideButton(buttonText: String, url: String, additionalButtonAttr
         attributes["hx-get"] = url
         if (additionalButtonAttributes != null) {
             attributes.putAll(additionalButtonAttributes)
+        }
+
+        span(classes = "htmx-indicator") {
+            attributes["aria-busy"] = "true"
         }
 
         +buttonText

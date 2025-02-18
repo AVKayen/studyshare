@@ -89,16 +89,23 @@ fun FlowContent.userListItem(user: User, groupId: ObjectId, showKickButton: Bool
             +user.name
         }
         if (showKickButton) {
-            button(classes = "btn secondary outline") {
-                attributes["_"] = "on click add .invisible to me toggle @disabled on me"
-                attributes["hx-get"] = "/$groupId/user-deletion-confirmation?userId=${user.id}&name=${user.name}"
-                attributes["hx-target"] = "#$userItemId"
-                attributes["hx-swap"] = "afterend"
+//            button(classes = "btn secondary outline") {
+//                attributes["_"] = "on click add .invisible to me toggle @disabled on me"
+//                attributes["hx-get"] = "/$groupId/user-deletion-confirmation?userId=${user.id}&name=${user.name}"
+//                attributes["hx-target"] = "#$userItemId"
+//                attributes["hx-swap"] = "afterend"
+//
+//                span(classes = "material-symbols-rounded") {
+//                    +"delete"
+//                }
+//            }
+            iconButton(
+                ButtonType.DELETE,
+                "/$groupId/user-deletion-confirmation?userId=${user.id}&name=${user.name}",
+                additionalScript = "on htmx:afterRequest add .invisible to me toggle @disabled on me",
+                buttonAttributes = mapOf("hx-target" to "#$userItemId", "hx-swap" to "afterend")
+            )
 
-                span(classes = "material-symbols-rounded") {
-                    +"delete"
-                }
-            }
         }
     }
     hr {
