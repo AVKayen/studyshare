@@ -1,8 +1,6 @@
 package com.studyshare.solution
 
-import com.mongodb.client.model.Filters
-import com.mongodb.client.model.Sorts
-import com.mongodb.client.model.Updates
+import com.mongodb.client.model.*
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.comment.CommentRepository
@@ -19,6 +17,13 @@ class MongoSolutionRepository(
 ) : SolutionRepository {
 
     private val solutionCollection = mongoDatabase.getCollection<Solution>("solutions")
+
+    private suspend fun createSolutionView(userId: ObjectId, solution: Solution): SolutionView = SolutionView(
+        solution = solution,
+        attachments = attachmentRepository.getAttachments(solution.attachmentIds),
+        isUpvoted = solution.upvotes.contains(userId),
+        isDownvoted = solution.downvotes.contains(userId)
+    )
 
     override suspend fun createSolution(solution: Solution, files: List<UploadFileData>, userId: ObjectId): SolutionView {
 
@@ -37,14 +42,24 @@ class MongoSolutionRepository(
         )
     }
 
-    override suspend fun updateSolution(id: ObjectId, newSolution: Solution) {
+    override suspend fun updateSolution(id: ObjectId, userId: ObjectId, solutionUpdates: SolutionUpdates): SolutionView? {
+
+        attachmentRepository.deleteAttachments(solutionUpdates.filesToDelete)
+        val attachments = attachmentRepository.createAttachments(solutionUpdates.newFiles)
+
         val filter = Filters.eq("_id", id)
         val updates = Updates.combine(
-            Updates.set(Solution::title.name, newSolution.title),
-            Updates.set(Solution::additionalNotes.name, newSolution.additionalNotes)
+            listOfNotNull(
+                Updates.set(Solution::title.name, solutionUpdates.title),
+                Updates.set(Solution::additionalNotes.name, solutionUpdates.additionalNotes),
+                Updates.pullAll(Solution::attachmentIds.name, solutionUpdates.filesToDelete),
+                Updates.addEachToSet(Solution::attachmentIds.name, attachments.map { it.attachment.id })
+            )
         )
+        val options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
 
-        solutionCollection.findOneAndUpdate(filter, updates)
+        val updatedSolution = solutionCollection.findOneAndUpdate(filter, updates, options) ?: return null
+        return createSolutionView(userId, updatedSolution)
     }
 
     override suspend fun deleteSolution(id: ObjectId) {
@@ -74,24 +89,14 @@ class MongoSolutionRepository(
         }
         val sort = Sorts.descending("_id")
         return solutionCollection.find(filter).sort(sort).limit(resultCount).toList().map { solution: Solution ->
-            SolutionView(
-                solution = solution,
-                attachments = attachmentRepository.getAttachments(solution.attachmentIds),
-                isUpvoted = solution.upvotes.contains(userId),
-                isDownvoted = solution.downvotes.contains(userId)
-            )
+            createSolutionView(userId, solution)
         }
     }
 
     override suspend fun getSolution(solutionId: ObjectId, userId: ObjectId): SolutionView? {
         val filter = Filters.eq("_id", solutionId)
         val solution = solutionCollection.find(filter).firstOrNull() ?: return null
-        return SolutionView(
-                solution = solution,
-                attachments = attachmentRepository.getAttachments(solution.attachmentIds),
-                isUpvoted = solution.upvotes.contains(userId),
-                isDownvoted = solution.downvotes.contains(userId)
-            )
+        return createSolutionView(userId, solution)
     }
 
 

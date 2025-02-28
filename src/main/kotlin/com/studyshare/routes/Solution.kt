@@ -241,18 +241,21 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
             return@patch
         }
 
-        val newSolution = previousSolution.solution.copy(
+        val solutionUpdates = SolutionUpdates(
             title = title,
             additionalNotes = additionalNotes
         )
 
-        solutionRepository.updateSolution(solutionId, newSolution)
+        val updatedSolutionView = solutionRepository.updateSolution(solutionId, userId, solutionUpdates)
 
-        val newSolutionView = SolutionView(newSolution, previousSolution.attachments, previousSolution.isUpvoted, previousSolution.isDownvoted)
+        if (updatedSolutionView == null) {
+            call.respondText("Solution not found", status = HttpStatusCode.NotFound)
+            return@patch
+        }
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(newSolutionView, AccessLevel.EDIT)
+                solutionTemplate(updatedSolutionView, AccessLevel.EDIT)
             }
         }
     }
