@@ -5,6 +5,8 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.comment.CommentRepository
 import com.studyshare.forms.UploadFileData
+import com.studyshare.utils.PostModificationRestrictedException
+import com.studyshare.utils.PostNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.conversions.Bson
@@ -42,23 +44,32 @@ class MongoSolutionRepository(
         )
     }
 
-    override suspend fun updateSolution(id: ObjectId, userId: ObjectId, solutionUpdates: SolutionUpdates): SolutionView? {
+    override suspend fun updateSolution(id: ObjectId, userId: ObjectId, solutionUpdates: SolutionUpdates): SolutionView {
 
         attachmentRepository.deleteAttachments(solutionUpdates.filesToDelete)
-        val attachments = attachmentRepository.createAttachments(solutionUpdates.newFiles)
+        val newAttachments = attachmentRepository.createAttachments(solutionUpdates.newFiles)
 
         val filter = Filters.eq("_id", id)
+
+        val solution = solutionCollection.find(filter).firstOrNull() ?: throw PostNotFoundException()
+
+        if (solution.authorId != userId) {
+            throw PostModificationRestrictedException()
+        }
+
+        val updatedAttachments = solution.attachmentIds + newAttachments.map { it.attachment.id } - solutionUpdates.filesToDelete.toSet()
+
         val updates = Updates.combine(
             listOfNotNull(
                 Updates.set(Solution::title.name, solutionUpdates.title),
                 Updates.set(Solution::additionalNotes.name, solutionUpdates.additionalNotes),
-                Updates.pullAll(Solution::attachmentIds.name, solutionUpdates.filesToDelete),
-                Updates.addEachToSet(Solution::attachmentIds.name, attachments.map { it.attachment.id })
+                Updates.set(Solution::attachmentIds.name, updatedAttachments)
             )
         )
-        val options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
 
-        val updatedSolution = solutionCollection.findOneAndUpdate(filter, updates, options) ?: return null
+        val options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+        val updatedSolution = solutionCollection.findOneAndUpdate(filter, updates, options) ?: throw PostNotFoundException()
+
         return createSolutionView(userId, updatedSolution)
     }
 
@@ -93,9 +104,9 @@ class MongoSolutionRepository(
         }
     }
 
-    override suspend fun getSolution(solutionId: ObjectId, userId: ObjectId): SolutionView? {
+    override suspend fun getSolution(solutionId: ObjectId, userId: ObjectId): SolutionView {
         val filter = Filters.eq("_id", solutionId)
-        val solution = solutionCollection.find(filter).firstOrNull() ?: return null
+        val solution = solutionCollection.find(filter).firstOrNull() ?: throw PostNotFoundException()
         return createSolutionView(userId, solution)
     }
 

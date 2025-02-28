@@ -6,10 +6,7 @@ import com.studyshare.group.GroupRepository
 import com.studyshare.solution.*
 import com.studyshare.task.TaskRepository
 import com.studyshare.templates.*
-import com.studyshare.utils.getAccessLevel
-import com.studyshare.utils.validateGroupBelonging
-import com.studyshare.utils.validateOptionalObjectIds
-import com.studyshare.utils.validateRequiredObjectIds
+import com.studyshare.utils.*
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
@@ -65,6 +62,7 @@ fun routeSolutionEditingForm(): Form {
 
     solutionEditingForm.addInput(TextlikeInput("New Title", "title", InputType.text, titleValidator))
     solutionEditingForm.addInput(TextlikeInput("New Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+    solutionEditingForm.addInput(FileInput("Upload new files", "newFiles", inputAttributes = mapOf("multiple" to "true")))
 
     globalFormRouter.routeFormValidators(solutionEditingForm)
 
@@ -101,7 +99,11 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form, solutionRepository:
             return@get
         }
 
-        val solutionView = solutionRepository.getSolution(ObjectId(id), userId) ?: return@get
+        val solutionView = try {
+            solutionRepository.getSolution(ObjectId(id), userId)
+        } catch (e: PostNotFoundException) {
+            return@get
+        }
 
         call.respondHtml {
             body {
@@ -232,25 +234,24 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
         val formSubmissionData: FormSubmissionData = solutionEditingForm.validateSubmission(call) ?: return@patch
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
-        formSubmissionData.cleanup()
-
-        val previousSolution = solutionRepository.getSolution(solutionId, userId) ?: return@patch call.respond(HttpStatusCode.NotFound)
-
-        if (previousSolution.solution.authorId != userId) {
-            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
-            return@patch
-        }
 
         val solutionUpdates = SolutionUpdates(
             title = title,
-            additionalNotes = additionalNotes
+            additionalNotes = additionalNotes,
+            newFiles = formSubmissionData.files
         )
 
-        val updatedSolutionView = solutionRepository.updateSolution(solutionId, userId, solutionUpdates)
-
-        if (updatedSolutionView == null) {
-            call.respondText("Solution not found", status = HttpStatusCode.NotFound)
+        val updatedSolutionView = try {
+            solutionRepository.updateSolution(solutionId, userId, solutionUpdates)
+        } catch (e: PostNotFoundException) {
+            call.respondText(e.message!!, status = HttpStatusCode.NotFound)
             return@patch
+        } catch (e: PostModificationRestrictedException) {
+            call.respondText(e.message!!, status = HttpStatusCode.Forbidden)
+            formSubmissionData.cleanup()
+            return@patch
+        } finally {
+            formSubmissionData.cleanup()
         }
 
         call.respondHtml(HttpStatusCode.OK) {
@@ -267,7 +268,11 @@ fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository:
         val solutionId = objectIds["id"]!!
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
-        val solutionView = solutionRepository.getSolution(solutionId, userId) ?: return@delete
+        val solutionView = try {
+            solutionRepository.getSolution(solutionId, userId)
+        } catch (e: PostNotFoundException) {
+            return@delete
+        }
         val parentTask = taskRepository.getTask(solutionView.solution.taskId) ?: return@delete
 
         val parentAuthorId = parentTask.task.authorId
@@ -293,7 +298,12 @@ fun Route.postVote(solutionRepository: SolutionRepository, groupRepository: Grou
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        if (!validateGroupBelonging(call, groupRepository, solutionRepository.getSolution(solutionId, userId)?.solution?.groupId)) return@post
+        val solutionView = try {
+            solutionRepository.getSolution(solutionId, userId)
+        } catch (e: PostNotFoundException) {
+            return@post
+        }
+        if (!validateGroupBelonging(call, groupRepository, solutionView.solution.groupId)) return@post
 
         if (action == null) {
             call.respondText("Action not specified.", status = HttpStatusCode.BadRequest)
