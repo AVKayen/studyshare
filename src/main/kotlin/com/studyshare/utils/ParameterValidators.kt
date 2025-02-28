@@ -64,3 +64,14 @@ suspend fun validateGroupBelonging(call: RoutingCall, groupRepository: GroupRepo
     }
     return true
 }
+
+fun parseObjectIdList(list: List<String>): List<ObjectId>? {
+    val parsedList = list.map {
+        if (ObjectId.isValid(it)) {
+            ObjectId(it)
+        } else {
+            return null
+        }
+    }
+    return parsedList
+}

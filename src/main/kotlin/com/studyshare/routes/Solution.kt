@@ -63,6 +63,7 @@ fun routeSolutionEditingForm(): Form {
     solutionEditingForm.addInput(TextlikeInput("New Title", "title", InputType.text, titleValidator))
     solutionEditingForm.addInput(TextlikeInput("New Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
     solutionEditingForm.addInput(FileInput("Upload new files", "newFiles", inputAttributes = mapOf("multiple" to "true")))
+    solutionEditingForm.addInput(FileDeletionInput("deletedFiles", "solutionEditFileDeletion"))
 
     globalFormRouter.routeFormValidators(solutionEditingForm)
 
@@ -117,7 +118,8 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form, solutionRepository:
                     inputValues = mapOf(
                         "title" to solutionView.solution.title,
                         "additionalNotes" to (solutionView.solution.additionalNotes ?: "")
-                    )
+                    ),
+                    filesToBeDeleted = mapOf("deletedFiles" to solutionView.attachments)
                 )
             }
         }
@@ -234,11 +236,22 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
         val formSubmissionData: FormSubmissionData = solutionEditingForm.validateSubmission(call) ?: return@patch
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
+        val deletedFiles = formSubmissionData.fields["deletedFiles"]!!
+
+        val filesToDelete = parseObjectIdList(deletedFiles.dropLast(1).split(";"))
+
+        if (filesToDelete == null) {
+            call.respondText("Invalid value passed for the deletedFiles argument")
+            return@patch
+        }
+
+        println(filesToDelete)
 
         val solutionUpdates = SolutionUpdates(
             title = title,
             additionalNotes = additionalNotes,
-            newFiles = formSubmissionData.files
+            newFiles = formSubmissionData.files,
+            filesToDelete = filesToDelete
         )
 
         val updatedSolutionView = try {

@@ -521,3 +521,43 @@ article > .user-list-item:first-of-type {
 .icon-btn::before {
     margin-inline-end: 0 !important;
 }
+
+.img-to-be-deleted {
+    position: relative;
+}
+
+.non-img-to-be-deleted {
+    display: flex;
+    justify-content: start;
+}
+
+.non-img-to-be-deleted > span {
+    display: flex;
+    align-items: center;
+    margin-right: 0.5em;
+}
+
+.file-deletion-btn {
+    padding: 0;
+    background-color: var(--pico-del-color) !important;
+    border: 1px solid var(--pico-del-color);
+}
+
+.img-to-be-deleted .file-deletion-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.deleted-count-text {
+    text-align: center;
+}
+
+.attachments {
+    display: flex;
+    flex-direction: column;
+}
+
+.attachments > a {
+    margin: 0.3em 0;
+}

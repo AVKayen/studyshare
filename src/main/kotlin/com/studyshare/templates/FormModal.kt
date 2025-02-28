@@ -1,5 +1,6 @@
 package com.studyshare.templates
 
+import com.studyshare.attachment.AttachmentView
 import com.studyshare.forms.Form
 import com.studyshare.forms.HtmxRequestType
 import kotlinx.html.FlowContent
@@ -14,7 +15,8 @@ fun FlowContent.formModalDialog(
     requestType: HtmxRequestType = HtmxRequestType.POST,
     inputDataLists: Map<String, List<String>>? = null,
     extraAttributes: Map<String, String>? = null,
-    inputValues: Map<String, String>? = null
+    inputValues: Map<String, String>? = null,
+    filesToBeDeleted: Map<String, List<AttachmentView>>? = null
 ) {
 
     val formScript = """
@@ -37,6 +39,8 @@ fun FlowContent.formModalDialog(
         submitAttributes = mapOf(),
         modalWrapper = modalWrapper
     ) {
-        form.renderInputFields(this, inputDataLists = inputDataLists, inputValues = inputValues)
+        form.renderInputFields(
+            this, inputDataLists = inputDataLists, inputValues = inputValues, filesToBeDeleted = filesToBeDeleted
+        )
     }
 }
