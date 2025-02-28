@@ -7,7 +7,6 @@ import java.nio.charset.StandardCharsets
 class FileInput(
     private val inputLabel: String,
     private val inputName: String,
-    private val maxFileCount: Int = 1,
     private val inputAttributes: Map<String, String>? = null
 ) : ControlledInput {
 
@@ -25,9 +24,6 @@ class FileInput(
             }
             input(type = InputType.file, name = inputName) {
                 attributes["id"] = inputName
-                if (maxFileCount > 1) {
-                    attributes["multiple"] = "true"
-                }
                 if (inputAttributes != null) {
                     attributes.putAll(inputAttributes)
                 }
