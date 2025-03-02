@@ -94,10 +94,16 @@ class MongoTaskRepository(
         return createTaskView(updatedTask)
     }
 
-    override suspend fun deleteTask(id: ObjectId): Task {
-        val filter = Filters.eq("_id", id)
-        val task = taskCollection.findOneAndDelete(filter) ?: throw ResourceNotFoundException()
+    override suspend fun deleteTask(id: ObjectId, userId: ObjectId): Task {
+        val task = getTask(id)
 
+        if (task.authorId != userId) {
+            throw ResourceModificationRestrictedException()
+        }
+
+        val filter = Filters.eq("_id", id)
+
+        taskCollection.deleteOne(filter)
         commentRepository.deleteComments(id)
         solutionRepository.deleteSolutions(taskId = task.id)
         attachmentRepository.deleteAttachments(task.attachmentIds)

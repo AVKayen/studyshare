@@ -321,35 +321,25 @@ fun Route.deleteTask(taskRepository: TaskRepository, groupRepository: GroupRepos
         val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@delete
         val taskId = objectIds["taskId"]!!
 
-        val task = try {
-            taskRepository.getTaskView(taskId).task
+        val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
+
+        val deletedTask = try {
+            taskRepository.deleteTask(taskId, userId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Task not found.", status = HttpStatusCode.NotFound)
             return@delete
-        }
-
-        val authorId = task.authorId
-        val groupId = task.groupId
-        val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
-
-        if (authorId == userId) {
-            val deletedTask = try {
-                taskRepository.deleteTask(taskId)
-            } catch (e: ResourceNotFoundException) {
-                call.respondText("Task not found.", status = HttpStatusCode.NotFound)
-                return@delete
-            }
-            if (!taskRepository.doesCategoryExist(groupId = groupId, category = deletedTask.category)) {
-                groupRepository.removeTaskCategory(groupId = groupId, taskCategory = deletedTask.category)
-            }
-
-            call.smartRedirect(redirectUrl = "/$groupId")
-        } else {
-            call.respondText(
-                "Resource Modification Restricted - Ownership Required",
-                status = HttpStatusCode.Forbidden
-            )
+        } catch (e: ResourceModificationRestrictedException) {
+            call.respondText("Task modification forbidden.", status = HttpStatusCode.Forbidden)
             return@delete
         }
+
+        val groupId = deletedTask.groupId
+
+        if (!taskRepository.doesCategoryExist(groupId = groupId, category = deletedTask.category)) {
+            groupRepository.removeTaskCategory(groupId = groupId, taskCategory = deletedTask.category)
+        }
+
+        call.smartRedirect(redirectUrl = "/$groupId")
+
     }
 }
