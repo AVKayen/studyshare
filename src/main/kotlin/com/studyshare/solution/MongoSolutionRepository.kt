@@ -110,8 +110,6 @@ class MongoSolutionRepository(
         return createSolutionView(userId, solution)
     }
 
-
-
     override suspend fun updateCommentAmount(solutionId: ObjectId, amount: Int): Int {
         val filter = Filters.eq("_id", solutionId)
         val updates = Updates.inc(Solution::commentAmount.name, amount)

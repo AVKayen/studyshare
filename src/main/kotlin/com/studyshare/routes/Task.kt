@@ -289,18 +289,6 @@ fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form
             return@patch
         }
 
-        val previousTask = try {
-            taskRepository.getTaskView(taskId)
-        } catch (e: ResourceNotFoundException) {
-            call.respondText("Task not found.", status = HttpStatusCode.NotFound)
-            return@patch
-        }
-
-        if (previousTask.task.authorId != userId) {
-            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
-            return@patch
-        }
-
         val taskUpdates = TaskUpdates(
             title = title,
             additionalNotes = additionalNotes,
@@ -309,9 +297,12 @@ fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form
         )
 
         val updatedTask = try {
-            taskRepository.updateTask(taskId, taskUpdates)
+            taskRepository.updateTask(taskId, userId, taskUpdates)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Task not found.", status = HttpStatusCode.NotFound)
+            return@patch
+        } catch (e:ResourceModificationRestrictedException) {
+            call.respondText("Task modification forbidden.", status = HttpStatusCode.Forbidden)
             return@patch
         } finally {
             formSubmissionData.cleanup()

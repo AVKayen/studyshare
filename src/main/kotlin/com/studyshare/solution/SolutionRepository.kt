@@ -10,8 +10,6 @@ interface SolutionRepository {
     suspend fun updateSolution(id: ObjectId, userId: ObjectId, solutionUpdates: SolutionUpdates): SolutionView
     suspend fun deleteSolutions(taskId: ObjectId)
     suspend fun deleteSolution(id: ObjectId)
-
     suspend fun updateCommentAmount(solutionId: ObjectId, amount: Int): Int
-
     suspend fun vote(id: ObjectId, userId: ObjectId, voteType: VoteType): VoteUpdate
 }

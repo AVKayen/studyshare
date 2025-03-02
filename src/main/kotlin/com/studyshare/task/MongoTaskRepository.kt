@@ -7,6 +7,7 @@ import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.comment.CommentRepository
 import com.studyshare.solution.Solution
 import com.studyshare.solution.SolutionRepository
+import com.studyshare.utils.ResourceModificationRestrictedException
 import com.studyshare.utils.ResourceNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
@@ -55,19 +56,27 @@ class MongoTaskRepository(
         return taskCollection.find(filter).sort(sort).limit(resultCount).toList()
     }
 
-    override suspend fun getTaskView(id: ObjectId): TaskView {
+    override suspend fun getTask(id: ObjectId): Task {
         val filter = Filters.eq("_id", id)
-        val task = taskCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
+        return taskCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
+    }
+
+    override suspend fun getTaskView(id: ObjectId): TaskView {
+        val task = getTask(id)
         return createTaskView(task)
     }
 
-    override suspend fun updateTask(id: ObjectId, taskUpdates: TaskUpdates): TaskView {
+    override suspend fun updateTask(id: ObjectId, userId: ObjectId, taskUpdates: TaskUpdates): TaskView {
 
         attachmentRepository.deleteAttachments(taskUpdates.filesToDelete)
         val newAttachments = attachmentRepository.createAttachments(taskUpdates.newFiles)
 
         val filter = Filters.eq("_id", id)
-        val task = taskCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
+        val task = getTask(id)
+
+        if (task.authorId != userId) {
+            throw ResourceModificationRestrictedException()
+        }
 
         val updatedAttachments = task.attachmentIds + newAttachments.map { it.attachment.id } - taskUpdates.filesToDelete.toSet()
 

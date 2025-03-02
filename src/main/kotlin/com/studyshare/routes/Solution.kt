@@ -269,7 +269,6 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
             return@patch
         } catch (e: ResourceModificationRestrictedException) {
             call.respondText("Solution modification forbidden.", status = HttpStatusCode.Forbidden)
-            formSubmissionData.cleanup()
             return@patch
         } finally {
             formSubmissionData.cleanup()
