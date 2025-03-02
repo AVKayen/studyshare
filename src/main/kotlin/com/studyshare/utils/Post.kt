@@ -3,12 +3,6 @@ package com.studyshare.utils
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 
-class PostModificationRestrictedException(): Exception(
-    "Post Modification Restricted - Ownership Required"
-)
-
-class PostNotFoundException(): Exception("Post not found")
-
 abstract class Post {
     @get:BsonId
     abstract val id: ObjectId

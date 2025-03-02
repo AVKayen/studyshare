@@ -102,7 +102,7 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form, solutionRepository:
 
         val solutionView = try {
             solutionRepository.getSolution(ObjectId(id), userId)
-        } catch (e: PostNotFoundException) {
+        } catch (e: ResourceNotFoundException) {
             return@get
         }
 
@@ -166,7 +166,12 @@ fun Route.getSolutions(taskRepository: TaskRepository, solutionRepository: Solut
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        val parentTask = taskRepository.getTask(taskId) ?: return@get
+        val parentTask = try {
+            taskRepository.getTask(taskId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Associated Task not found.", status = HttpStatusCode.NotFound)
+            return@get
+        }
         val parentAuthorId = parentTask.task.authorId
 
         if (!validateGroupBelonging(call, groupRepository, parentTask.task.groupId)) return@get
@@ -208,7 +213,12 @@ fun Route.postSolutionCreation(taskRepository: TaskRepository, solutionRepositor
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
 
-        val task = taskRepository.getTask(taskId) ?: return@post call.respond(HttpStatusCode.NotFound)
+        val task = try {
+            taskRepository.getTask(taskId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Associated Task not found.", status = HttpStatusCode.NotFound)
+            return@post
+        }
 
         if (!validateGroupBelonging(call, groupRepository, task.task.groupId)) return@post
 
@@ -256,11 +266,11 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
 
         val updatedSolutionView = try {
             solutionRepository.updateSolution(solutionId, userId, solutionUpdates)
-        } catch (e: PostNotFoundException) {
-            call.respondText(e.message!!, status = HttpStatusCode.NotFound)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Solution not found.", status = HttpStatusCode.NotFound)
             return@patch
-        } catch (e: PostModificationRestrictedException) {
-            call.respondText(e.message!!, status = HttpStatusCode.Forbidden)
+        } catch (e: ResourceModificationRestrictedException) {
+            call.respondText("Solution modification forbidden.", status = HttpStatusCode.Forbidden)
             formSubmissionData.cleanup()
             return@patch
         } finally {
@@ -283,10 +293,15 @@ fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository:
 
         val solutionView = try {
             solutionRepository.getSolution(solutionId, userId)
-        } catch (e: PostNotFoundException) {
+        } catch (e: ResourceNotFoundException) {
             return@delete
         }
-        val parentTask = taskRepository.getTask(solutionView.solution.taskId) ?: return@delete
+        val parentTask = try {
+            taskRepository.getTask(solutionView.solution.taskId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Associated Task not found.", status = HttpStatusCode.NotFound)
+            return@delete
+        }
 
         val parentAuthorId = parentTask.task.authorId
         val authorId = solutionView.solution.authorId
@@ -313,7 +328,7 @@ fun Route.postVote(solutionRepository: SolutionRepository, groupRepository: Grou
 
         val solutionView = try {
             solutionRepository.getSolution(solutionId, userId)
-        } catch (e: PostNotFoundException) {
+        } catch (e: ResourceNotFoundException) {
             return@post
         }
         if (!validateGroupBelonging(call, groupRepository, solutionView.solution.groupId)) return@post

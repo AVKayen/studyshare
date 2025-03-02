@@ -51,11 +51,13 @@ fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepo
         val taskId = objectIds["taskId"]!!
         val groupId = objectIds["groupId"]!!
 
-        val taskView = taskRepository.getTask(taskId)
-        if(taskView == null) {
+        val taskView = try {
+            taskRepository.getTask(taskId)
+        } catch (e: ResourceNotFoundException) {
             call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
             return@get
         }
+
         if(taskView.task.groupId != groupId) {
             call.respondText(text = "Task does not belong to this group. How did we get here?", status = HttpStatusCode.NotFound)
             return@get
@@ -151,11 +153,14 @@ fun Route.getTaskList(taskRepository: TaskRepository, groupRepository: GroupRepo
 fun Route.getTaskCreationModal(taskCreationForm: Form, groupRepository: GroupRepository) {
     get {
         val groupId = validateRequiredObjectIds(call, "groupId")?.get("groupId") ?: return@get
-        val groupView = groupRepository.getGroup(groupId)
-        if (groupView == null) {
+
+        val groupView = try {
+            groupRepository.getGroup(groupId)
+        } catch (e: ResourceNotFoundException) {
             call.respondText(text = "Group does not exist.", status = HttpStatusCode.NotFound)
             return@get
         }
+
         call.respondHtml {
             body {
                 formModalDialog(
@@ -177,7 +182,12 @@ fun Route.getTaskEditingModal(taskEditingForm: Form, taskRepository: TaskReposit
             return@get
         }
 
-        val taskView = taskRepository.getTask(ObjectId(id)) ?: return@get
+        val taskView = try {
+            taskRepository.getTask(ObjectId(id))
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Task not found.", status = HttpStatusCode.NotFound)
+            return@get
+        }
 
         call.respondHtml {
             body {
@@ -229,7 +239,12 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
         val files = formSubmissionData.files
 
         val groupId = validateRequiredObjectIds(call, "groupId")?.get("groupId") ?: return@post
-        val group = groupRepository.getGroup(groupId) ?: return@post call.respond(HttpStatusCode.NotFound)
+        val group = try {
+            groupRepository.getGroup(groupId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Group not found.", status = HttpStatusCode.NotFound)
+            return@post
+        }
 
         val userSession = call.sessions.get<UserSession>()!!
 
@@ -264,7 +279,12 @@ fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
         formSubmissionData.cleanup()
 
-        val previousTask = taskRepository.getTask(taskId) ?: return@patch call.respond(HttpStatusCode.NotFound)
+        val previousTask = try {
+            taskRepository.getTask(taskId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Task not found.", status = HttpStatusCode.NotFound)
+            return@patch
+        }
 
         if (previousTask.task.authorId != userId) {
             call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
@@ -292,14 +312,26 @@ fun Route.deleteTask(taskRepository: TaskRepository, groupRepository: GroupRepos
     delete {
         val objectIds = validateRequiredObjectIds(call, "taskId") ?: return@delete
         val taskId = objectIds["taskId"]!!
-        val task = taskRepository.getTask(taskId)?.task ?: return@delete
+
+        val task = try {
+            taskRepository.getTask(taskId).task
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Task not found.", status = HttpStatusCode.NotFound)
+            return@delete
+        }
+
         val authorId = task.authorId
         val groupId = task.groupId
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
         if (authorId == userId) {
-            val deletedTask = taskRepository.deleteTask(taskId)
-            if (deletedTask != null && !taskRepository.doesCategoryExist(groupId = groupId, category = deletedTask.category)) {
+            val deletedTask = try {
+                taskRepository.deleteTask(taskId)
+            } catch (e: ResourceNotFoundException) {
+                call.respondText("Task not found.", status = HttpStatusCode.NotFound)
+                return@delete
+            }
+            if (!taskRepository.doesCategoryExist(groupId = groupId, category = deletedTask.category)) {
                 groupRepository.removeTaskCategory(groupId = groupId, taskCategory = deletedTask.category)
             }
 

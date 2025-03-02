@@ -8,6 +8,7 @@ import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.authentication.user.UserRepository
 import com.studyshare.forms.UploadFileData
 import com.studyshare.task.TaskRepository
+import com.studyshare.utils.ResourceNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
@@ -70,8 +71,8 @@ class MongoGroupRepository(
         return group.leaderId == userId
     }
 
-    override suspend fun getGroup(groupId: ObjectId): GroupView? {
-        val group = groupCollection.find(Filters.eq("_id", groupId)).firstOrNull() ?: return null
+    override suspend fun getGroup(groupId: ObjectId): GroupView {
+        val group = groupCollection.find(Filters.eq("_id", groupId)).firstOrNull() ?: throw ResourceNotFoundException()
         return GroupView(
             group = group,
             thumbnail = group.thumbnailId?.let { attachmentRepository.getAttachment(it) }

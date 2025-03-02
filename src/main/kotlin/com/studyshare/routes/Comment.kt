@@ -10,6 +10,7 @@ import com.studyshare.task.TaskRepository
 import com.studyshare.templates.commentCountTemplate
 import com.studyshare.templates.commentTemplate
 import com.studyshare.utils.Post
+import com.studyshare.utils.ResourceNotFoundException
 import com.studyshare.utils.validateGroupBelonging
 import com.studyshare.utils.validateRequiredObjectIds
 import io.ktor.http.*
@@ -38,12 +39,17 @@ fun Route.getCommentView(taskRepository: TaskRepository, solutionRepository: Sol
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
         val comments = commentRepository.getComments(parentId!!)
-        val parentPost = when (parentPostClassName.lowercase()) {
-            "task" -> taskRepository.getTask(parentId)?.task
-            "solution" -> solutionRepository.getSolution(parentId, userId)?.solution
-            else -> return@get
+        val parentPost: Post = try {
+            when (parentPostClassName.lowercase()) {
+                "task" -> taskRepository.getTask(parentId).task
+                "solution" -> solutionRepository.getSolution(parentId, userId).solution
+                else -> return@get call.respond(HttpStatusCode.BadRequest)
+            }
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Associated Post not found", status = HttpStatusCode.NotFound)
+            return@get
         }
-        if (!validateGroupBelonging(call, groupRepository, parentPost?.groupId)) return@get
+        if (!validateGroupBelonging(call, groupRepository, parentPost.groupId)) return@get
 
         call.respondHtml {
             body {
@@ -101,14 +107,14 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
             return@post
         }
 
-        val parentPost: Post? = when (postType?.lowercase()) {
-            "task" -> taskRepository.getTask(parentId!!)?.task
-            "solution" -> solutionRepository.getSolution(parentId!!, authorId)?.solution
-            else -> return@post
-        }
-
-        if (parentPost == null) {
-            call.respond(HttpStatusCode.NotFound)
+        val parentPost: Post = try {
+            when (postType?.lowercase()) {
+                "task" -> taskRepository.getTask(parentId!!).task
+                "solution" -> solutionRepository.getSolution(parentId!!, authorId).solution
+                else -> return@post call.respond(HttpStatusCode.BadRequest)
+            }
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Associated Post not found", status = HttpStatusCode.NotFound)
             return@post
         }
 
@@ -159,7 +165,7 @@ fun Route.deleteComment(commentRepository: CommentRepository, solutionRepository
         val newCommentAmount = when (postType) {
             "task" -> taskRepository.updateCommentAmount(parentId, -1)
             "solution" -> solutionRepository.updateCommentAmount(parentId, -1)
-            else -> return@delete
+            else -> return@delete call.respond(HttpStatusCode.BadRequest)
         }
 
 

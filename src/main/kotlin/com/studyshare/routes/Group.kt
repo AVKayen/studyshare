@@ -8,6 +8,7 @@ import com.studyshare.group.GroupRepository
 import com.studyshare.solution.additionalNotesValidator
 import com.studyshare.solution.titleValidator
 import com.studyshare.templates.*
+import com.studyshare.utils.ResourceNotFoundException
 
 import com.studyshare.utils.smartRedirect
 import com.studyshare.utils.validateGroupBelonging
@@ -128,7 +129,12 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
         val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
         val groupId = objectIds["groupId"]!!
 
-        val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
+        val groupView = try {
+            groupRepository.getGroup(groupId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Group not found.", status = HttpStatusCode.NotFound)
+            return@get
+        }
         val userSession = call.sessions.get<UserSession>()!!
 
         call.respondHtml(HttpStatusCode.OK) {
@@ -151,7 +157,12 @@ fun Route.getUsersModal(groupRepository: GroupRepository, userRepository: UserRe
         val userSession = call.sessions.get<UserSession>()!!
         val userId = userSession.id
 
-        val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
+        val groupView = try {
+            groupRepository.getGroup(groupId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Group not found.", status = HttpStatusCode.NotFound)
+            return@get
+        }
 
         val groupMembers = userRepository.getUsersByIds(groupView.group.memberIds)
         val groupLeader = groupMembers.first { it.id == groupView.group.leaderId }
@@ -277,7 +288,12 @@ fun Route.deleteUserFromGroup(groupRepository: GroupRepository) {
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        val groupView = groupRepository.getGroup(groupId) ?: return@delete call.respond(HttpStatusCode.NotFound)
+        val groupView = try {
+            groupRepository.getGroup(groupId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Group not found.", status = HttpStatusCode.NotFound)
+            return@delete
+        }
         if (!groupView.group.canUserKick(userId)) {
             call.respond(HttpStatusCode.Forbidden)
             return@delete
@@ -321,7 +337,12 @@ fun Route.deleteGroup(groupRepository: GroupRepository) {
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        val groupView = groupRepository.getGroup(groupId) ?: return@delete call.respond(HttpStatusCode.NotFound)
+        val groupView = try {
+            groupRepository.getGroup(groupId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Group not found.", status = HttpStatusCode.NotFound)
+            return@delete
+        }
         if (groupView.group.leaderId != userId) {
             call.respond(HttpStatusCode.Forbidden)
             return@delete

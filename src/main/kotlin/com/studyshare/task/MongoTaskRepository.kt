@@ -9,6 +9,7 @@ import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.comment.CommentRepository
 import com.studyshare.solution.Solution
 import com.studyshare.solution.SolutionRepository
+import com.studyshare.utils.ResourceNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
@@ -51,9 +52,9 @@ class MongoTaskRepository(
         return taskCollection.find(filter).sort(sort).limit(resultCount).toList()
     }
 
-    override suspend fun getTask(id: ObjectId): TaskView? {
+    override suspend fun getTask(id: ObjectId): TaskView {
         val filter = Filters.eq("_id", id)
-        val task = taskCollection.find(filter).firstOrNull() ?: return null
+        val task = taskCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
         return TaskView(
             task = task,
             attachments = attachmentRepository.getAttachments(task.attachmentIds)
@@ -70,9 +71,9 @@ class MongoTaskRepository(
         taskCollection.findOneAndUpdate(filter, updates)
     }
 
-    override suspend fun deleteTask(id: ObjectId): Task? {
+    override suspend fun deleteTask(id: ObjectId): Task {
         val filter = Filters.eq("_id", id)
-        val task = taskCollection.findOneAndDelete(filter) ?: return null
+        val task = taskCollection.findOneAndDelete(filter) ?: throw ResourceNotFoundException()
 
         commentRepository.deleteComments(id)
         solutionRepository.deleteSolutions(taskId = task.id)

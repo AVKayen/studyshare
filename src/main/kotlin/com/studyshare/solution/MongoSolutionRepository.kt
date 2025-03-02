@@ -5,8 +5,8 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.comment.CommentRepository
 import com.studyshare.forms.UploadFileData
-import com.studyshare.utils.PostModificationRestrictedException
-import com.studyshare.utils.PostNotFoundException
+import com.studyshare.utils.ResourceModificationRestrictedException
+import com.studyshare.utils.ResourceNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.conversions.Bson
@@ -51,10 +51,10 @@ class MongoSolutionRepository(
 
         val filter = Filters.eq("_id", id)
 
-        val solution = solutionCollection.find(filter).firstOrNull() ?: throw PostNotFoundException()
+        val solution = solutionCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
 
         if (solution.authorId != userId) {
-            throw PostModificationRestrictedException()
+            throw ResourceModificationRestrictedException()
         }
 
         val updatedAttachments = solution.attachmentIds + newAttachments.map { it.attachment.id } - solutionUpdates.filesToDelete.toSet()
@@ -68,7 +68,7 @@ class MongoSolutionRepository(
         )
 
         val options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
-        val updatedSolution = solutionCollection.findOneAndUpdate(filter, updates, options) ?: throw PostNotFoundException()
+        val updatedSolution = solutionCollection.findOneAndUpdate(filter, updates, options) ?: throw ResourceNotFoundException()
 
         return createSolutionView(userId, updatedSolution)
     }
@@ -106,7 +106,7 @@ class MongoSolutionRepository(
 
     override suspend fun getSolution(solutionId: ObjectId, userId: ObjectId): SolutionView {
         val filter = Filters.eq("_id", solutionId)
-        val solution = solutionCollection.find(filter).firstOrNull() ?: throw PostNotFoundException()
+        val solution = solutionCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
         return createSolutionView(userId, solution)
     }
 
