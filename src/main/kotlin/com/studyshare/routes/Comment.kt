@@ -127,10 +127,15 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
             authorId = authorId
         )
 
-        when (postType.lowercase()) {
-            "task" -> taskRepository.updateCommentAmount(parentId, 1)
-            "solution" -> solutionRepository.updateCommentAmount(parentId, 1)
-            else -> return@post
+        try {
+            when (postType.lowercase()) {
+                "task" -> taskRepository.updateCommentAmount(parentId, 1)
+                "solution" -> solutionRepository.updateCommentAmount(parentId, 1)
+                else -> return@post
+            }
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Associated Post not found.", status = HttpStatusCode.NotFound)
+            return@post
         }
 
         commentRepository.createComment(newComment)
@@ -147,7 +152,12 @@ fun Route.deleteComment(commentRepository: CommentRepository, solutionRepository
     delete {
         val objectIds = validateRequiredObjectIds(call, "commentId", "parentId") ?: return@delete
         val commentId = objectIds["commentId"]!!
-        val authorId = commentRepository.getComment(commentId)?.authorId
+        val authorId = try {
+            commentRepository.getComment(commentId).authorId
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Comment not found.", status = HttpStatusCode.NotFound)
+            return@delete
+        }
 
         val parentId = objectIds["parentId"]!!
         val postType = call.request.queryParameters["postType"]
@@ -162,12 +172,16 @@ fun Route.deleteComment(commentRepository: CommentRepository, solutionRepository
             return@delete
         }
 
-        val newCommentAmount = when (postType) {
-            "task" -> taskRepository.updateCommentAmount(parentId, -1)
-            "solution" -> solutionRepository.updateCommentAmount(parentId, -1)
-            else -> return@delete call.respond(HttpStatusCode.BadRequest)
+        val newCommentAmount = try {
+            when (postType) {
+                "task" -> taskRepository.updateCommentAmount(parentId, -1)
+                "solution" -> solutionRepository.updateCommentAmount(parentId, -1)
+                else -> return@delete call.respond(HttpStatusCode.BadRequest)
+            }
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Associated Post not found.", status = HttpStatusCode.NotFound)
+            return@delete
         }
-
 
         commentRepository.deleteComment(commentId)
         call.respondHtml {

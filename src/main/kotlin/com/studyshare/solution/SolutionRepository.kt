@@ -13,5 +13,5 @@ interface SolutionRepository {
 
     suspend fun updateCommentAmount(solutionId: ObjectId, amount: Int): Int
 
-    suspend fun vote(id: ObjectId, userId: ObjectId, voteType: VoteType): VoteUpdate?
+    suspend fun vote(id: ObjectId, userId: ObjectId, voteType: VoteType): VoteUpdate
 }

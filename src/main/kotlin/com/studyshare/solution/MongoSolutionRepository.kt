@@ -116,14 +116,14 @@ class MongoSolutionRepository(
         val filter = Filters.eq("_id", solutionId)
         val updates = Updates.inc(Solution::commentAmount.name, amount)
 
-        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: throw ResourceNotFoundException()
 
         return solution.commentAmount + 1
     }
 
-    override suspend fun vote(id: ObjectId, userId: ObjectId, voteType: VoteType): VoteUpdate? {
+    override suspend fun vote(id: ObjectId, userId: ObjectId, voteType: VoteType): VoteUpdate {
         val filter = Filters.eq("_id", id)
-        val solution = solutionCollection.find(filter).firstOrNull() ?: return null
+        val solution = solutionCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
 
         val removeDownvote = Updates.pull(Solution::downvotes.name, userId)
         val removeUpvote = Updates.pull(Solution::upvotes.name, userId)

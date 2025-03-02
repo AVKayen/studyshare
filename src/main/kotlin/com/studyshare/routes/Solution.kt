@@ -329,6 +329,7 @@ fun Route.postVote(solutionRepository: SolutionRepository, groupRepository: Grou
         val solutionView = try {
             solutionRepository.getSolution(solutionId, userId)
         } catch (e: ResourceNotFoundException) {
+            call.respondText("Solution not found.", status = HttpStatusCode.NotFound)
             return@post
         }
         if (!validateGroupBelonging(call, groupRepository, solutionView.solution.groupId)) return@post
@@ -347,7 +348,12 @@ fun Route.postVote(solutionRepository: SolutionRepository, groupRepository: Grou
             }
         }
 
-        val voteUpdate = solutionRepository.vote(solutionId, userId, voteType) ?: return@post
+        val voteUpdate = try {
+            solutionRepository.vote(solutionId, userId, voteType)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Solution not found.", status = HttpStatusCode.NotFound)
+            return@post
+        }
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
