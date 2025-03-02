@@ -101,7 +101,7 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form, solutionRepository:
         }
 
         val solutionView = try {
-            solutionRepository.getSolution(ObjectId(id), userId)
+            solutionRepository.getSolutionView(ObjectId(id), userId)
         } catch (e: ResourceNotFoundException) {
             return@get
         }
@@ -167,7 +167,7 @@ fun Route.getSolutions(taskRepository: TaskRepository, solutionRepository: Solut
         val userId = ObjectId(userSession.id)
 
         val parentTask = try {
-            taskRepository.getTask(taskId)
+            taskRepository.getTaskView(taskId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Associated Task not found.", status = HttpStatusCode.NotFound)
             return@get
@@ -176,7 +176,7 @@ fun Route.getSolutions(taskRepository: TaskRepository, solutionRepository: Solut
 
         if (!validateGroupBelonging(call, groupRepository, parentTask.task.groupId)) return@get
 
-        val solutionViews = solutionRepository.getSolutions(
+        val solutionViews = solutionRepository.getSolutionViews(
             taskId = taskId, userId = userId, lastId = lastId, resultCount = pageSize
         )
 
@@ -214,7 +214,7 @@ fun Route.postSolutionCreation(taskRepository: TaskRepository, solutionRepositor
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
 
         val task = try {
-            taskRepository.getTask(taskId)
+            taskRepository.getTaskView(taskId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Associated Task not found.", status = HttpStatusCode.NotFound)
             return@post
@@ -290,12 +290,12 @@ fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository:
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
         val solutionView = try {
-            solutionRepository.getSolution(solutionId, userId)
+            solutionRepository.getSolutionView(solutionId, userId)
         } catch (e: ResourceNotFoundException) {
             return@delete
         }
         val parentTask = try {
-            taskRepository.getTask(solutionView.solution.taskId)
+            taskRepository.getTaskView(solutionView.solution.taskId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Associated Task not found.", status = HttpStatusCode.NotFound)
             return@delete
@@ -325,7 +325,7 @@ fun Route.postVote(solutionRepository: SolutionRepository, groupRepository: Grou
         val userId = ObjectId(userSession.id)
 
         val solutionView = try {
-            solutionRepository.getSolution(solutionId, userId)
+            solutionRepository.getSolutionView(solutionId, userId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Solution not found.", status = HttpStatusCode.NotFound)
             return@post

@@ -89,7 +89,7 @@ class MongoSolutionRepository(
         solutionCollection.deleteMany(filter)
     }
 
-    override suspend fun getSolutions(taskId: ObjectId, userId: ObjectId, resultCount: Int, lastId: ObjectId?): List<SolutionView> {
+    override suspend fun getSolutionViews(taskId: ObjectId, userId: ObjectId, resultCount: Int, lastId: ObjectId?): List<SolutionView> {
         val filter = if (lastId != null) {
             Filters.and(
                 Filters.eq(Solution::taskId.name, taskId),
@@ -104,7 +104,7 @@ class MongoSolutionRepository(
         }
     }
 
-    override suspend fun getSolution(solutionId: ObjectId, userId: ObjectId): SolutionView {
+    override suspend fun getSolutionView(solutionId: ObjectId, userId: ObjectId): SolutionView {
         val filter = Filters.eq("_id", solutionId)
         val solution = solutionCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
         return createSolutionView(userId, solution)

@@ -41,8 +41,8 @@ fun Route.getCommentView(taskRepository: TaskRepository, solutionRepository: Sol
         val comments = commentRepository.getComments(parentId!!)
         val parentPost: Post = try {
             when (parentPostClassName.lowercase()) {
-                "task" -> taskRepository.getTask(parentId).task
-                "solution" -> solutionRepository.getSolution(parentId, userId).solution
+                "task" -> taskRepository.getTaskView(parentId).task
+                "solution" -> solutionRepository.getSolutionView(parentId, userId).solution
                 else -> return@get call.respond(HttpStatusCode.BadRequest)
             }
         } catch (e: ResourceNotFoundException) {
@@ -109,8 +109,8 @@ fun Route.postComment(taskRepository: TaskRepository, solutionRepository: Soluti
 
         val parentPost: Post = try {
             when (postType?.lowercase()) {
-                "task" -> taskRepository.getTask(parentId!!).task
-                "solution" -> solutionRepository.getSolution(parentId!!, authorId).solution
+                "task" -> taskRepository.getTaskView(parentId!!).task
+                "solution" -> solutionRepository.getSolutionView(parentId!!, authorId).solution
                 else -> return@post call.respond(HttpStatusCode.BadRequest)
             }
         } catch (e: ResourceNotFoundException) {

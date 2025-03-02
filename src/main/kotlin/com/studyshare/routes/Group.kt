@@ -107,7 +107,7 @@ fun Route.getGroupList(groupRepository: GroupRepository, userRepository: UserRep
     get {
         val userSession = call.sessions.get<UserSession>()!!
         val groupIds = userRepository.getUserById(userSession.id)?.groupIds ?: emptySet()
-        val groupViews = groupRepository.getGroups(groupIds.toList())
+        val groupViews = groupRepository.getGroupViews(groupIds.toList())
 
         call.respondHtml {
             body {
@@ -130,7 +130,7 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
         val groupId = objectIds["groupId"]!!
 
         val groupView = try {
-            groupRepository.getGroup(groupId)
+            groupRepository.getGroupView(groupId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Group not found.", status = HttpStatusCode.NotFound)
             return@get
@@ -158,7 +158,7 @@ fun Route.getUsersModal(groupRepository: GroupRepository, userRepository: UserRe
         val userId = userSession.id
 
         val groupView = try {
-            groupRepository.getGroup(groupId)
+            groupRepository.getGroupView(groupId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Group not found.", status = HttpStatusCode.NotFound)
             return@get
@@ -289,7 +289,7 @@ fun Route.deleteUserFromGroup(groupRepository: GroupRepository) {
         val userId = ObjectId(userSession.id)
 
         val groupView = try {
-            groupRepository.getGroup(groupId)
+            groupRepository.getGroupView(groupId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Group not found.", status = HttpStatusCode.NotFound)
             return@delete
@@ -338,7 +338,7 @@ fun Route.deleteGroup(groupRepository: GroupRepository) {
         val userId = ObjectId(userSession.id)
 
         val groupView = try {
-            groupRepository.getGroup(groupId)
+            groupRepository.getGroupView(groupId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Group not found.", status = HttpStatusCode.NotFound)
             return@delete

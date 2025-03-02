@@ -10,8 +10,8 @@ interface GroupRepository {
     suspend fun isUserMember(groupId: ObjectId, userId: ObjectId): Boolean
     suspend fun isUserGroupLeader(groupId: ObjectId, userId: ObjectId): Boolean
     suspend fun deleteUser(groupId: ObjectId, userId: ObjectId)
-    suspend fun getGroup(groupId: ObjectId): GroupView
-    suspend fun getGroups(groupIds: List<ObjectId>): List<GroupView>
+    suspend fun getGroupView(groupId: ObjectId): GroupView
+    suspend fun getGroupViews(groupIds: List<ObjectId>): List<GroupView>
     suspend fun addTaskCategory(groupId: ObjectId, taskCategory: String)
     suspend fun removeTaskCategory(groupId: ObjectId, taskCategory: String)
 }

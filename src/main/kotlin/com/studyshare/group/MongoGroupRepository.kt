@@ -71,7 +71,7 @@ class MongoGroupRepository(
         return group.leaderId == userId
     }
 
-    override suspend fun getGroup(groupId: ObjectId): GroupView {
+    override suspend fun getGroupView(groupId: ObjectId): GroupView {
         val group = groupCollection.find(Filters.eq("_id", groupId)).firstOrNull() ?: throw ResourceNotFoundException()
         return GroupView(
             group = group,
@@ -79,7 +79,7 @@ class MongoGroupRepository(
         )
     }
 
-    override suspend fun getGroups(groupIds: List<ObjectId>): List<GroupView> {
+    override suspend fun getGroupViews(groupIds: List<ObjectId>): List<GroupView> {
         val filter = Filters.`in`("_id", groupIds)
         val sort = Sorts.descending("_id")
         return groupCollection.find(filter).sort(sort).toList().map { group: Group ->

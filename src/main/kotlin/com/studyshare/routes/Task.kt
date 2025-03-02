@@ -52,7 +52,7 @@ fun Route.getTaskView(taskRepository: TaskRepository, groupRepository: GroupRepo
         val groupId = objectIds["groupId"]!!
 
         val taskView = try {
-            taskRepository.getTask(taskId)
+            taskRepository.getTaskView(taskId)
         } catch (e: ResourceNotFoundException) {
             call.respondText(text = "Task not found.", status = HttpStatusCode.NotFound)
             return@get
@@ -157,7 +157,7 @@ fun Route.getTaskCreationModal(taskCreationForm: Form, groupRepository: GroupRep
         val groupId = validateRequiredObjectIds(call, "groupId")?.get("groupId") ?: return@get
 
         val groupView = try {
-            groupRepository.getGroup(groupId)
+            groupRepository.getGroupView(groupId)
         } catch (e: ResourceNotFoundException) {
             call.respondText(text = "Group does not exist.", status = HttpStatusCode.NotFound)
             return@get
@@ -185,7 +185,7 @@ fun Route.getTaskEditingModal(taskEditingForm: Form, taskRepository: TaskReposit
         }
 
         val taskView = try {
-            taskRepository.getTask(ObjectId(id))
+            taskRepository.getTaskView(ObjectId(id))
         } catch (e: ResourceNotFoundException) {
             call.respondText("Task not found.", status = HttpStatusCode.NotFound)
             return@get
@@ -243,7 +243,7 @@ fun Route.postTaskCreation(taskRepository: TaskRepository, groupRepository: Grou
 
         val groupId = validateRequiredObjectIds(call, "groupId")?.get("groupId") ?: return@post
         val group = try {
-            groupRepository.getGroup(groupId)
+            groupRepository.getGroupView(groupId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Group not found.", status = HttpStatusCode.NotFound)
             return@post
@@ -290,7 +290,7 @@ fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form
         }
 
         val previousTask = try {
-            taskRepository.getTask(taskId)
+            taskRepository.getTaskView(taskId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Task not found.", status = HttpStatusCode.NotFound)
             return@patch
@@ -331,7 +331,7 @@ fun Route.deleteTask(taskRepository: TaskRepository, groupRepository: GroupRepos
         val taskId = objectIds["taskId"]!!
 
         val task = try {
-            taskRepository.getTask(taskId).task
+            taskRepository.getTaskView(taskId).task
         } catch (e: ResourceNotFoundException) {
             call.respondText("Task not found.", status = HttpStatusCode.NotFound)
             return@delete
