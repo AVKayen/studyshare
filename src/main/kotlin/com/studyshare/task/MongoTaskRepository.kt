@@ -1,8 +1,6 @@
 package com.studyshare.task
 
-import com.mongodb.client.model.Filters
-import com.mongodb.client.model.Sorts
-import com.mongodb.client.model.Updates
+import com.mongodb.client.model.*
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.studyshare.forms.UploadFileData
 import com.studyshare.attachment.AttachmentRepository
@@ -21,6 +19,11 @@ class MongoTaskRepository(
      private val solutionRepository: SolutionRepository
 ) : TaskRepository {
     private val taskCollection = mongoDatabase.getCollection<Task>("tasks")
+
+    private suspend fun createTaskView(task: Task): TaskView = TaskView(
+        task = task,
+        attachments = attachmentRepository.getAttachments(task.attachmentIds)
+    )
 
     override suspend fun createTask(task: Task, files: List<UploadFileData>): TaskView {
 
@@ -55,20 +58,31 @@ class MongoTaskRepository(
     override suspend fun getTask(id: ObjectId): TaskView {
         val filter = Filters.eq("_id", id)
         val task = taskCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
-        return TaskView(
-            task = task,
-            attachments = attachmentRepository.getAttachments(task.attachmentIds)
-        )
+        return createTaskView(task)
     }
 
-    override suspend fun updateTask(id: ObjectId, newTask: Task) {
+    override suspend fun updateTask(id: ObjectId, taskUpdates: TaskUpdates): TaskView {
+
+        attachmentRepository.deleteAttachments(taskUpdates.filesToDelete)
+        val newAttachments = attachmentRepository.createAttachments(taskUpdates.newFiles)
+
         val filter = Filters.eq("_id", id)
+        val task = taskCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
+
+        val updatedAttachments = task.attachmentIds + newAttachments.map { it.attachment.id } - taskUpdates.filesToDelete.toSet()
+
         val updates = Updates.combine(
-            Updates.set(Task::title.name, newTask.title),
-            Updates.set(Task::additionalNotes.name, newTask.additionalNotes)
+            listOfNotNull(
+                Updates.set(Solution::title.name, taskUpdates.title),
+                Updates.set(Solution::additionalNotes.name, taskUpdates.additionalNotes),
+                Updates.set(Solution::attachmentIds.name, updatedAttachments)
+            )
         )
 
-        taskCollection.findOneAndUpdate(filter, updates)
+        val options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+        val updatedTask = taskCollection.findOneAndUpdate(filter, updates, options) ?: throw ResourceNotFoundException()
+
+        return createTaskView(updatedTask)
     }
 
     override suspend fun deleteTask(id: ObjectId): Task {

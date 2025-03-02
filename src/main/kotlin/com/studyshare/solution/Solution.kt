@@ -4,7 +4,7 @@ import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 import com.studyshare.task.titleValidator
 import com.studyshare.task.additionalNotesValidator
-import com.studyshare.utils.Post
+import com.studyshare.post.Post
 
 val titleValidator = titleValidator
 val additionalNotesValidator = additionalNotesValidator

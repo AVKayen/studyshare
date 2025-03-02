@@ -2,7 +2,7 @@ package com.studyshare.templates
 
 import com.studyshare.solution.Solution
 import com.studyshare.task.Task
-import com.studyshare.utils.Post
+import com.studyshare.post.Post
 import kotlinx.html.*
 
 enum class AccessLevel {

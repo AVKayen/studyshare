@@ -255,8 +255,6 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
             return@patch
         }
 
-        println(filesToDelete)
-
         val solutionUpdates = SolutionUpdates(
             title = title,
             additionalNotes = additionalNotes,

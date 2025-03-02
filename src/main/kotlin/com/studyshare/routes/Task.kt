@@ -108,6 +108,8 @@ fun routeTaskEditingForm(): Form {
 
     taskEditingForm.addInput(TextlikeInput("New Title", "title", InputType.text, titleValidator))
     taskEditingForm.addInput(TextlikeInput("New Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+    taskEditingForm.addInput(FileInput("Upload new files", "newFiles", inputAttributes = mapOf("multiple" to "true")))
+    taskEditingForm.addInput(FileDeletionInput("deletedFiles", "taskEditFileDeletion"))
 
     globalFormRouter.routeFormValidators(taskEditingForm)
 
@@ -201,7 +203,8 @@ fun Route.getTaskEditingModal(taskEditingForm: Form, taskRepository: TaskReposit
                     inputValues = mapOf(
                         "title" to taskView.task.title,
                         "additionalNotes" to (taskView.task.additionalNotes ?: "")
-                    )
+                    ),
+                    filesToBeDeleted = mapOf("deletedFiles" to taskView.attachments)
                 )
             }
         }
@@ -277,7 +280,14 @@ fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form
         val formSubmissionData: FormSubmissionData = taskEditingForm.validateSubmission(call) ?: return@patch
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
-        formSubmissionData.cleanup()
+        val deletedFiles = formSubmissionData.fields["deletedFiles"]!!
+
+        val filesToDelete = parseObjectIdList(deletedFiles.dropLast(1).split(";"))
+
+        if (filesToDelete == null) {
+            call.respondText("Invalid value passed for the deletedFiles argument")
+            return@patch
+        }
 
         val previousTask = try {
             taskRepository.getTask(taskId)
@@ -291,18 +301,25 @@ fun Route.patchTaskEditing(taskRepository: TaskRepository, taskEditingForm: Form
             return@patch
         }
 
-        val newTask = previousTask.task.copy(
+        val taskUpdates = TaskUpdates(
             title = title,
-            additionalNotes = additionalNotes
+            additionalNotes = additionalNotes,
+            newFiles = formSubmissionData.files,
+            filesToDelete = filesToDelete
         )
 
-        taskRepository.updateTask(taskId, newTask)
-
-        val newTaskView = TaskView(newTask, previousTask.attachments)
+        val updatedTask = try {
+            taskRepository.updateTask(taskId, taskUpdates)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Task not found.", status = HttpStatusCode.NotFound)
+            return@patch
+        } finally {
+            formSubmissionData.cleanup()
+        }
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                taskTemplate(newTaskView, AccessLevel.EDIT)
+                taskTemplate(updatedTask, AccessLevel.EDIT)
             }
         }
     }

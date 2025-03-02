@@ -9,7 +9,7 @@ import com.studyshare.solution.SolutionRepository
 import com.studyshare.task.TaskRepository
 import com.studyshare.templates.commentCountTemplate
 import com.studyshare.templates.commentTemplate
-import com.studyshare.utils.Post
+import com.studyshare.post.Post
 import com.studyshare.utils.ResourceNotFoundException
 import com.studyshare.utils.validateGroupBelonging
 import com.studyshare.utils.validateRequiredObjectIds

@@ -1,4 +1,4 @@
-package com.studyshare.utils
+package com.studyshare.post
 
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId

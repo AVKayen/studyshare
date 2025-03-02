@@ -1,7 +1,7 @@
 package com.studyshare.templates
 
 import com.studyshare.comment.Comment
-import com.studyshare.utils.Post
+import com.studyshare.post.Post
 import com.studyshare.utils.className
 import kotlinx.html.FlowContent
 import kotlinx.html.*
