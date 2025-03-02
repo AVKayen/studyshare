@@ -300,15 +300,14 @@ fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository:
             return@delete
         }
 
-        val parentAuthorId = parentTask.task.authorId
-        val authorId = solutionView.solution.authorId
-
-        if (authorId == userId || parentAuthorId == userId) {
-            solutionRepository.deleteSolution(solutionId)
+        try {
+            solutionRepository.deleteSolution(solutionId, userId, parentTask.task)
             call.respondHtml { body() }
-        }
-        else {
-            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Solution not found.", status = HttpStatusCode.NotFound)
+            return@delete
+        } catch (e: ResourceModificationRestrictedException) {
+            call.respondText("Solution deletion forbidden.", status = HttpStatusCode.NotFound)
             return@delete
         }
     }

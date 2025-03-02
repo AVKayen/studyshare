@@ -5,6 +5,7 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.comment.CommentRepository
 import com.studyshare.forms.UploadFileData
+import com.studyshare.task.Task
 import com.studyshare.utils.ResourceModificationRestrictedException
 import com.studyshare.utils.ResourceNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
@@ -26,6 +27,11 @@ class MongoSolutionRepository(
         isUpvoted = solution.upvotes.contains(userId),
         isDownvoted = solution.downvotes.contains(userId)
     )
+
+    suspend fun getSolution(id: ObjectId): Solution {
+        val filter = Filters.eq("_id", id)
+        return solutionCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
+    }
 
     override suspend fun createSolution(solution: Solution, files: List<UploadFileData>, userId: ObjectId): SolutionView {
 
@@ -73,8 +79,15 @@ class MongoSolutionRepository(
         return createSolutionView(userId, updatedSolution)
     }
 
-    override suspend fun deleteSolution(id: ObjectId) {
-        val solution = solutionCollection.findOneAndDelete(Filters.eq("_id", id)) ?: return
+    override suspend fun deleteSolution(id: ObjectId, userId: ObjectId, parentTask: Task) {
+
+        val solution = getSolution(id)
+
+        if (solution.authorId != userId && parentTask.authorId != userId) {
+            throw ResourceModificationRestrictedException()
+        }
+
+        solutionCollection.deleteOne(Filters.eq("_id", id))
         attachmentRepository.deleteAttachments(solution.attachmentIds)
         commentRepository.deleteComments(id)
     }

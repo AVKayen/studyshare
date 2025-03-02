@@ -329,7 +329,7 @@ fun Route.deleteTask(taskRepository: TaskRepository, groupRepository: GroupRepos
             call.respondText("Task not found.", status = HttpStatusCode.NotFound)
             return@delete
         } catch (e: ResourceModificationRestrictedException) {
-            call.respondText("Task modification forbidden.", status = HttpStatusCode.Forbidden)
+            call.respondText("Task deletion forbidden.", status = HttpStatusCode.Forbidden)
             return@delete
         }
 
