@@ -307,7 +307,7 @@ fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository:
             call.respondText("Solution not found.", status = HttpStatusCode.NotFound)
             return@delete
         } catch (e: ResourceModificationRestrictedException) {
-            call.respondText("Solution deletion forbidden.", status = HttpStatusCode.NotFound)
+            call.respondText("Solution deletion forbidden.", status = HttpStatusCode.Forbidden)
             return@delete
         }
     }

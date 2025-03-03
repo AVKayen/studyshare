@@ -8,6 +8,7 @@ import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.authentication.user.UserRepository
 import com.studyshare.forms.UploadFileData
 import com.studyshare.task.TaskRepository
+import com.studyshare.utils.ResourceModificationRestrictedException
 import com.studyshare.utils.ResourceNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
@@ -47,15 +48,24 @@ class MongoGroupRepository(
         groupCollection.updateOne(filter, updates)
     }
 
-    override suspend fun deleteGroup(groupId: ObjectId) {
-        val group = groupCollection.findOneAndDelete(Filters.eq("_id", groupId)) ?: return
+    override suspend fun deleteGroup(groupId: ObjectId, userId: ObjectId) {
+        val group = groupCollection.findOneAndDelete(Filters.eq("_id", groupId)) ?: throw ResourceNotFoundException()
+        if (group.leaderId != userId) {
+            throw ResourceModificationRestrictedException()
+        }
         taskRepository.deleteTasks(group.id)
     }
 
-    override suspend fun deleteUser(groupId: ObjectId, userId: ObjectId) {
+    override suspend fun deleteUser(groupId: ObjectId, userId: ObjectId, targetUserId: ObjectId) {
         val filter = Filters.eq("_id", groupId)
-        val updates = Updates.pull(Group::memberIds.name, userId)
-        userRepository.removeGroupFromUser(userId, groupId)
+        val group = groupCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
+
+        if (!group.canUserKick(userId)) {
+            throw ResourceModificationRestrictedException()
+        }
+
+        val updates = Updates.pull(Group::memberIds.name, targetUserId)
+        userRepository.removeGroupFromUser(targetUserId, groupId)
         groupCollection.updateOne(filter, updates)
     }
 

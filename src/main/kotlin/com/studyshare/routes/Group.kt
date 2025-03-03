@@ -8,11 +8,8 @@ import com.studyshare.group.GroupRepository
 import com.studyshare.solution.additionalNotesValidator
 import com.studyshare.solution.titleValidator
 import com.studyshare.templates.*
-import com.studyshare.utils.ResourceNotFoundException
+import com.studyshare.utils.*
 
-import com.studyshare.utils.smartRedirect
-import com.studyshare.utils.validateGroupBelonging
-import com.studyshare.utils.validateRequiredObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
@@ -288,18 +285,15 @@ fun Route.deleteUserFromGroup(groupRepository: GroupRepository) {
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        val groupView = try {
-            groupRepository.getGroupView(groupId)
+        try {
+            groupRepository.deleteUser(groupId, userId, targetUserId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Group not found.", status = HttpStatusCode.NotFound)
             return@delete
-        }
-        if (!groupView.group.canUserKick(userId)) {
-            call.respond(HttpStatusCode.Forbidden)
+        } catch (e: ResourceModificationRestrictedException) {
+            call.respondText("User deletion forbidden.", status = HttpStatusCode.Forbidden)
             return@delete
         }
-
-        groupRepository.deleteUser(groupId, targetUserId)
 
         call.respondHtml { body() }
     }
@@ -337,18 +331,15 @@ fun Route.deleteGroup(groupRepository: GroupRepository) {
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        val groupView = try {
-            groupRepository.getGroupView(groupId)
+        try {
+            groupRepository.deleteGroup(groupId, userId)
         } catch (e: ResourceNotFoundException) {
             call.respondText("Group not found.", status = HttpStatusCode.NotFound)
             return@delete
-        }
-        if (groupView.group.leaderId != userId) {
-            call.respond(HttpStatusCode.Forbidden)
+        } catch (e: ResourceModificationRestrictedException) {
+            call.respondText("Group deletion forbidden.", status = HttpStatusCode.Forbidden)
             return@delete
         }
-
-        groupRepository.deleteGroup(groupId)
 
         call.smartRedirect("/")
     }
