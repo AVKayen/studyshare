@@ -51,17 +51,14 @@ class MongoSolutionRepository(
     }
 
     override suspend fun updateSolution(id: ObjectId, userId: ObjectId, solutionUpdates: SolutionUpdates): SolutionView {
-
-        attachmentRepository.deleteAttachments(solutionUpdates.filesToDelete)
-        val newAttachments = attachmentRepository.createAttachments(solutionUpdates.newFiles)
-
-        val filter = Filters.eq("_id", id)
-
-        val solution = solutionCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
+        val solution = getSolution(id)
 
         if (solution.authorId != userId) {
             throw ResourceModificationRestrictedException()
         }
+
+        attachmentRepository.deleteAttachments(solutionUpdates.filesToDelete)
+        val newAttachments = attachmentRepository.createAttachments(solutionUpdates.newFiles)
 
         val updatedAttachments = solution.attachmentIds + newAttachments.map { it.attachment.id } - solutionUpdates.filesToDelete.toSet()
 
@@ -73,6 +70,7 @@ class MongoSolutionRepository(
             )
         )
 
+        val filter = Filters.eq("_id", id)
         val options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
         val updatedSolution = solutionCollection.findOneAndUpdate(filter, updates, options) ?: throw ResourceNotFoundException()
 

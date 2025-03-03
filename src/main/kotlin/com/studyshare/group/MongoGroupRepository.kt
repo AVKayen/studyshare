@@ -1,8 +1,6 @@
 package com.studyshare.group
 
-import com.mongodb.client.model.Filters
-import com.mongodb.client.model.Sorts
-import com.mongodb.client.model.Updates
+import com.mongodb.client.model.*
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.authentication.user.UserRepository
@@ -22,6 +20,16 @@ class MongoGroupRepository(
 ) : GroupRepository {
 
     private val groupCollection = database.getCollection<Group>("groups")
+
+    private suspend fun getGroup(groupId: ObjectId): Group {
+        val filter = Filters.eq("_id", groupId)
+        return groupCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
+    }
+
+    private suspend fun createGroupView(group: Group): GroupView = GroupView(
+            group = group,
+            thumbnail = group.thumbnailId?.let { attachmentRepository.getAttachment(it) }
+        )
 
     override suspend fun createGroup(group: Group, groupThumbnailFile: UploadFileData?): GroupView {
         userRepository.addGroupToUser(group.leaderId, group.id)
@@ -57,13 +65,13 @@ class MongoGroupRepository(
     }
 
     override suspend fun deleteUser(groupId: ObjectId, userId: ObjectId, targetUserId: ObjectId) {
-        val filter = Filters.eq("_id", groupId)
-        val group = groupCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
+        val group = getGroup(groupId)
 
         if (!group.canUserKick(userId)) {
             throw ResourceModificationRestrictedException()
         }
 
+        val filter = Filters.eq("_id", groupId)
         val updates = Updates.pull(Group::memberIds.name, targetUserId)
         userRepository.removeGroupFromUser(targetUserId, groupId)
         groupCollection.updateOne(filter, updates)
@@ -82,11 +90,8 @@ class MongoGroupRepository(
     }
 
     override suspend fun getGroupView(groupId: ObjectId): GroupView {
-        val group = groupCollection.find(Filters.eq("_id", groupId)).firstOrNull() ?: throw ResourceNotFoundException()
-        return GroupView(
-            group = group,
-            thumbnail = group.thumbnailId?.let { attachmentRepository.getAttachment(it) }
-        )
+        val group = getGroup(groupId)
+        return createGroupView(group)
     }
 
     override suspend fun getGroupViews(groupIds: List<ObjectId>): List<GroupView> {
@@ -101,14 +106,41 @@ class MongoGroupRepository(
     }
 
     override suspend fun addTaskCategory(groupId: ObjectId, taskCategory: String) {
-        val filters = Filters.eq("_id", groupId)
+        val filter = Filters.eq("_id", groupId)
         val updates = Updates.addToSet(Group::taskCategories.name, taskCategory)
-        groupCollection.updateOne(filters, updates)
+        groupCollection.updateOne(filter, updates)
     }
 
     override suspend fun removeTaskCategory(groupId: ObjectId, taskCategory: String) {
-        val filters = Filters.eq("_id", groupId)
+        val filter = Filters.eq("_id", groupId)
         val updates = Updates.pull(Group::taskCategories.name, taskCategory)
-        groupCollection.updateOne(filters, updates)
+        groupCollection.updateOne(filter, updates)
+    }
+
+    override suspend fun editGroup(groupId: ObjectId, userId: ObjectId, groupUpdates: GroupUpdates): GroupView {
+        val group = getGroup(groupId)
+
+        if (group.leaderId != userId) {
+            throw ResourceModificationRestrictedException()
+        }
+
+        val newThumbnailAttachment = groupUpdates.newThumbnail?.let {
+            attachmentRepository.createAttachment(it).attachment
+        }
+
+        val filter = Filters.eq("_id", groupId)
+        val updates = Updates.combine(
+            listOfNotNull(
+                Updates.set(Group::title.name, groupUpdates.title),
+                Updates.set(Group::description.name, groupUpdates.description),
+                newThumbnailAttachment?.let {
+                    Updates.set(Group::thumbnailId.name, it.id)
+                }
+            )
+        )
+
+        val options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+        val updatedGroup = groupCollection.findOneAndUpdate(filter, updates, options) ?: throw ResourceNotFoundException()
+        return createGroupView(updatedGroup)
     }
 }

@@ -14,4 +14,5 @@ interface GroupRepository {
     suspend fun getGroupViews(groupIds: List<ObjectId>): List<GroupView>
     suspend fun addTaskCategory(groupId: ObjectId, taskCategory: String)
     suspend fun removeTaskCategory(groupId: ObjectId, taskCategory: String)
+    suspend fun editGroup(groupId: ObjectId, userId: ObjectId, groupUpdates: GroupUpdates): GroupView
 }
