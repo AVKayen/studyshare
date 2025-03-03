@@ -52,11 +52,10 @@ class MongoTaskRepository(
         )
 
         val sort = Sorts.descending("_id")
-
         return taskCollection.find(filter).sort(sort).limit(resultCount).toList()
     }
 
-    override suspend fun getTask(id: ObjectId): Task {
+    private suspend fun getTask(id: ObjectId): Task {
         val filter = Filters.eq("_id", id)
         return taskCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
     }
@@ -81,11 +80,9 @@ class MongoTaskRepository(
         val updatedAttachments = task.attachmentIds + newAttachments.map { it.attachment.id } - taskUpdates.filesToDelete.toSet()
 
         val updates = Updates.combine(
-            listOfNotNull(
-                Updates.set(Solution::title.name, taskUpdates.title),
-                Updates.set(Solution::additionalNotes.name, taskUpdates.additionalNotes),
-                Updates.set(Solution::attachmentIds.name, updatedAttachments)
-            )
+            Updates.set(Solution::title.name, taskUpdates.title),
+            Updates.set(Solution::additionalNotes.name, taskUpdates.additionalNotes),
+            Updates.set(Solution::attachmentIds.name, updatedAttachments)
         )
 
         val options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)

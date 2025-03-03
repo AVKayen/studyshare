@@ -28,7 +28,7 @@ class MongoSolutionRepository(
         isDownvoted = solution.downvotes.contains(userId)
     )
 
-    suspend fun getSolution(id: ObjectId): Solution {
+    private suspend fun getSolution(id: ObjectId): Solution {
         val filter = Filters.eq("_id", id)
         return solutionCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
     }
@@ -63,11 +63,9 @@ class MongoSolutionRepository(
         val updatedAttachments = solution.attachmentIds + newAttachments.map { it.attachment.id } - solutionUpdates.filesToDelete.toSet()
 
         val updates = Updates.combine(
-            listOfNotNull(
-                Updates.set(Solution::title.name, solutionUpdates.title),
-                Updates.set(Solution::additionalNotes.name, solutionUpdates.additionalNotes),
-                Updates.set(Solution::attachmentIds.name, updatedAttachments)
-            )
+            Updates.set(Solution::title.name, solutionUpdates.title),
+            Updates.set(Solution::additionalNotes.name, solutionUpdates.additionalNotes),
+            Updates.set(Solution::attachmentIds.name, updatedAttachments)
         )
 
         val filter = Filters.eq("_id", id)
