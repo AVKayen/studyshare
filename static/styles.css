@@ -479,6 +479,7 @@ details summary {
 .user-deletion-confirmation > small {
     display: flex;
     align-items: center;
+    margin: 0 1rem;
 }
 
 .user-deletion-confirmation > button {
