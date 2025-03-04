@@ -5,7 +5,7 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.comment.CommentRepository
 import com.studyshare.forms.UploadFileData
-import com.studyshare.task.Task
+import com.studyshare.task.TaskRepository
 import com.studyshare.utils.ResourceModificationRestrictedException
 import com.studyshare.utils.ResourceNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
@@ -75,9 +75,10 @@ class MongoSolutionRepository(
         return createSolutionView(userId, updatedSolution)
     }
 
-    override suspend fun deleteSolution(id: ObjectId, userId: ObjectId, parentTask: Task) {
+    override suspend fun deleteSolution(id: ObjectId, userId: ObjectId, taskRepository: TaskRepository) {
 
         val solution = getSolution(id)
+        val parentTask = taskRepository.getTask(solution.taskId)
 
         if (solution.authorId != userId && parentTask.authorId != userId) {
             throw ResourceModificationRestrictedException()

@@ -288,23 +288,11 @@ fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository:
         val solutionId = objectIds["id"]!!
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
-        val solutionView = try {
-            solutionRepository.getSolutionView(solutionId, userId)
-        } catch (e: ResourceNotFoundException) {
-            return@delete
-        }
-        val parentTask = try {
-            taskRepository.getTaskView(solutionView.solution.taskId)
-        } catch (e: ResourceNotFoundException) {
-            call.respondText("Associated Task not found.", status = HttpStatusCode.NotFound)
-            return@delete
-        }
-
         try {
-            solutionRepository.deleteSolution(solutionId, userId, parentTask.task)
+            solutionRepository.deleteSolution(solutionId, userId, taskRepository)
             call.respondHtml { body() }
         } catch (e: ResourceNotFoundException) {
-            call.respondText("Solution not found.", status = HttpStatusCode.NotFound)
+            call.respondText("Solution or the parent Task not found.", status = HttpStatusCode.NotFound)
             return@delete
         } catch (e: ResourceModificationRestrictedException) {
             call.respondText("Solution deletion forbidden.", status = HttpStatusCode.Forbidden)

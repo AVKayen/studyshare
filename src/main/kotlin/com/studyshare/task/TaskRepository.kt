@@ -6,6 +6,7 @@ import org.bson.types.ObjectId
 interface TaskRepository {
     suspend fun getTasks(groupId: ObjectId, category: String?, resultCount: Int, lastId: ObjectId?): List<Task>
     suspend fun createTask(task: Task, files: List<UploadFileData>): TaskView
+    suspend fun getTask(id: ObjectId): Task
     suspend fun getTaskView(id: ObjectId): TaskView
     suspend fun updateTask(id: ObjectId, userId: ObjectId, taskUpdates: TaskUpdates): TaskView
     suspend fun deleteTask(id: ObjectId, userId: ObjectId): Task

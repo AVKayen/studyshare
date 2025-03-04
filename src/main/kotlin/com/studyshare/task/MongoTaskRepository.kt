@@ -55,7 +55,7 @@ class MongoTaskRepository(
         return taskCollection.find(filter).sort(sort).limit(resultCount).toList()
     }
 
-    private suspend fun getTask(id: ObjectId): Task {
+    override suspend fun getTask(id: ObjectId): Task {
         val filter = Filters.eq("_id", id)
         return taskCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
     }
