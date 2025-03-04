@@ -1,9 +1,9 @@
-package com.studyshare.utils
+package com.studyshare.post
 
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 
-abstract class Post{
+abstract class Post {
     @get:BsonId
     abstract val id: ObjectId
 

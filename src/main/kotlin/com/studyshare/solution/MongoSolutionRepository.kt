@@ -1,12 +1,13 @@
 package com.studyshare.solution
 
-import com.mongodb.client.model.Filters
-import com.mongodb.client.model.Sorts
-import com.mongodb.client.model.Updates
+import com.mongodb.client.model.*
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.comment.CommentRepository
 import com.studyshare.forms.UploadFileData
+import com.studyshare.task.TaskRepository
+import com.studyshare.utils.ResourceModificationRestrictedException
+import com.studyshare.utils.ResourceNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.conversions.Bson
@@ -19,6 +20,18 @@ class MongoSolutionRepository(
 ) : SolutionRepository {
 
     private val solutionCollection = mongoDatabase.getCollection<Solution>("solutions")
+
+    private suspend fun createSolutionView(userId: ObjectId, solution: Solution): SolutionView = SolutionView(
+        solution = solution,
+        attachments = attachmentRepository.getAttachments(solution.attachmentIds),
+        isUpvoted = solution.upvotes.contains(userId),
+        isDownvoted = solution.downvotes.contains(userId)
+    )
+
+    private suspend fun getSolution(solutionId: ObjectId): Solution {
+        val filter = Filters.eq("_id", solutionId)
+        return solutionCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
+    }
 
     override suspend fun createSolution(solution: Solution, files: List<UploadFileData>, userId: ObjectId): SolutionView {
 
@@ -37,18 +50,41 @@ class MongoSolutionRepository(
         )
     }
 
-    override suspend fun updateSolution(id: ObjectId, newSolution: Solution) {
-        val filter = Filters.eq("_id", id)
+    override suspend fun updateSolution(id: ObjectId, userId: ObjectId, solutionUpdates: SolutionUpdates): SolutionView {
+        val solution = getSolution(id)
+
+        if (solution.authorId != userId) {
+            throw ResourceModificationRestrictedException()
+        }
+
+        attachmentRepository.deleteAttachments(solutionUpdates.filesToDelete)
+        val newAttachments = attachmentRepository.createAttachments(solutionUpdates.newFiles)
+
+        val updatedAttachments = solution.attachmentIds + newAttachments.map { it.attachment.id } - solutionUpdates.filesToDelete.toSet()
+
         val updates = Updates.combine(
-            Updates.set(Solution::title.name, newSolution.title),
-            Updates.set(Solution::additionalNotes.name, newSolution.additionalNotes)
+            Updates.set(Solution::title.name, solutionUpdates.title),
+            Updates.set(Solution::additionalNotes.name, solutionUpdates.additionalNotes),
+            Updates.set(Solution::attachmentIds.name, updatedAttachments)
         )
 
-        solutionCollection.findOneAndUpdate(filter, updates)
+        val filter = Filters.eq("_id", id)
+        val options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+        val updatedSolution = solutionCollection.findOneAndUpdate(filter, updates, options) ?: throw ResourceNotFoundException()
+
+        return createSolutionView(userId, updatedSolution)
     }
 
-    override suspend fun deleteSolution(id: ObjectId) {
-        val solution = solutionCollection.findOneAndDelete(Filters.eq("_id", id)) ?: return
+    override suspend fun deleteSolution(id: ObjectId, userId: ObjectId, taskRepository: TaskRepository) {
+
+        val solution = getSolution(id)
+        val parentTask = taskRepository.getTask(solution.taskId)
+
+        if (solution.authorId != userId && parentTask.authorId != userId) {
+            throw ResourceModificationRestrictedException()
+        }
+
+        solutionCollection.deleteOne(Filters.eq("_id", id))
         attachmentRepository.deleteAttachments(solution.attachmentIds)
         commentRepository.deleteComments(id)
     }
@@ -63,7 +99,7 @@ class MongoSolutionRepository(
         solutionCollection.deleteMany(filter)
     }
 
-    override suspend fun getSolutions(taskId: ObjectId, userId: ObjectId, resultCount: Int, lastId: ObjectId?): List<SolutionView> {
+    override suspend fun getSolutionViews(taskId: ObjectId, userId: ObjectId, resultCount: Int, lastId: ObjectId?): List<SolutionView> {
         val filter = if (lastId != null) {
             Filters.and(
                 Filters.eq(Solution::taskId.name, taskId),
@@ -74,40 +110,28 @@ class MongoSolutionRepository(
         }
         val sort = Sorts.descending("_id")
         return solutionCollection.find(filter).sort(sort).limit(resultCount).toList().map { solution: Solution ->
-            SolutionView(
-                solution = solution,
-                attachments = attachmentRepository.getAttachments(solution.attachmentIds),
-                isUpvoted = solution.upvotes.contains(userId),
-                isDownvoted = solution.downvotes.contains(userId)
-            )
+            createSolutionView(userId, solution)
         }
     }
 
-    override suspend fun getSolution(solutionId: ObjectId, userId: ObjectId): SolutionView? {
+    override suspend fun getSolutionView(solutionId: ObjectId, userId: ObjectId): SolutionView {
         val filter = Filters.eq("_id", solutionId)
-        val solution = solutionCollection.find(filter).firstOrNull() ?: return null
-        return SolutionView(
-                solution = solution,
-                attachments = attachmentRepository.getAttachments(solution.attachmentIds),
-                isUpvoted = solution.upvotes.contains(userId),
-                isDownvoted = solution.downvotes.contains(userId)
-            )
+        val solution = solutionCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
+        return createSolutionView(userId, solution)
     }
-
-
 
     override suspend fun updateCommentAmount(solutionId: ObjectId, amount: Int): Int {
         val filter = Filters.eq("_id", solutionId)
         val updates = Updates.inc(Solution::commentAmount.name, amount)
 
-        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: return 0
+        val solution = solutionCollection.findOneAndUpdate(filter, updates) ?: throw ResourceNotFoundException()
 
         return solution.commentAmount + 1
     }
 
-    override suspend fun vote(id: ObjectId, userId: ObjectId, voteType: VoteType): VoteUpdate? {
+    override suspend fun vote(id: ObjectId, userId: ObjectId, voteType: VoteType): VoteUpdate {
         val filter = Filters.eq("_id", id)
-        val solution = solutionCollection.find(filter).firstOrNull() ?: return null
+        val solution = solutionCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
 
         val removeDownvote = Updates.pull(Solution::downvotes.name, userId)
         val removeUpvote = Updates.pull(Solution::upvotes.name, userId)

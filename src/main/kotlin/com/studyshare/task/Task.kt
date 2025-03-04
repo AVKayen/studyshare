@@ -1,6 +1,6 @@
 package com.studyshare.task
 
-import com.studyshare.utils.Post
+import com.studyshare.post.Post
 import org.bson.codecs.pojo.annotations.BsonId
 import org.bson.types.ObjectId
 

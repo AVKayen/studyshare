@@ -391,6 +391,7 @@ hr:last-child {
     display: flex;
     flex-direction: row;
     margin-bottom: 1rem;
+    flex-grow: 1
 }
 
 .group-info > .group-thumbnail {
@@ -398,6 +399,7 @@ hr:last-child {
     object-fit: cover;
     width: 20%;
     margin-right: 1rem;
+    border-radius: 0.25rem;
 }
 
 
@@ -405,10 +407,6 @@ hr:last-child {
     .group-info > .group-thumbnail {
         width: 30%;
     }
-}
-
-.group-info > .group-thumbnail > img {
-    border-radius: 0.25rem;
 }
 
 .modal-content {
@@ -481,6 +479,7 @@ details summary {
 .user-deletion-confirmation > small {
     display: flex;
     align-items: center;
+    margin: 0 1rem;
 }
 
 .user-deletion-confirmation > button {
@@ -515,9 +514,49 @@ article > .user-list-item:first-of-type {
 
 .group-header {
     display: flex;
-    justify-content: space-between;
+    align-items: flex-start;
 }
 
 .icon-btn::before {
     margin-inline-end: 0 !important;
+}
+
+.img-to-be-deleted {
+    position: relative;
+}
+
+.non-img-to-be-deleted {
+    display: flex;
+    justify-content: start;
+}
+
+.non-img-to-be-deleted > span {
+    display: flex;
+    align-items: center;
+    margin-right: 0.5em;
+}
+
+.file-deletion-btn {
+    padding: 0;
+    background-color: var(--pico-del-color) !important;
+    border: 1px solid var(--pico-del-color);
+}
+
+.img-to-be-deleted .file-deletion-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.deleted-count-text {
+    text-align: center;
+}
+
+.attachments {
+    display: flex;
+    flex-direction: column;
+}
+
+.attachments > a {
+    margin: 0.3em 0;
 }

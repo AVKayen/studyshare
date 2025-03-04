@@ -6,10 +6,7 @@ import com.studyshare.group.GroupRepository
 import com.studyshare.solution.*
 import com.studyshare.task.TaskRepository
 import com.studyshare.templates.*
-import com.studyshare.utils.getAccessLevel
-import com.studyshare.utils.validateGroupBelonging
-import com.studyshare.utils.validateOptionalObjectIds
-import com.studyshare.utils.validateRequiredObjectIds
+import com.studyshare.utils.*
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
@@ -65,6 +62,8 @@ fun routeSolutionEditingForm(): Form {
 
     solutionEditingForm.addInput(TextlikeInput("New Title", "title", InputType.text, titleValidator))
     solutionEditingForm.addInput(TextlikeInput("New Additional notes", "additionalNotes", InputType.text, additionalNotesValidator))
+    solutionEditingForm.addInput(FileInput("Upload new files", "newFiles", inputAttributes = mapOf("multiple" to "true")))
+    solutionEditingForm.addInput(FileDeletionInput("deletedFiles", "solutionEditFileDeletion"))
 
     globalFormRouter.routeFormValidators(solutionEditingForm)
 
@@ -101,7 +100,11 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form, solutionRepository:
             return@get
         }
 
-        val solutionView = solutionRepository.getSolution(ObjectId(id), userId) ?: return@get
+        val solutionView = try {
+            solutionRepository.getSolutionView(ObjectId(id), userId)
+        } catch (e: ResourceNotFoundException) {
+            return@get
+        }
 
         call.respondHtml {
             body {
@@ -115,7 +118,8 @@ fun Route.getSolutionEditingModal(solutionEditingForm: Form, solutionRepository:
                     inputValues = mapOf(
                         "title" to solutionView.solution.title,
                         "additionalNotes" to (solutionView.solution.additionalNotes ?: "")
-                    )
+                    ),
+                    filesToBeDeleted = mapOf("deletedFiles" to solutionView.attachments)
                 )
             }
         }
@@ -162,12 +166,17 @@ fun Route.getSolutions(taskRepository: TaskRepository, solutionRepository: Solut
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        val parentTask = taskRepository.getTask(taskId) ?: return@get
+        val parentTask = try {
+            taskRepository.getTaskView(taskId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Associated Task not found.", status = HttpStatusCode.NotFound)
+            return@get
+        }
         val parentAuthorId = parentTask.task.authorId
 
         if (!validateGroupBelonging(call, groupRepository, parentTask.task.groupId)) return@get
 
-        val solutionViews = solutionRepository.getSolutions(
+        val solutionViews = solutionRepository.getSolutionViews(
             taskId = taskId, userId = userId, lastId = lastId, resultCount = pageSize
         )
 
@@ -204,7 +213,12 @@ fun Route.postSolutionCreation(taskRepository: TaskRepository, solutionRepositor
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
 
-        val task = taskRepository.getTask(taskId) ?: return@post call.respond(HttpStatusCode.NotFound)
+        val task = try {
+            taskRepository.getTaskView(taskId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Associated Task not found.", status = HttpStatusCode.NotFound)
+            return@post
+        }
 
         if (!validateGroupBelonging(call, groupRepository, task.task.groupId)) return@post
 
@@ -232,27 +246,37 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
         val formSubmissionData: FormSubmissionData = solutionEditingForm.validateSubmission(call) ?: return@patch
         val title = formSubmissionData.fields["title"]!!
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
-        formSubmissionData.cleanup()
+        val deletedFiles = formSubmissionData.fields["deletedFiles"]!!
 
-        val previousSolution = solutionRepository.getSolution(solutionId, userId) ?: return@patch call.respond(HttpStatusCode.NotFound)
-
-        if (previousSolution.solution.authorId != userId) {
-            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
-            return@patch
+        val filesToDelete = if (deletedFiles.isNotEmpty()) {
+            parseObjectIdList(deletedFiles.dropLast(1).split(";")) ?:
+                return@patch call.respondText("Invalid value passed for the deletedFiles argument")
+        } else {
+            emptyList()
         }
 
-        val newSolution = previousSolution.solution.copy(
+        val solutionUpdates = SolutionUpdates(
             title = title,
-            additionalNotes = additionalNotes
+            additionalNotes = additionalNotes,
+            newFiles = formSubmissionData.files,
+            filesToDelete = filesToDelete
         )
 
-        solutionRepository.updateSolution(solutionId, newSolution)
-
-        val newSolutionView = SolutionView(newSolution, previousSolution.attachments, previousSolution.isUpvoted, previousSolution.isDownvoted)
+        val updatedSolutionView = try {
+            solutionRepository.updateSolution(solutionId, userId, solutionUpdates)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Solution not found.", status = HttpStatusCode.NotFound)
+            return@patch
+        } catch (e: ResourceModificationRestrictedException) {
+            call.respondText("Solution modification forbidden.", status = HttpStatusCode.Forbidden)
+            return@patch
+        } finally {
+            formSubmissionData.cleanup()
+        }
 
         call.respondHtml(HttpStatusCode.OK) {
             body {
-                solutionTemplate(newSolutionView, AccessLevel.EDIT)
+                solutionTemplate(updatedSolutionView, AccessLevel.EDIT)
             }
         }
     }
@@ -264,18 +288,14 @@ fun Route.deleteSolution(solutionRepository: SolutionRepository, taskRepository:
         val solutionId = objectIds["id"]!!
         val userId = ObjectId(call.sessions.get<UserSession>()!!.id)
 
-        val solutionView = solutionRepository.getSolution(solutionId, userId) ?: return@delete
-        val parentTask = taskRepository.getTask(solutionView.solution.taskId) ?: return@delete
-
-        val parentAuthorId = parentTask.task.authorId
-        val authorId = solutionView.solution.authorId
-
-        if (authorId == userId || parentAuthorId == userId) {
-            solutionRepository.deleteSolution(solutionId)
+        try {
+            solutionRepository.deleteSolution(solutionId, userId, taskRepository)
             call.respondHtml { body() }
-        }
-        else {
-            call.respondText("Resource Modification Restricted - Ownership Required", status = HttpStatusCode.Forbidden)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Solution or the parent Task not found.", status = HttpStatusCode.NotFound)
+            return@delete
+        } catch (e: ResourceModificationRestrictedException) {
+            call.respondText("Solution deletion forbidden.", status = HttpStatusCode.Forbidden)
             return@delete
         }
     }
@@ -290,7 +310,13 @@ fun Route.postVote(solutionRepository: SolutionRepository, groupRepository: Grou
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        if (!validateGroupBelonging(call, groupRepository, solutionRepository.getSolution(solutionId, userId)?.solution?.groupId)) return@post
+        val solutionView = try {
+            solutionRepository.getSolutionView(solutionId, userId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Solution not found.", status = HttpStatusCode.NotFound)
+            return@post
+        }
+        if (!validateGroupBelonging(call, groupRepository, solutionView.solution.groupId)) return@post
 
         if (action == null) {
             call.respondText("Action not specified.", status = HttpStatusCode.BadRequest)
@@ -306,7 +332,12 @@ fun Route.postVote(solutionRepository: SolutionRepository, groupRepository: Grou
             }
         }
 
-        val voteUpdate = solutionRepository.vote(solutionId, userId, voteType) ?: return@post
+        val voteUpdate = try {
+            solutionRepository.vote(solutionId, userId, voteType)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Solution not found.", status = HttpStatusCode.NotFound)
+            return@post
+        }
 
         call.respondHtml(HttpStatusCode.OK) {
             body {

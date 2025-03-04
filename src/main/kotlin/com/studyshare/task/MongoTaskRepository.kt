@@ -1,14 +1,15 @@
 package com.studyshare.task
 
-import com.mongodb.client.model.Filters
-import com.mongodb.client.model.Sorts
-import com.mongodb.client.model.Updates
+import com.mongodb.client.model.*
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.studyshare.forms.UploadFileData
 import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.comment.CommentRepository
+import com.studyshare.group.GroupRepository
 import com.studyshare.solution.Solution
 import com.studyshare.solution.SolutionRepository
+import com.studyshare.utils.ResourceModificationRestrictedException
+import com.studyshare.utils.ResourceNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
@@ -20,6 +21,11 @@ class MongoTaskRepository(
      private val solutionRepository: SolutionRepository
 ) : TaskRepository {
     private val taskCollection = mongoDatabase.getCollection<Task>("tasks")
+
+    private suspend fun createTaskView(task: Task): TaskView = TaskView(
+        task = task,
+        attachments = attachmentRepository.getAttachments(task.attachmentIds)
+    )
 
     override suspend fun createTask(task: Task, files: List<UploadFileData>): TaskView {
 
@@ -47,33 +53,56 @@ class MongoTaskRepository(
         )
 
         val sort = Sorts.descending("_id")
-
         return taskCollection.find(filter).sort(sort).limit(resultCount).toList()
     }
 
-    override suspend fun getTask(id: ObjectId): TaskView? {
+    override suspend fun getTask(id: ObjectId): Task {
         val filter = Filters.eq("_id", id)
-        val task = taskCollection.find(filter).firstOrNull() ?: return null
-        return TaskView(
-            task = task,
-            attachments = attachmentRepository.getAttachments(task.attachmentIds)
-        )
+        return taskCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
     }
 
-    override suspend fun updateTask(id: ObjectId, newTask: Task) {
+    override suspend fun getTaskView(id: ObjectId): TaskView {
+        val task = getTask(id)
+        return createTaskView(task)
+    }
+
+    override suspend fun updateTask(id: ObjectId, userId: ObjectId, taskUpdates: TaskUpdates): TaskView {
+
+        attachmentRepository.deleteAttachments(taskUpdates.filesToDelete)
+        val newAttachments = attachmentRepository.createAttachments(taskUpdates.newFiles)
+
         val filter = Filters.eq("_id", id)
+        val task = getTask(id)
+
+        if (task.authorId != userId) {
+            throw ResourceModificationRestrictedException()
+        }
+
+        val updatedAttachments = task.attachmentIds + newAttachments.map { it.attachment.id } - taskUpdates.filesToDelete.toSet()
+
         val updates = Updates.combine(
-            Updates.set(Task::title.name, newTask.title),
-            Updates.set(Task::additionalNotes.name, newTask.additionalNotes)
+            Updates.set(Solution::title.name, taskUpdates.title),
+            Updates.set(Solution::additionalNotes.name, taskUpdates.additionalNotes),
+            Updates.set(Solution::attachmentIds.name, updatedAttachments)
         )
 
-        taskCollection.findOneAndUpdate(filter, updates)
+        val options = FindOneAndUpdateOptions().returnDocument(ReturnDocument.AFTER)
+        val updatedTask = taskCollection.findOneAndUpdate(filter, updates, options) ?: throw ResourceNotFoundException()
+
+        return createTaskView(updatedTask)
     }
 
-    override suspend fun deleteTask(id: ObjectId): Task? {
-        val filter = Filters.eq("_id", id)
-        val task = taskCollection.findOneAndDelete(filter) ?: return null
+    override suspend fun deleteTask(id: ObjectId, userId: ObjectId, groupRepository: GroupRepository): Task {
+        val task = getTask(id)
+        val parentGroup = groupRepository.getGroup(task.groupId)
 
+        if (task.authorId != userId && parentGroup.leaderId != userId) {
+            throw ResourceModificationRestrictedException()
+        }
+
+        val filter = Filters.eq("_id", id)
+
+        taskCollection.deleteOne(filter)
         commentRepository.deleteComments(id)
         solutionRepository.deleteSolutions(taskId = task.id)
         attachmentRepository.deleteAttachments(task.attachmentIds)
@@ -102,7 +131,7 @@ class MongoTaskRepository(
 
     override suspend fun doesCategoryExist(groupId: ObjectId, category: String): Boolean {
         val filter = Filters.and(
-            Filters.eq("_id", groupId),
+            Filters.eq(Task::groupId.name, groupId),
             Filters.eq(Task::category.name, category)
         )
         return taskCollection.find(filter).firstOrNull() != null

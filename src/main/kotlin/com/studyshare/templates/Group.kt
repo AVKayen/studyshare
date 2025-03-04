@@ -28,17 +28,15 @@ fun FlowContent.groupThumbnailTemplate(groupView: GroupView) {
     }
 }
 
-fun FlowContent.groupViewTemplate(groupView: GroupView, userSession: UserSession) {
-
-    val groupId = groupView.group.id
-
+fun FlowContent.groupHeader(groupView: GroupView, userSession: UserSession) {
     div(classes = "group-header") {
+        attributes["id"] = "group-header-${groupView.group.id}"
         div(classes = "group-info") {
             groupView.thumbnail?.let {
-                div {
-                    classes = setOf("group-thumbnail")
-                    img(src = it.thumbnailUrl, alt = "${groupView.group.title}'s thumbnail")
-                }
+                img(
+                    classes = "group-thumbnail",
+                    src = it.thumbnailUrl,
+                    alt = "${groupView.group.title}'s thumbnail")
             }
             div {
                 classes = setOf("group-info-text")
@@ -50,14 +48,24 @@ fun FlowContent.groupViewTemplate(groupView: GroupView, userSession: UserSession
                 }
             }
         }
-        div(classes = "group-options") {
-            if (groupView.group.leaderId == ObjectId(userSession.id)) {
-                deletionButton(
-                    getUrl = "/$groupId/group-deletion-confirmation?groupTitle=${groupView.group.title}"
-                )
-            }
+
+        if (groupView.group.leaderId == ObjectId(userSession.id)) {
+            editButton(
+                getUrl = "/${groupView.group.id}/edition-modal"
+            )
+            deletionButton(
+                getUrl = "/${groupView.group.id}/group-deletion-confirmation?groupTitle=${groupView.group.title}"
+            )
         }
     }
+}
+
+fun FlowContent.groupViewTemplate(groupView: GroupView, userSession: UserSession) {
+
+    val groupId = groupView.group.id
+
+    groupHeader(groupView, userSession)
+
     section(classes = "wide-button-container") {
         modalOpenButton(
             buttonText = "Create a task",
@@ -89,23 +97,12 @@ fun FlowContent.userListItem(user: User, groupId: ObjectId, showKickButton: Bool
             +user.name
         }
         if (showKickButton) {
-//            button(classes = "btn secondary outline") {
-//                attributes["_"] = "on click add .invisible to me toggle @disabled on me"
-//                attributes["hx-get"] = "/$groupId/user-deletion-confirmation?userId=${user.id}&name=${user.name}"
-//                attributes["hx-target"] = "#$userItemId"
-//                attributes["hx-swap"] = "afterend"
-//
-//                span(classes = "material-symbols-rounded") {
-//                    +"delete"
-//                }
-//            }
             iconButton(
                 ButtonType.DELETE,
                 "/$groupId/user-deletion-confirmation?userId=${user.id}&name=${user.name}",
                 additionalScript = "on htmx:afterRequest add .invisible to me toggle @disabled on me",
                 buttonAttributes = mapOf("hx-target" to "#$userItemId", "hx-swap" to "afterend")
             )
-
         }
     }
     hr {

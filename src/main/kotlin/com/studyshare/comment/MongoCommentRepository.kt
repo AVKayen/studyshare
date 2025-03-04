@@ -2,11 +2,11 @@ package com.studyshare.comment
 
 import com.mongodb.client.model.Filters
 import com.mongodb.kotlin.client.coroutine.MongoDatabase
+import com.studyshare.utils.ResourceNotFoundException
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.toList
 import org.bson.types.ObjectId
 
-// TODO: error handling
 class MongoCommentRepository(
     mongoDatabase: MongoDatabase,
 ) : CommentRepository {
@@ -14,9 +14,9 @@ class MongoCommentRepository(
     private val commentCollection = mongoDatabase.getCollection<Comment>("comments")
 
 
-    override suspend fun getComment(id: ObjectId): Comment? {
+    override suspend fun getComment(id: ObjectId): Comment {
         val filter = Filters.eq("_id", id)
-        return commentCollection.find(filter).firstOrNull()
+        return commentCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
     }
 
     override suspend fun getComments(parentId: ObjectId): List<Comment> {
@@ -29,13 +29,11 @@ class MongoCommentRepository(
     }
 
     override suspend fun deleteComment(id: ObjectId) {
-        commentCollection.findOneAndDelete(Filters.eq("_id", id))
+        commentCollection.deleteOne(Filters.eq("_id", id))
     }
 
     override suspend fun deleteComments(parentId: ObjectId) {
         val filter = Filters.eq(Comment::parentId.name, parentId)
         commentCollection.deleteMany(filter)
     }
-
-
 }

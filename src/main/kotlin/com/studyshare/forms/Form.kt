@@ -1,5 +1,6 @@
 package com.studyshare.forms
 
+import com.studyshare.attachment.AttachmentView
 import io.ktor.http.*
 import io.ktor.http.content.*
 import io.ktor.server.html.*
@@ -78,25 +79,27 @@ class Form(
     fun renderInputFields(
         flowContent: FlowContent,
         inputDataLists: Map<String, List<String>>? = null,
-        inputValues: Map<String, String>? = null
+        inputValues: Map<String, String>? = null,
+        filesToBeDeleted: Map<String, List<AttachmentView>>? = null
     ) {
         flowContent.div {
             for (input in this@Form.inputs) {
-                if (input is TextlikeInput) {
-                    if (validatorsRoute != null) {
-                        input.render(
-                            flowContent,
-                            validationUrl = this@Form.validatorsRoute!!,
-                            dataList = inputDataLists?.get(input.inputName),
-                            inputValue = inputValues?.get(input.inputName)
-                        )
-                    } else {
-                        // TODO: What error type to throw??
-                        throw UninitializedPropertyAccessException("Form ${this@Form.formName} is not routed")
+                when (input) {
+                    is TextlikeInput -> {
+                        if (validatorsRoute != null) {
+                            input.render(
+                                flowContent,
+                                validationUrl = this@Form.validatorsRoute!!,
+                                dataList = inputDataLists?.get(input.inputName),
+                                inputValue = inputValues?.get(input.inputName)
+                            )
+                        } else {
+                            // TODO: What error type to throw??
+                            throw UninitializedPropertyAccessException("Form ${this@Form.formName} is not routed")
+                        }
                     }
-                }
-                if (input is FileInput) {
-                    input.render(flowContent)
+                    is FileInput -> input.render(flowContent)
+                    is FileDeletionInput -> input.render(flowContent, filesToBeDeleted?.get(input.inputName))
                 }
             }
 
@@ -197,16 +200,21 @@ class Form(
         val validatedFields = mutableMapOf<String, String>()
 
         for (input in inputs) {
-            if (input !is TextlikeInput) {
-                continue
+            when (input) {
+                is TextlikeInput -> {
+                    val inputValue: String = fields[input.inputName]?.first() ?: ""
+                    val error = input.validate?.invoke(inputValue)
+                    if (error != null) {
+                        input.respondInputError(call, error)
+                        return null
+                    }
+                    validatedFields[input.inputName] = inputValue
+                }
+                is FileDeletionInput -> {
+                    val inputValue: String = fields[input.inputName]?.first() ?: ""
+                    validatedFields[input.inputName] = inputValue
+                }
             }
-            val inputValue: String = fields[input.inputName]?.first() ?: ""
-            val error = input.validate?.invoke(inputValue)
-            if (error != null) {
-                input.respondInputError(call, error)
-                return null
-            }
-            validatedFields[input.inputName] = inputValue
         }
         return validatedFields
     }

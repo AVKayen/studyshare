@@ -2,13 +2,22 @@ package com.studyshare.templates
 
 import com.studyshare.solution.Solution
 import com.studyshare.task.Task
-import com.studyshare.utils.Post
+import com.studyshare.post.Post
 import kotlinx.html.*
+import org.bson.types.ObjectId
 
 enum class AccessLevel {
     NONE,
     DELETE,
     EDIT
+}
+
+fun getAccessLevel(userId: ObjectId, authorId: ObjectId, parentAuthorId: ObjectId? = null): AccessLevel {
+    return when (userId) {
+        authorId -> AccessLevel.EDIT
+        parentAuthorId -> AccessLevel.DELETE
+        else -> AccessLevel.NONE
+    }
 }
 
 fun FlowContent.postDeletionButton(post: Post) {
@@ -33,6 +42,9 @@ fun FlowContent.postActions(post: Post, accessLevel: AccessLevel) {
     when (accessLevel) {
         AccessLevel.NONE -> return
         AccessLevel.DELETE -> postDeletionButton(post)
-        AccessLevel.EDIT -> {postEditingButton(post); postDeletionButton(post)}
+        AccessLevel.EDIT -> {
+            postEditingButton(post)
+            postDeletionButton(post)
+        }
     }
 }

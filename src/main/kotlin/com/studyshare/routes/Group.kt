@@ -5,13 +5,12 @@ import com.studyshare.authentication.user.UserSession
 import com.studyshare.forms.*
 import com.studyshare.group.Group
 import com.studyshare.group.GroupRepository
+import com.studyshare.group.GroupUpdates
 import com.studyshare.solution.additionalNotesValidator
 import com.studyshare.solution.titleValidator
 import com.studyshare.templates.*
+import com.studyshare.utils.*
 
-import com.studyshare.utils.smartRedirect
-import com.studyshare.utils.validateGroupBelonging
-import com.studyshare.utils.validateRequiredObjectIds
 import io.ktor.http.*
 import io.ktor.server.html.*
 import io.ktor.server.response.*
@@ -23,6 +22,7 @@ import org.bson.types.ObjectId
 fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepository) {
     val groupCreationForm = routeGroupCreationForm()
     val userAdditionForm = routeUserAdditionForm()
+    val groupEditionForm = routeGroupEditionForm()
     route("/groups") {
         getGroupList(groupRepository, userRepository)
         postCreateGroup(groupRepository, groupCreationForm)
@@ -32,7 +32,11 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
     }
     route("/{groupId}") {
         getGroupView(groupRepository)
+        patchGroupEditing(groupRepository, groupEditionForm)
         deleteGroup(groupRepository)
+        route("/edition-modal") {
+            getGroupEditionModal(groupEditionForm, groupRepository)
+        }
         route("/add-user") {
             getAddUserToGroupModal(userAdditionForm)
             postAddUserToGroup(groupRepository, userRepository, userAdditionForm)
@@ -57,16 +61,29 @@ fun Route.groupRouter(groupRepository: GroupRepository, userRepository: UserRepo
 fun routeGroupCreationForm(): Form {
     val groupCreationForm = Form("Create a new group", "groupForm", formAttributes = mapOf(
         "hx-swap" to "none"
-    )
-    )
+    ))
 
     groupCreationForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))
     groupCreationForm.addInput(TextlikeInput("Description", "description", InputType.text, additionalNotesValidator))
-    groupCreationForm.addInput(FileInput("Thumbnail", "image", inputAttributes = mapOf("multiple" to "false")))
+    groupCreationForm.addInput(FileInput("Thumbnail", "image"))
 
     globalFormRouter.routeFormValidators(groupCreationForm)
 
     return groupCreationForm
+}
+
+fun routeGroupEditionForm(): Form {
+    val groupEditionForm = Form("Edit your Group", "groupEditionForm", formAttributes = mapOf(
+        "hx-swap" to "outerHTML"
+    ))
+
+    groupEditionForm.addInput(TextlikeInput("Title", "title", InputType.text, titleValidator))
+    groupEditionForm.addInput(TextlikeInput("Description", "description", InputType.text, additionalNotesValidator))
+    groupEditionForm.addInput(FileInput("Select a new thumbnail", "image"))
+
+    globalFormRouter.routeFormValidators(groupEditionForm)
+
+    return groupEditionForm
 }
 
 val nonEmptyValidator = fun(title: String): String? {
@@ -102,11 +119,42 @@ fun Route.getGroupCreationModal(groupCreationForm: Form) {
     }
 }
 
+fun Route.getGroupEditionModal(groupEditionForm: Form, groupRepository: GroupRepository) {
+    get {
+        val validatedObjectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
+        val groupId = validatedObjectIds["groupId"]!!
+        
+        val group = try {
+            groupRepository.getGroup(groupId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Group not found.", status = HttpStatusCode.NotFound)
+            return@get
+        }
+
+        call.respondHtml {
+            body {
+                formModalDialog(
+                    form = groupEditionForm,
+                    callbackUrl = "/$groupId",
+                    requestType = HtmxRequestType.PATCH,
+                    extraAttributes = mapOf(
+                        "hx-target" to "#group-header-${group.id}"
+                    ),
+                    inputValues = mapOf(
+                        "title" to group.title,
+                        "description" to (group.description ?: "")
+                    )
+                )
+            }
+        }
+    }
+}
+
 fun Route.getGroupList(groupRepository: GroupRepository, userRepository: UserRepository) {
     get {
         val userSession = call.sessions.get<UserSession>()!!
         val groupIds = userRepository.getUserById(userSession.id)?.groupIds ?: emptySet()
-        val groupViews = groupRepository.getGroups(groupIds.toList())
+        val groupViews = groupRepository.getGroupViews(groupIds.toList())
 
         call.respondHtml {
             body {
@@ -128,7 +176,12 @@ fun Route.getGroupView(groupRepository: GroupRepository) {
         val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
         val groupId = objectIds["groupId"]!!
 
-        val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
+        val groupView = try {
+            groupRepository.getGroupView(groupId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Group not found.", status = HttpStatusCode.NotFound)
+            return@get
+        }
         val userSession = call.sessions.get<UserSession>()!!
 
         call.respondHtml(HttpStatusCode.OK) {
@@ -151,7 +204,12 @@ fun Route.getUsersModal(groupRepository: GroupRepository, userRepository: UserRe
         val userSession = call.sessions.get<UserSession>()!!
         val userId = userSession.id
 
-        val groupView = groupRepository.getGroup(groupId) ?: return@get call.respond(HttpStatusCode.NotFound)
+        val groupView = try {
+            groupRepository.getGroupView(groupId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Group not found.", status = HttpStatusCode.NotFound)
+            return@get
+        }
 
         val groupMembers = userRepository.getUsersByIds(groupView.group.memberIds)
         val groupLeader = groupMembers.first { it.id == groupView.group.leaderId }
@@ -234,6 +292,44 @@ fun Route.postAddUserToGroup(groupRepository: GroupRepository, userRepository: U
     }
 }
 
+fun Route.patchGroupEditing(groupRepository: GroupRepository, groupEditionForm: Form) {
+    patch {
+        val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@patch
+        val groupId = objectIds["groupId"]!!
+
+        val userSession = call.sessions.get<UserSession>()!!
+        val userId = ObjectId(userSession.id)
+
+        val formSubmissionData: FormSubmissionData = groupEditionForm.validateSubmission(call) ?: return@patch
+        val title = formSubmissionData.fields["title"]!!
+        val description = formSubmissionData.fields["description"]!!
+
+        val solutionUpdates = GroupUpdates(
+            title = title,
+            description = description,
+            newThumbnail = formSubmissionData.files.firstOrNull()
+        )
+
+        val updatedGroupView = try {
+            groupRepository.editGroup(groupId, userId, solutionUpdates)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Group not found.", status = HttpStatusCode.NotFound)
+            return@patch
+        } catch (e: ResourceModificationRestrictedException) {
+            call.respondText("Group modification forbidden.", status = HttpStatusCode.Forbidden)
+            return@patch
+        } finally {
+            formSubmissionData.cleanup()
+        }
+
+        call.respondHtml(HttpStatusCode.OK) {
+            body {
+                groupHeader(updatedGroupView, userSession)
+            }
+        }
+    }
+}
+
 fun Route.getAddUserToGroupModal(userAdditionForm: Form) {
     get {
         val objectIds = validateRequiredObjectIds(call, "groupId") ?: return@get
@@ -277,13 +373,15 @@ fun Route.deleteUserFromGroup(groupRepository: GroupRepository) {
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        val groupView = groupRepository.getGroup(groupId) ?: return@delete call.respond(HttpStatusCode.NotFound)
-        if (!groupView.group.canUserKick(userId)) {
-            call.respond(HttpStatusCode.Forbidden)
+        try {
+            groupRepository.deleteUser(groupId, userId, targetUserId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Group not found.", status = HttpStatusCode.NotFound)
+            return@delete
+        } catch (e: ResourceModificationRestrictedException) {
+            call.respondText("User deletion forbidden.", status = HttpStatusCode.Forbidden)
             return@delete
         }
-
-        groupRepository.deleteUser(groupId, targetUserId)
 
         call.respondHtml { body() }
     }
@@ -321,13 +419,15 @@ fun Route.deleteGroup(groupRepository: GroupRepository) {
         val userSession = call.sessions.get<UserSession>()!!
         val userId = ObjectId(userSession.id)
 
-        val groupView = groupRepository.getGroup(groupId) ?: return@delete call.respond(HttpStatusCode.NotFound)
-        if (groupView.group.leaderId != userId) {
-            call.respond(HttpStatusCode.Forbidden)
+        try {
+            groupRepository.deleteGroup(groupId, userId)
+        } catch (e: ResourceNotFoundException) {
+            call.respondText("Group not found.", status = HttpStatusCode.NotFound)
+            return@delete
+        } catch (e: ResourceModificationRestrictedException) {
+            call.respondText("Group deletion forbidden.", status = HttpStatusCode.Forbidden)
             return@delete
         }
-
-        groupRepository.deleteGroup(groupId)
 
         call.smartRedirect("/")
     }

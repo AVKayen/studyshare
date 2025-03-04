@@ -25,7 +25,7 @@ fun FlowContent.taskTemplate(taskView: TaskView, accessLevel: AccessLevel) {
         }
         if (taskView.task.additionalNotes != null) {
             p {
-                    +"${taskView.task.additionalNotes}"
+                +"${taskView.task.additionalNotes}"
             }
         }
 
