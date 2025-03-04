@@ -21,7 +21,7 @@ class MongoGroupRepository(
 
     private val groupCollection = database.getCollection<Group>("groups")
 
-    private suspend fun getGroup(groupId: ObjectId): Group {
+    override suspend fun getGroup(groupId: ObjectId): Group {
         val filter = Filters.eq("_id", groupId)
         return groupCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
     }

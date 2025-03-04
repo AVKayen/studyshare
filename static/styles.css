@@ -391,6 +391,7 @@ hr:last-child {
     display: flex;
     flex-direction: row;
     margin-bottom: 1rem;
+    flex-grow: 1
 }
 
 .group-info > .group-thumbnail {
@@ -515,7 +516,7 @@ article > .user-list-item:first-of-type {
 
 .group-header {
     display: flex;
-    justify-content: space-between;
+    align-items: flex-start;
 }
 
 .icon-btn::before {

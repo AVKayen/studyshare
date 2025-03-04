@@ -28,8 +28,8 @@ class MongoSolutionRepository(
         isDownvoted = solution.downvotes.contains(userId)
     )
 
-    private suspend fun getSolution(id: ObjectId): Solution {
-        val filter = Filters.eq("_id", id)
+    private suspend fun getSolution(solutionId: ObjectId): Solution {
+        val filter = Filters.eq("_id", solutionId)
         return solutionCollection.find(filter).firstOrNull() ?: throw ResourceNotFoundException()
     }
 
