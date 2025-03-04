@@ -399,6 +399,7 @@ hr:last-child {
     object-fit: cover;
     width: 20%;
     margin-right: 1rem;
+    border-radius: 0.25rem;
 }
 
 
@@ -406,10 +407,6 @@ hr:last-child {
     .group-info > .group-thumbnail {
         width: 30%;
     }
-}
-
-.group-info > .group-thumbnail > img {
-    border-radius: 0.25rem;
 }
 
 .modal-content {

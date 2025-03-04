@@ -33,10 +33,10 @@ fun FlowContent.groupHeader(groupView: GroupView, userSession: UserSession) {
         attributes["id"] = "group-header-${groupView.group.id}"
         div(classes = "group-info") {
             groupView.thumbnail?.let {
-                div {
-                    classes = setOf("group-thumbnail")
-                    img(src = it.thumbnailUrl, alt = "${groupView.group.title}'s thumbnail")
-                }
+                img(
+                    classes = "group-thumbnail",
+                    src = it.thumbnailUrl,
+                    alt = "${groupView.group.title}'s thumbnail")
             }
             div {
                 classes = setOf("group-info-text")
