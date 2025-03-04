@@ -131,7 +131,7 @@ class MongoTaskRepository(
 
     override suspend fun doesCategoryExist(groupId: ObjectId, category: String): Boolean {
         val filter = Filters.and(
-            Filters.eq("_id", groupId),
+            Filters.eq(Task::groupId.name, groupId),
             Filters.eq(Task::category.name, category)
         )
         return taskCollection.find(filter).firstOrNull() != null
