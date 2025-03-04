@@ -5,6 +5,7 @@ import com.mongodb.kotlin.client.coroutine.MongoDatabase
 import com.studyshare.forms.UploadFileData
 import com.studyshare.attachment.AttachmentRepository
 import com.studyshare.comment.CommentRepository
+import com.studyshare.group.GroupRepository
 import com.studyshare.solution.Solution
 import com.studyshare.solution.SolutionRepository
 import com.studyshare.utils.ResourceModificationRestrictedException
@@ -91,10 +92,11 @@ class MongoTaskRepository(
         return createTaskView(updatedTask)
     }
 
-    override suspend fun deleteTask(id: ObjectId, userId: ObjectId): Task {
+    override suspend fun deleteTask(id: ObjectId, userId: ObjectId, groupRepository: GroupRepository): Task {
         val task = getTask(id)
+        val parentGroup = groupRepository.getGroup(task.groupId)
 
-        if (task.authorId != userId) {
+        if (task.authorId != userId && parentGroup.leaderId != userId) {
             throw ResourceModificationRestrictedException()
         }
 

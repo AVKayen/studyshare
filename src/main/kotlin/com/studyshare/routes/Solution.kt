@@ -248,11 +248,11 @@ fun Route.patchSolutionEditing(solutionRepository: SolutionRepository, solutionE
         val additionalNotes = formSubmissionData.fields["additionalNotes"]!!
         val deletedFiles = formSubmissionData.fields["deletedFiles"]!!
 
-        val filesToDelete = parseObjectIdList(deletedFiles.dropLast(1).split(";"))
-
-        if (filesToDelete == null) {
-            call.respondText("Invalid value passed for the deletedFiles argument")
-            return@patch
+        val filesToDelete = if (deletedFiles.isNotEmpty()) {
+            parseObjectIdList(deletedFiles.dropLast(1).split(";")) ?:
+                return@patch call.respondText("Invalid value passed for the deletedFiles argument")
+        } else {
+            emptyList()
         }
 
         val solutionUpdates = SolutionUpdates(
