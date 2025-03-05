@@ -4,7 +4,7 @@ import com.google.cloud.datastore.Datastore
 import com.google.cloud.datastore.DatastoreOptions
 import com.google.cloud.datastore.Entity
 
-data class GoogleDatastoreEnvironment(override val production: Boolean) : Environment(production) {
+data class GoogleDatastoreEnvironment(override val production: Boolean) : Environment() {
     private val datastore: Datastore = DatastoreOptions.newBuilder()
         .setProjectId("skillful-fx-446014-k1")
         .setDatabaseId("environment")
