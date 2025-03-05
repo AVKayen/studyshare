@@ -4,7 +4,7 @@ import com.studyshare.globalEnvironment
 import kotlinx.html.*
 
 fun HEAD.headTags() {
-    val googleCloudStaticLocation = "https://storage.googleapis.com/${globalEnvironment!!.STATIC_BUCKET_NAME}"
+    val googleCloudStaticLocation = "https://storage.googleapis.com/${globalEnvironment!!.staticBucketName}"
 
     // htmx
     script { src = "$googleCloudStaticLocation/htmx-2.0.4.min.js" }
@@ -21,7 +21,7 @@ fun HEAD.headTags() {
     link(rel = "stylesheet", href = "$googleCloudStaticLocation/fancybox-5.0.css")
 
     // On development server, custom/private static files are served from /static
-    val staticLocation: String = if (!globalEnvironment!!.PRODUCTION) "/static" else googleCloudStaticLocation
+    val staticLocation: String = if (!globalEnvironment!!.production) "/static" else googleCloudStaticLocation
     link(rel = "stylesheet", href = "${staticLocation}/styles.css")
     script { src = "${staticLocation}/helperFunctions.js" }
     link(rel = "apple-touch-icon", href = "${staticLocation}/apple-touch-icon.png")
