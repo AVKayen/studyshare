@@ -19,12 +19,12 @@ StudyShare is a web application for users to share their tasks to be solved by o
 - Hyperscript
 - MongoDB
 
-## How to run
+## Configuration
+Due to the structure of Google App Engine, the app **requires you** to write your own implementation of the 
+`com.studyshare.environment.Environment` class, which must expose the necessary environment variables,
+MongoDB connection string and Google Cloud Storage bucket names.
 
+## How to run
 1. Clone the repository
 2. Run `./gradlew run` in the root directory
 3. The server will be running on `localhost:8080`
-
-Due to the structure of Google App Engine, the app **requires you** to write your own implementation of the `Environment`
-class inside `src/main/kotlin/Environment.kt`, which must expose the necessary environment variables,
-MongoDB connection string and Google Cloud Storage bucket name.
