@@ -7,6 +7,8 @@ import io.ktor.server.application.*
 
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import com.studyshare.comment.MongoCommentRepository
+import com.studyshare.environment.Environment
+import com.studyshare.environment.GoogleDatastoreEnvironment
 import com.studyshare.group.MongoGroupRepository
 import com.studyshare.solution.MongoSolutionRepository
 import com.studyshare.task.MongoTaskRepository
@@ -23,11 +25,13 @@ private val logger = LoggerFactory.getLogger("Application")
 
 
 fun Application.module() {
-    globalEnvironment = Environment(!this.developmentMode)
-    val mongodbClient = MongoClient.create(globalEnvironment!!.MONGODB_CONNECTION_STRING)
-    val database = mongodbClient.getDatabase(globalEnvironment!!.DATABASE_NAME)
+    // You may change this to use your own Environment class implementation
+    globalEnvironment = GoogleDatastoreEnvironment(!this.developmentMode)
 
-    val imageRepository = MongoGCloudAttachmentRepository(bucketName = globalEnvironment!!.BUCKET_NAME, database = database)
+    val mongodbClient = MongoClient.create(globalEnvironment!!.mongodbConnectionString)
+    val database = mongodbClient.getDatabase(globalEnvironment!!.databaseName)
+
+    val imageRepository = MongoGCloudAttachmentRepository(bucketName = globalEnvironment!!.bucketName, database = database)
     val commentRepository = MongoCommentRepository(database)
     val solutionRepository = MongoSolutionRepository(database, commentRepository, imageRepository)
     val taskRepository = MongoTaskRepository(database, imageRepository, commentRepository, solutionRepository)

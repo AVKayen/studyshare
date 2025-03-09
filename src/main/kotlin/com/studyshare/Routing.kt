@@ -21,7 +21,7 @@ fun Application.configureRouting(
     groupRepository: GroupRepository
 ) {
     routing {
-        if (!globalEnvironment!!.PRODUCTION) {
+        if (!globalEnvironment!!.production) {
             staticFiles("/static", File("static"))
         }
 
